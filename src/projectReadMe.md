@@ -21,7 +21,7 @@ clang --version  # For Clang
 cmake --version  # To check CMake version
 ```
 
-## Instructions
+## Instructions for Running the Application
 
 ### 1. **Configure the Project**
 
@@ -57,9 +57,99 @@ Run the following command to execute it:
 
 - Make sure your compiler supports **C++17**.
 
-## For Developers
+## For Developers: Initial Configuration Settings
 
-Follow the same instructions as above for setup. When making changes, rerun the last two **build** and **run** commands to see your changes in output. Some IDE extensions may automatically do some of this for you, so you might find easier ways of doing this.
+Follow these instructions when first cloning the project to set up the correct settings, before starting to develop:
+
+### 1. **Setup Google C++ Style Formatting**
+
+This tool formats your code, improving readability and maintainability. VS Code supports formatting out of the box:
+
+    1.	Open VS Code Settings (Ctrl + , on Windows/Linux, Cmd + , on macOS).
+    2.	Search for C_Cpp: Clang_format_style.
+    3.	Set the option to "Google"
+
+    It is a good idea to enable formatting on save or on typing. In the same settings window:
+
+    1.	Search for editor.formatOnSave and enable it.
+    2.	Search for editor.formatOnType and enable it if you want formatting to apply while typing.
+
+### 3. **Setup cpplint for linting**
+
+#### macOS (Homebrew-managed Python)
+
+1. **Option A (Recommended)**: Use a Virtual Environment
+
+   - Create a virtual environment:
+     ```bash
+     python3 -m venv myenv
+     ```
+   - Activate the virtual environment:
+     ```bash
+     source myenv/bin/activate
+     ```
+   - Install `cpplint` inside the virtual environment:
+     ```bash
+     python -m pip install cpplint
+     ```
+
+2. **Option B**: Use `pipx` for system-wide installation
+   - Install `pipx` with Homebrew:
+     ```bash
+     brew install pipx
+     pipx ensurepath
+     ```
+   - Install `cpplint` with `pipx`:
+     ```bash
+     pipx install cpplint
+     ```
+
+After this, we can install the VS Code extension to make the linter run automatically on your code:
+
+1. Install the extension "cpplint" by "mine"
+2. Find the path to the extension by running in terminal
+
+```bash
+which cpplint
+```
+
+3. After this, open VS Code settings and search for the setting "Cpplint: Cpplint Path". Paste this path and save the settings.
+
+4. Restart VS Code. The linter should now work automatically by highlighting code in blue squiggles
+
+#### Windows and Linux
+
+1. For these systems, you can typically install `cpplint` directly with:
+
+```bash
+pip install cpplint
+```
+
+2. Find the path to the extension by running in terminal
+
+```bash
+which cpplint
+```
+
+### 4. **Setup Doxygen for Comments/Documentation**
+
+1. Install the VS Code Extension "Doxygen Document Generator" by "Christoph Schlosser"
+2. Install the Doxygen command-line tool:
+
+#### macOS (Homebrew)
+
+```bash
+brew install doxygen
+```
+
+#### Windows
+
+1. Download the Doxygen installer from the [official website](http://www.doxygen.nl/download.html).
+2. Run the installer and follow the instructions to complete the installation.
+
+## For Developers: When Developing
+
+Follow the same instructions as for running the application when developing. When making changes, rerun the last two **build** and **run** commands to see your changes in output. Some IDE extensions may automatically do some of this for you, so you might find easier ways of doing this.
 
 When making larger changes, e.g. importing libraries, switching compilers, et.c., it can be a good idea to clean the project before rebuilding. Run:
 
@@ -68,3 +158,21 @@ cmake --build build --target clean
 ```
 
 After this, build and run normally.
+
+### Doxygen Comments:
+
+Doxygen comments are useful diretly above functions, classes and structs for describing the code. These will be auto-generated into documentation.
+
+```cpp
+/** This is the structure of a doxygen comment */
+```
+
+smaller comments meant for clarifying things can be made as regular comments.
+
+To update the Doxygen documentation with new comments, run in terminal:
+
+```bash
+doxygen Doxyfile
+```
+
+An html of the documentation will be generated. To view, drag and drop the file "index.html" into your browser search field.
