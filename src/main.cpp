@@ -1,11 +1,19 @@
-#include <iostream>
+#include <QApplication>
+#include <QPushButton>
 
 /**
  * @brief main function
- * @return 0
+ * @param argc Argument count
+ * @param argv Argument vector
+ * @return Application exit status
  */
+int main(int argc, char *argv[]) {
+  QApplication app(argc, argv);
 
-int main() {
-  std::cout << "Hello World!" << std::endl;
-  return 0;
+  QPushButton button("Hello, World!");
+  button.resize(200, 100);
+
+  button.show();
+
+  return app.exec();
 }
