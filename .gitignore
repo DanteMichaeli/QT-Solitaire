@@ -50,3 +50,6 @@ build
 
 # VS Code settings
 .vscode/
+
+# OSX
+.DS_Store

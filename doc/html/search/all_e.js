@@ -1,8 +1,6 @@
 var searchData=
 [
-  ['macos_20homebrew_0',['macOS (Homebrew)',['../md_src_2project_read_me.html#autotoc_md13',1,'']]],
-  ['macos_20homebrew_20managed_20python_1',['macOS (Homebrew-managed Python)',['../md_src_2project_read_me.html#autotoc_md10',1,'']]],
-  ['main_2',['main',['../main_8cpp.html#ae66f6b31b5ad750f1fe042a706a4e3d4',1,'main.cpp']]],
-  ['main_2ecpp_3',['main.cpp',['../main_8cpp.html',1,'']]],
-  ['managed_20python_4',['macOS (Homebrew-managed Python)',['../md_src_2project_read_me.html#autotoc_md10',1,'']]]
+  ['king_0',['KING',['../card_8hpp.html#adf74d53cd68bbef55ba510b266ecbbeda157524408d6f0fc4b7dc5e52f3dd3b80',1,'card.hpp']]],
+  ['klondikepile_1',['KlondikePile',['../class_klondike_pile.html',1,'KlondikePile'],['../class_klondike_pile.html#adc8e451739297a67ac621889d84e3e14',1,'KlondikePile::KlondikePile()'],['../class_klondike_pile.html#a5f471ee7c114aa6f74a52283c02535a2',1,'KlondikePile::KlondikePile(Deck &amp;deck, size_t nofCards, size_t nofFacingUp)']]],
+  ['klondikepile_2ehpp_2',['klondikePile.hpp',['../klondike_pile_8hpp.html',1,'']]]
 ];
