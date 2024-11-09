@@ -10,16 +10,15 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
-# In case of older CMake versions
-if(CMAKE_VERSION VERSION_LESS "3.7.0")
-    set(CMAKE_INCLUDE_CURRENT_DIR ON)
-endif()
-
 # Find the required Qt components (Qt 6 in your case)
 find_package(Qt6 COMPONENTS Core Gui Widgets REQUIRED)
 
-# Automatically find all .cpp files in the src/ directory and subdirectories
-file(GLOB_RECURSE SOURCES "${CMAKE_SOURCE_DIR}/src/*.cpp")
+# Automatically find all .cpp / .hpp / .c / .h files in the src/ directory and subdirectories
+file(GLOB_RECURSE SOURCES_C_CPP "src/*.c" "src/*.cpp")
+file(GLOB_RECURSE HEADERS "src/*.h" "src/*.hpp")
+
+# Combine all sources
+set(SOURCES ${SOURCES_C_CPP} ${HEADERS})
 
 # Add the executable
 add_executable(solitaire ${SOURCES})
