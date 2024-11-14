@@ -1,6 +1,5 @@
 #include <QApplication>
-#include <QPushButton>
-
+#include "mainwindow.h"
 /**
  * @brief main function
  * @param argc Argument count
@@ -8,12 +7,11 @@
  * @return Application exit status
  */
 int main(int argc, char *argv[]) {
-  QApplication app(argc, argv);
+    QApplication app(argc, argv);
 
-  QPushButton button("Hello, World!");
-  button.resize(200, 100);
+    MainWindow mainWindow;  // Create the main window (loaded from .ui file)
 
-  button.show();
+    mainWindow.show();      // Show the window
 
-  return app.exec();
+    return app.exec();      // Start the application's event loop
 }
