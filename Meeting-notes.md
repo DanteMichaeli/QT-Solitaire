@@ -97,3 +97,49 @@ Short summary of current project status.
 ## Project status
 
 Dev env is set up for some, but not all developers. Initial UML is done. Project plan is not written yet, DL this Friday!
+
+---
+
+# Meeting 9.11.2024 19:00-19:20
+
+**Participants**:
+
+1. Ukko Ihamäki
+2. Daniel Michaeli
+3. Kasper Tulonen
+4. Robin Runne
+
+## Summary of works
+
+1. Daniel Michaeli
+
+   Has been busy, but will catch up with the QT gui class implementations next week
+
+2. Ukko Ihamäki
+
+   Expanded the simple QT main app window into a working mvp, with functionality for selecting game mode, settings, starting game and quitting the app
+
+3. Kasper Tulonen
+
+   Implemented basic program classes for deck, piles and card
+
+4. Robin Runne
+
+   Has been busy, will catch up on implementing the Game class next week, utilizing the classes Kasper has created
+
+## Challenges
+
+1. Nothing much, quite smooth sailing thus far!
+
+## Actions
+
+1. Daniel will expand on the QT functionality by adding graphical representations of each class
+2. Robin will create the game class utilizing the card, deck and piles
+3. We will have to implement some testing library to start writing unit tests. How to fix Valgrind for mac???
+
+> Please reflect these action decisions in your git commit messages so that
+> your group members and advisor can follow the progress.
+
+## Project status
+
+A working app instance is created, with basic implementation of the first classes. We are lacking in unit testing and have to fix that ASAP, including the problem of valgrinding with mac.
