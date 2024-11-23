@@ -143,3 +143,49 @@ Dev env is set up for some, but not all developers. Initial UML is done. Project
 ## Project status
 
 A working app instance is created, with basic implementation of the first classes. We are lacking in unit testing and have to fix that ASAP, including the problem of valgrinding with mac.
+
+# Meeting 20.11.2024 16:00-17:30
+
+**Participants**:
+
+1. Ukko Ihamäki
+2. Daniel Michaeli
+3. Kasper Tulonen
+4. Robin Runne
+
+## Summary of works
+
+1. Daniel Michaeli
+
+   Created some, but not all of the GUI classes, incorporate into Ukkos main app
+
+2. Ukko Ihamäki
+
+   No larger changes since last meeting (Expanded the simple QT main app window into a working mvp, with functionality for selecting game mode, settings, starting game and quitting the app)
+
+3. Kasper Tulonen
+
+   No larger changes since the last meeting (Implemented basic program classes for deck, piles and card)
+
+4. Robin Runne
+
+   Started implementing game class utilizing Kasper's logical classes. Ran into some ambiguity later on.
+
+## Challenges
+
+1. Some tasks were too ambiguous and large to fully complete without further communication between the team
+2. Logical + GUI classes seems unnecessarily complex, especially regarding pointers and ownership mgmt
+
+## Actions
+
+1. Squash logical and gui classes into one. Class is mainly a QT gui-type, but contains all logical functionality as well. Kasper will start on this, and others will pick up
+2. We still need to implement unit testing. Daniel will take care of finding and installing a relevant library
+3. After having reconciled the squashing and everyone understanding it, we can continue working on new tasks with this as a basis
+4. Tasks need to be smaller and more detailed to easily collaborate and finish them
+
+> Please reflect these action decisions in your git commit messages so that
+> your group members and advisor can follow the progress.
+
+## Project status
+
+A working app instance is created, with basic implementation of all the logical classes and some gui classes. Some redesigns are in plan, and will be implemented in this sprint (mentioned above). Simple GUI will remain more or less as is.
