@@ -1,6 +1,8 @@
 #ifndef DECK_HPP
 #define DECK_HPP
 
+#include <QGraphicsPixmapItem>
+#include <QGraphicsSceneMouseEvent>
 #include <algorithm>
 #include <chrono>
 #include <exception>
@@ -14,37 +16,27 @@ using namespace std;
 /**
  * @brief Array of all possible suits, used to initialize a deck.
  */
-const Suit allSuits[] = {CLUBS, DIAMONDS, SPADES, HEARTS};
+constexpr Suit allSuits[] = {CLUBS, DIAMONDS, SPADES, HEARTS};
 
 /**
  * @brief Array of all possible ranks, used to initialize a deck.
  */
-const Rank allRanks[] = {ACE,   TWO,  THREE, FOUR, FIVE,  SIX, SEVEN,
-                         EIGHT, NINE, TEN,   JACK, QUEEN, KING};
+constexpr Rank allRanks[] = {ACE,   TWO,  THREE, FOUR, FIVE,  SIX, SEVEN,
+                             EIGHT, NINE, TEN,   JACK, QUEEN, KING};
 
 /**
  * @class Deck
  * @brief Represents a deck of cards with operations for shuffling, dealing, and
  * checking status.
  */
-class Deck {
+class Deck : public QGraphicsPixmapItem {
  public:
   /**
    * @brief Constructs a standard deck of 52 cards, each unique by suit and
    * rank.
    */
-  Deck() {
-    for (Suit suit : allSuits) {
-      for (Rank rank : allRanks) {
-        cards_.push_back(make_unique<Card>(Card(suit, rank)));
-      }
-    }
-  }
+  explicit Deck(QGraphicsItem* parent = nullptr);
 
-  /**
-   * @brief Destroys the Deck object and outputs a message indicating the deck
-   * is being destroyed.
-   */
   ~Deck() { cout << "Deck destroyed" << endl; }
 
   /**
@@ -82,7 +74,7 @@ class Deck {
     if (cards_.empty()) {
       return nullptr;
     }
-    unique_ptr<Card> cardPtr = move(cards_.back());
+    unique_ptr<Card> cardPtr = std::move(cards_.back());
     cards_.pop_back();
     return cardPtr;
   }
@@ -99,8 +91,15 @@ class Deck {
    */
   void AddCard(unique_ptr<Card> card) {
     card->flipDown();
-    cards_.push_back(move(card));
+    cards_.push_back(std::move(card));
   }
+
+ protected:
+  /**
+   * @brief Handles mouse press events on the deck.
+   * @param event The mouse event triggered by clicking on the deck.
+   */
+  void mousePressEvent(QGraphicsSceneMouseEvent* event) override;
 
  private:
   /**
@@ -108,6 +107,8 @@ class Deck {
    * cards in the deck. A vector is used for easy shuffling.
    */
   vector<unique_ptr<Card>> cards_;
+
+  QPixmap frontImage_;  ///< The deck image (face-down).
 };
 
 #endif
