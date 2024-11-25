@@ -201,6 +201,26 @@ brew install doxygen
 1. Download the Doxygen installer from the [official website](http://www.doxygen.nl/download.html).
 2. Run the installer and follow the instructions to complete the installation.
 
+### 5. Set up Catch2 for Unit Testing:
+
+Unit testing ensures all our code is up to date and that no previous code breaks later in the process. Before merging to staging/submitting PR it is advised to run all unit tests to ensure this.
+
+From the src dir, run the following commands
+
+```bash
+cd libs/
+git submodule add https://github.com/catchorg/Catch2.git
+git submodule update --init --recursive
+```
+
+Clean and regenerate your build directory:
+
+```bash
+rm -rf build
+cmake -B build
+cmake --build build
+```
+
 ## For Developers: When Developing
 
 Follow the same instructions as for running the application when developing. When making changes, rerun the last two **build** and **run** commands to see your changes in output. Some IDE extensions may automatically do some of this for you, so you might find easier ways of doing this.
@@ -230,3 +250,27 @@ doxygen Doxyfile
 ```
 
 An html of the documentation will be generated. To view, drag and drop the file "index.html" into your browser search field.
+
+### Unit Testing:
+
+Unit testing ensures all our code is up to date and that no previous code breaks later in the process. Before merging to staging/submitting PR it is advised to run all unit tests to ensure this.
+
+To run all unit tests, build the project and run:
+
+```bash
+./build/solitaire_tests
+```
+
+If you want to run a specific test files, the test files must contain tags, e.g.:
+
+```cpp
+TEST_CASE("Card Initialization", "[card]") {
+    // Test logic
+}
+```
+
+Then, build and run as usual:
+
+```bash
+./build/solitaire_tests "[card]"
+```

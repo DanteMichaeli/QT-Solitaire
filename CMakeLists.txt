@@ -27,7 +27,7 @@ set(SOURCES ${SOURCES_C_CPP} ${HEADERS})
 # Add the resources.qrc file to the project
 qt6_add_resources(RESOURCES src/assets/resources.qrc)
 
-# Add the executable
+# Add the executable for the main application
 add_executable(solitaire ${SOURCES} ${RESOURCES})
 
 # Link the Qt libraries automatically
@@ -37,4 +37,28 @@ target_link_libraries(solitaire Qt6::Core Qt6::Gui Qt6::Widgets)
 set(CMAKE_VERBOSE_MAKEFILE ON)
 
 # Export compile commands for use with tools like clang-tidy
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
+# Add Catch2 as a subdirectory (Catch2 is now located under the libs/ folder as a git submodule)
+add_subdirectory(libs/Catch2)
+
+# Define the test sources (glob all .cpp files inside the tests/ folder)
+file(GLOB_RECURSE TEST_SOURCES "tests/*.cpp")
+
+# Create the test executable
+add_executable(solitaire_tests ${TEST_SOURCES})
+
+# Link the Catch2 library to the test executable
+target_link_libraries(solitaire_tests PRIVATE Catch2::Catch2WithMain)
+
+# Include Catch2 headers for the tests
+target_include_directories(solitaire_tests PRIVATE
+    ${CMAKE_SOURCE_DIR}/libs/Catch2/src
+    ${CMAKE_SOURCE_DIR}/libs/Catch2/src/catch2
+)
+
+# Enable verbose output for CMake (if needed)
+set(CMAKE_VERBOSE_MAKEFILE ON)
+
+# Export compile commands for use with tools like clang-tidy (for the tests)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
