@@ -1,9 +1,13 @@
 #ifndef CARD_HPP
 #define CARD_HPP
 
+#include <QGraphicsPixmapItem>
+#include <QGraphicsSceneMouseEvent>
 #include <iostream>
 #include <sstream>
 #include <string>
+
+#define SCALING_FACTOR 0.2
 
 using namespace std;
 
@@ -42,35 +46,25 @@ enum Color { BLACK, RED };
  * @brief Represents a single playing card with a suit, rank, color, and face-up
  * status.
  */
-class Card {
+class Card : public QGraphicsPixmapItem {
  public:
   /**
    * @brief Constructs a new Card object with specified suit and rank.
    * @param s Suit of the card (CLUBS, DIAMONDS, SPADES, HEARTS).
    * @param r Rank of the card (ACE to KING).
    */
-  Card(Suit s, Rank r) : suit_(s), rank_(r), faceUp_(false) {
-    switch (s) {
-      case Suit::CLUBS:
-        color_ = Color::BLACK;
-        break;
-      case Suit::DIAMONDS:
-        color_ = Color::RED;
-        break;
-      case Suit::HEARTS:
-        color_ = Color::RED;
-        break;
-      case Suit::SPADES:
-        color_ = Color::BLACK;
-        break;
-    }
-  }
+  explicit Card(Suit s, Rank r, QGraphicsItem* parent = nullptr);
 
   /**
    * @brief Destroys the Card object and outputs a message indicating which card
    * is being destroyed.
    */
-  ~Card() { cout << "Card destroyed: " << CardToString() << endl; }
+  ~Card();
+
+  /**
+   * @brief Updates the image shown based on the value of faceUp_.
+   */
+  void updateCardImage();
 
   /**
    * @brief Gets the suit of the card.
@@ -85,6 +79,18 @@ class Card {
   Rank GetRank() const { return rank_; }
 
   /**
+   * @brief Get the Suit in QString
+   * @return QString
+   */
+  QString getSuitQstring() const;
+
+  /**
+   * @brief Get the Rank in QString
+   * @return QString
+   */
+  QString getRankQstring() const;
+
+  /**
    * @brief Checks if the card is face-up.
    * @return true if the card is face-up, false otherwise.
    */
@@ -97,64 +103,26 @@ class Card {
   Color GetColor() const { return color_; }
 
   /**
-   * @brief Returns a string representation of the card, including its rank and
+   * @brief Returns a Qstring representation of the card, including its rank and
    * suit.
-   * @return String in the format "RANK of SUIT".
+   * @return String in the format "RANK_of_SUIT".
    */
-  string CardToString() const {
-    stringstream ss;
-    switch (rank_) {
-      case Rank::ACE:
-        ss << "ACE";
-        break;
-      case Rank::JACK:
-        ss << "JACK";
-        break;
-      case Rank::QUEEN:
-        ss << "QUEEN";
-        break;
-      case Rank::KING:
-        ss << "KING";
-        break;
-      default:
-        ss << rank_;
-    }
-    ss << " of ";
-
-    switch (suit_) {
-      case Suit::CLUBS:
-        ss << "CLUBS";
-        break;
-      case Suit::DIAMONDS:
-        ss << "DIAMONDS";
-        break;
-      case Suit::HEARTS:
-        ss << "HEARTS";
-        break;
-      case Suit::SPADES:
-        ss << "SPADES";
-        break;
-    }
-    return ss.str();
-  }
-
-  /**
-   * @brief Flips the face-up status of the card (face-up becomes face-down and
-   * vice versa).
-   */
-  void flipFace() { faceUp_ ^= true; }
+  QString cardToQString() const;
 
   /**
    * @brief Sets the card to face-up.
    */
-  void flipUp() { faceUp_ = true; }
+  void flipUp();
 
   /**
    * @brief Sets the card to face-down.
    */
-  void flipDown() { faceUp_ = false; }
+  void flipDown();
 
  private:
+  QPixmap frontImage_;  ///< The front image of the card.
+  QPixmap backImage_;   ///< The back image of the card.
+
   Suit suit_;    ///< Suit of the card (CLUBS, DIAMONDS, SPADES, HEARTS).
   Rank rank_;    ///< Rank of the card (ACE to KING).
   bool faceUp_;  ///< Face-up status of the card.

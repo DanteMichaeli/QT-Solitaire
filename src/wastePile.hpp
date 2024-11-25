@@ -19,7 +19,7 @@ class WastePile : public Pile {
   /**
    * @brief Default constructor for an empty pile.
    */
-  WastePile() {}
+  WastePile(QGraphicsItem* parent = nullptr);
 
   /**
    * @brief Checks if a card can be legally added to this pile based on game
@@ -36,16 +36,7 @@ class WastePile : public Pile {
    * @param deck The deck from which cards are dealt.
    * @param nofCards The number of cards to add to the waste pile.
    */
-  void AddFromDeck(Deck& deck, size_t nofCards) {
-    for (size_t i = 0; i < nofCards; i++) {
-      auto cardPtr = deck.dealCard();
-      if (cardPtr == nullptr) {
-        break;
-      }
-      cardPtr->flipUp();
-      cards_.push_back(cardPtr);
-    }
-  }
+  void AddFromDeck(Deck& deck, size_t nofCards);
 
   /**
    * @brief Moves all cards from the waste pile back to the deck.
@@ -54,19 +45,11 @@ class WastePile : public Pile {
    * after transferring the cards.
    * @return true if the transfer is successful, false if the deck is not empty.
    */
-  bool AddToDeck(Deck& deck, bool shuffle = false) {
-    if (deck.Empty()) {
-      while (!cards_.empty()) {
-        deck.AddCard(move(cards_.back()));
-        cards_.pop_back();
-      }
-      if (shuffle) {
-        deck.Shuffle();
-      }
-      return true;
-    }
-    return false;
-  }
+  bool AddToDeck(Deck& deck, bool shuffle = false);
+
+ protected:
+  // TODO:
+  void mousePressEvent(QGraphicsSceneMouseEvent* event) override;
 };
 
 #endif

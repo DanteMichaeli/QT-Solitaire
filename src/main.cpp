@@ -1,17 +1,20 @@
 #include <QApplication>
-#include "mainwindow.h"
+#include <QDebug>
+#include <QDirIterator>
+
+#include "gui/mainwindow.h"
 /**
  * @brief main function
  * @param argc Argument count
  * @param argv Argument vector
  * @return Application exit status
  */
+
 int main(int argc, char *argv[]) {
-    QApplication app(argc, argv);
+  QApplication app(argc, argv);
 
-    MainWindow mainWindow;  // Create the main window (loaded from .ui file)
+  MainWindow mainWindow;
+  mainWindow.show();
 
-    mainWindow.show();      // Show the window
-
-    return app.exec();      // Start the application's event loop
+  return app.exec();
 }

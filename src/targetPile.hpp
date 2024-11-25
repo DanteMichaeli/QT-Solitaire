@@ -20,7 +20,7 @@ class TargetPile : public Pile {
    * @param suit The suit that this TargetPile will accept (CLUBS, DIAMONDS,
    * HEARTS, or SPADES).
    */
-  TargetPile(Suit suit) : suit_(suit) {}
+  TargetPile(Suit suit, QGraphicsItem* parent = nullptr);
 
   /**
    * @brief Checks if a card can be legally added to this pile.
@@ -35,19 +35,7 @@ class TargetPile : public Pile {
    * - If the pile is non-empty, the card must have a rank exactly one higher
    * than the current top card.
    */
-  bool IsValid(const Card& card) override {
-    if (!card.isFaceUp()) {
-      return false;
-    }
-    if (card.GetSuit() != suit_) {
-      return false;
-    }
-    if (cards_.empty()) {
-      return card.GetRank() == Rank::ACE;
-    } else {
-      return card.GetRank() == cards_.back()->GetRank() + 1;
-    }
-  }
+  bool IsValid(const Card& card) override;
 
   /**
    * @brief Prevents removing cards from the target pile.
@@ -64,6 +52,9 @@ class TargetPile : public Pile {
   bool TransferCard(Pile& other) override { return false; }
 
  private:
+  // TODO:
+  void mousePressEvent(QGraphicsSceneMouseEvent* event) override;
+
   Suit suit_;  ///< The suit required for cards in this TargetPile (CLUBS,
                ///< DIAMONDS, HEARTS, or SPADES).
 };
