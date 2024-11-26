@@ -45,11 +45,21 @@ add_subdirectory(libs/Catch2)
 # Define the test sources (glob all .cpp files inside the tests/ folder)
 file(GLOB_RECURSE TEST_SOURCES "tests/*.cpp")
 
+# Add the card source (and other sources you need for testing) to the test build
+list(APPEND TEST_SOURCES ${CMAKE_SOURCE_DIR}/src/card.cpp)  # Include card.cpp
+
 # Create the test executable
 add_executable(solitaire_tests ${TEST_SOURCES})
 
 # Link the Catch2 library to the test executable
-target_link_libraries(solitaire_tests PRIVATE Catch2::Catch2WithMain)
+# Link QtCore, QtGui, and QtWidgets to the tests
+target_link_libraries(solitaire_tests PRIVATE 
+    Qt6::Core 
+    Qt6::Gui 
+    Qt6::Widgets
+    Catch2::Catch2WithMain
+    ${RESOURCES}
+)
 
 # Include Catch2 headers for the tests
 target_include_directories(solitaire_tests PRIVATE

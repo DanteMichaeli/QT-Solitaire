@@ -25,7 +25,7 @@ unique_ptr<Card> Pile::RemoveCard() {
 }
 
 bool Pile::TransferCard(Pile& other) {
-  if (!cards_.empty()) {
+  if (cards_.empty()) {
     return false;
   }
   if (!other.IsValid(*cards_.back())) {
