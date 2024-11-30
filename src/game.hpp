@@ -35,6 +35,8 @@ class Game : public QObject {
 
   void firstLegalMove(Card* card, Pile* fromPile);
 
+  bool hasWon();
+
  private slots:
   void deckClicked();
   bool moveCard(Card* card, Pile* fromPile, Pile* toPile);
