@@ -9,45 +9,46 @@
 GameView::GameView(QWidget* parent)
     : QGraphicsView(parent),
       scene(new QGraphicsScene(this)),
-      klondikePiles(7) {  // Predefine vector size
+      game_(std::make_unique<Game>()) {
   setScene(scene);
   setAlignment(Qt::AlignLeft | Qt::AlignTop);
   setBackgroundBrush(QBrush(Qt::green));
-
+  scene->setSceneRect(scene->itemsBoundingRect());
   initializeGame();
+  viewport()->update();
 }
 
 void GameView::initializeGame() {
   scene->clear();
 
   // Initialize the deck
-  deck_ = std::make_unique<Deck>();
-  scene->addItem(deck_.get());
-  deck_->setScale(0.2);
-  deck_->setPos(70, 70);
-
+  Deck* deck = game_->getDeck();
+  scene->addItem(deck);
+  deck->setPos(70, 70);
   qDebug() << "Deck initialized with 52 cards.";
 
+  WastePile* wastePile = game_->getWPile();
+  scene->addItem(wastePile);
+  wastePile->setPos(70, 250);
+
   // Create and add all seven Klondike piles to the tableau
-  for (int i = 0; i < 7; i++) {
-    qDebug() << "Deck size before creating pile" << i + 1 << ":" << 52 - i;
 
-    qDebug() << "Creating pile" << i + 1;
+  auto& kPiles = game_->getKPiles();
+  size_t i = 0;
+  for (auto& ptr : kPiles) {
+    scene->addItem(ptr.get());
+    ptr.get()->setPos(200 + i * 150, 150);
+    i++;
+    qDebug() << "KlondikePile" << i << "added to the scene.";
+  }
 
-    if (deck_->Empty()) {
-      qDebug() << "Error: Deck is empty while creating pile" << i + 1;
-      return;
-    }
-
-    // Init KlondikePile
-    klondikePiles[i] = (std::make_unique<KlondikePile>(*deck_, i + 1, 1));
-
-    qDebug() << "Pile" << i + 1 << "created with" << i + 1 << "cards.";
-
-    // Create the graphical item for the pile and add it to the scene
-    scene->addItem(klondikePiles[i].get());
-    klondikePiles[i].get()->setPos(200 + i * 150, 150);
-
-    qDebug() << "Pile" << i + 1 << "added to the scene.";
+  auto& tPiles = game_->getTPiles();
+  qDebug() << tPiles.size();
+  i = 0;
+  for (auto& ptr : tPiles) {
+    scene->addItem(ptr.get());
+    ptr.get()->setPos(1250, 150 + 160 * i);
+    i++;
+    qDebug() << "KlondikePile" << i << "added to the scene.";
   }
 }

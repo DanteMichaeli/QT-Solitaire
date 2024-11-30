@@ -1,6 +1,7 @@
 #ifndef WASTEPILE_HPP
 #define WASTEPILE_HPP
 
+#include "deck.hpp"
 #include "pile.hpp"
 
 using namespace std;
@@ -15,6 +16,7 @@ using namespace std;
  * - Cards can be transferred back to the deck, optionally with shuffling.
  */
 class WastePile : public Pile {
+  Q_OBJECT
  public:
   /**
    * @brief Default constructor for an empty pile.
@@ -28,7 +30,7 @@ class WastePile : public Pile {
    * @param card The card to check for validity.
    * @return Always returns false for WastePile.
    */
-  bool IsValid(const Card& card) override { return false; }
+  bool IsValid(const Card& card) override;
 
   /**
    * @brief Adds a specified number of cards from the deck to the waste pile,
@@ -47,9 +49,7 @@ class WastePile : public Pile {
    */
   bool AddToDeck(Deck& deck, bool shuffle = false);
 
- protected:
-  // TODO:
-  void mousePressEvent(QGraphicsSceneMouseEvent* event) override;
+  void updateVisuals() override;
 };
 
 #endif

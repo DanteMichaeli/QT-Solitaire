@@ -1,10 +1,12 @@
+#ifndef GAME_VIEW_HPP
+#define GAME_VIEW_HPP
+
 #include <QGraphicsScene>
 #include <QGraphicsView>
 #include <memory>
 #include <vector>
 
-#include "deck.hpp"
-#include "klondikePile.hpp"
+#include "game.hpp"
 
 /**
  * @class GameView
@@ -20,6 +22,6 @@ class GameView : public QGraphicsView {
 
  private:
   QGraphicsScene *scene;  // The scene containing all graphical items
-  unique_ptr<Deck> deck_;
-  std::vector<std::unique_ptr<KlondikePile>> klondikePiles;
+  unique_ptr<Game> game_;
 };
+#endif

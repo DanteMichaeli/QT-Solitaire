@@ -1,10 +1,11 @@
 #ifndef PILE_HPP
 #define PILE_HPP
 
-#include <QGraphicsRectItem>
+#include <QGraphicsObject>
+#include <QPainter>
+#include <memory>
 
 #include "card.hpp"
-#include "deck.hpp"
 
 #define PILE_YOFFSET 20
 
@@ -16,7 +17,9 @@ using namespace std;
  * transfer cards. This is an abstract base class, as it includes a pure virtual
  * method IsValid.
  */
-class Pile : public QGraphicsRectItem {
+class Pile : public QGraphicsObject {
+  Q_OBJECT
+  Q_INTERFACES(QGraphicsItem)
  public:
   /**
    * @brief Default constructor for an empty pile.
@@ -27,7 +30,15 @@ class Pile : public QGraphicsRectItem {
    * @brief Destructor for the Pile, outputs a message when the pile is
    * destroyed.
    */
-  virtual ~Pile() { cout << "Pile destroyed" << endl; }
+  virtual ~Pile();
+
+  int Size() const { return cards_.size(); }
+
+  bool Empty() const { return cards_.empty(); }
+
+  Card* getTopCard() const;
+
+  vector<unique_ptr<Card>>& getCards() { return cards_; }
 
   /**
    * @brief Add a card to the pile.
@@ -57,18 +68,29 @@ class Pile : public QGraphicsRectItem {
    */
   virtual bool IsValid(const Card& card) = 0;
 
-  // gets the cards in the pile
-  vector<unique_ptr<Card>>& getCards() { return cards_; }
+  virtual void updateVisuals() = 0;  // Refresh the appearance of the pile
 
-  void updateVisuals();  // Refresh the appearance of the pile
+ signals:
+  void cardMoved(Card* card, Pile* fromPile, Pile* toPile);
 
  protected:
-  virtual void mousePressEvent(QGraphicsSceneMouseEvent* event) override = 0;
+  QRectF boundingRect() const override;
+
+  void paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
+             QWidget* widget = nullptr) override;
 
   /**
    * @brief Collection of unique pointers to Card objects in the pile.
    */
   vector<unique_ptr<Card>> cards_;
+
+ private slots:
+  virtual void onCardClicked(Card* card);
+
+  void onCardDragged(Card* card, const QPointF& newPosition);
+
+ private:
+  QRectF rect_;
 };
 
 #endif

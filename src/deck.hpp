@@ -1,8 +1,6 @@
 #ifndef DECK_HPP
 #define DECK_HPP
 
-#include <QGraphicsPixmapItem>
-#include <QGraphicsSceneMouseEvent>
 #include <algorithm>
 #include <chrono>
 #include <exception>
@@ -10,26 +8,17 @@
 #include <random>
 #include <vector>
 
-#include "card.hpp"
+#include "pile.hpp"
+
 using namespace std;
-
-/**
- * @brief Array of all possible suits, used to initialize a deck.
- */
-constexpr Suit allSuits[] = {CLUBS, DIAMONDS, SPADES, HEARTS};
-
-/**
- * @brief Array of all possible ranks, used to initialize a deck.
- */
-constexpr Rank allRanks[] = {ACE,   TWO,  THREE, FOUR, FIVE,  SIX, SEVEN,
-                             EIGHT, NINE, TEN,   JACK, QUEEN, KING};
 
 /**
  * @class Deck
  * @brief Represents a deck of cards with operations for shuffling, dealing, and
  * checking status.
  */
-class Deck : public QGraphicsPixmapItem {
+class Deck : public Pile {
+  Q_OBJECT
  public:
   /**
    * @brief Constructs a standard deck of 52 cards, each unique by suit and
@@ -37,62 +26,19 @@ class Deck : public QGraphicsPixmapItem {
    */
   explicit Deck(QGraphicsItem* parent = nullptr);
 
-  ~Deck() { cout << "Deck destroyed" << endl; }
-
   /**
    * @brief Shuffles the deck of cards using a random seed.
    * @param seed Optional seed for reproducible shuffling. If 0 (default), the
    * seed is based on system time.
    */
-  void Shuffle(unsigned long seed = 0) {
-    if (seed == 0) {
-      // Default seed is based on system time.
-      seed = chrono::high_resolution_clock::now().time_since_epoch().count();
-    }
-    mt19937 generator(seed);
-    shuffle(cards_.begin(), cards_.end(), generator);
-  }
+  void Shuffle(unsigned long seed = 0);
 
-  /**
-   * @brief Peeks at the top card of the deck without removing it.
-   * @return A reference to the top Card object.
-   * @throws std::out_of_range if the deck is empty.
-   */
-  Card& Peek() const {
-    if (cards_.empty()) {
-      throw std::out_of_range("Deck is empty");
-    }
-    return *cards_.back();
-  }
+  bool IsValid(const Card& card) override;
 
-  /**
-   * @brief Deals (removes) the top card from the deck.
-   * @return A unique pointer to the top Card object. Returns nullptr if the
-   * deck is empty.
-   */
-  unique_ptr<Card> dealCard() {
-    if (cards_.empty()) {
-      return nullptr;
-    }
-    unique_ptr<Card> cardPtr = std::move(cards_.back());
-    cards_.pop_back();
-    return cardPtr;
-  }
+  void updateVisuals() override;
 
-  /**
-   * @brief Checks if the deck is empty.
-   * @return true if the deck contains no cards, false otherwise.
-   */
-  bool Empty() const { return cards_.empty(); }
-
-  /**
-   * @brief Adds a face down card to the top of the deck.
-   * @param card A unique pointer to the Card object to be added.
-   */
-  void AddCard(unique_ptr<Card> card) {
-    card->flipDown();
-    cards_.push_back(std::move(card));
-  }
+ signals:
+  void deckClicked();
 
  protected:
   /**
@@ -101,14 +47,8 @@ class Deck : public QGraphicsPixmapItem {
    */
   void mousePressEvent(QGraphicsSceneMouseEvent* event) override;
 
- private:
-  /**
-   * @brief Collection of unique pointers to Card objects, representing the
-   * cards in the deck. A vector is used for easy shuffling.
-   */
-  vector<unique_ptr<Card>> cards_;
-
-  QPixmap frontImage_;  ///< The deck image (face-down).
+ private slots:
+  void onCardClicked(Card* card) override;
 };
 
 #endif

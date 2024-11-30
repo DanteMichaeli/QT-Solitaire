@@ -14,6 +14,7 @@ using namespace std;
  * from ACE up to KING, with all cards belonging to the same suit.
  */
 class TargetPile : public Pile {
+  Q_OBJECT
  public:
   /**
    * @brief Constructs a TargetPile for a specific suit.
@@ -51,10 +52,9 @@ class TargetPile : public Pile {
    */
   bool TransferCard(Pile& other) override { return false; }
 
- private:
-  // TODO:
-  void mousePressEvent(QGraphicsSceneMouseEvent* event) override;
+  void updateVisuals() override;
 
+ private:
   Suit suit_;  ///< The suit required for cards in this TargetPile (CLUBS,
                ///< DIAMONDS, HEARTS, or SPADES).
 };

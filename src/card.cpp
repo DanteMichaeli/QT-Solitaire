@@ -2,9 +2,13 @@
 
 #include <QDebug>
 
+#include "deck.hpp"
+#include "klondikePile.hpp"
+#include "targetPile.hpp"
+#include "wastePile.hpp"
+
 Card::Card(Suit s, Rank r, QGraphicsItem* parent)
-    : suit_(s), rank_(r), faceUp_(false), QGraphicsPixmapItem(parent) {
-  // Set color
+    : suit_(s), rank_(r), faceUp_(false), QGraphicsObject(parent) {
   color_ = (s == Suit::SPADES || s == Suit::CLUBS) ? Color::BLACK : Color::RED;
 
   // Enable selection and movement of the CardItem
@@ -70,11 +74,60 @@ void Card::flipDown() {
   updateCardImage();
 }
 
+bool Card::isClickable() {
+  Pile* pile = static_cast<Pile*>(this->parentItem());
+  if (dynamic_cast<KlondikePile*>(pile) != nullptr) {
+    return isFaceUp();
+  }
+  if (dynamic_cast<WastePile*>(pile) != nullptr) {
+    return pile->getTopCard() == this;
+  }
+  if (dynamic_cast<Deck*>(pile) != nullptr) {
+    return true;
+  }
+  return false;
+}
+
+bool Card::isDraggable() {
+  if (dynamic_cast<Deck*>(this->parentItem()) != nullptr) {
+    return false;
+  }
+  return isClickable();
+}
+
 void Card::updateCardImage() {
   // Update the pixmap based on whether the card is face-up or face-down
-  if (isFaceUp()) {
-    setPixmap(frontImage_);
-  } else {
-    setPixmap(backImage_);
+  pixmap_ = isFaceUp() ? frontImage_ : backImage_;
+  update();
+}
+
+QRectF Card::boundingRect() const {
+  return QRectF(0, 0, pixmap_.width(), pixmap_.height());
+}
+
+void Card::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
+                 QWidget* widget) {
+  Q_UNUSED(option);
+  Q_UNUSED(widget);
+  painter->drawPixmap(0, 0, pixmap_);
+}
+
+// TODO:
+void Card::mousePressEvent(QGraphicsSceneMouseEvent* event) {
+  qDebug() << isClickable();
+  if (event->button() == Qt::LeftButton && this->isClickable()) {
+    prevPos_ = event->pos();
+    emit cardClicked(this);
   }
+  QGraphicsItem::mousePressEvent(event);
+}
+
+void Card::mouseMoveEvent(QGraphicsSceneMouseEvent* event) {
+  if (this->isDraggable() && (event->pos() - prevPos_).manhattanLength() > 0) {
+    QGraphicsItem::mouseMoveEvent(event);
+  }
+}
+
+void Card::mouseReleaseEvent(QGraphicsSceneMouseEvent* event) {
+  QGraphicsItem::mouseReleaseEvent(event);
 }
