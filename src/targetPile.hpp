@@ -45,13 +45,6 @@ class TargetPile : public Pile {
    */
   unique_ptr<Card> RemoveCard() override { return nullptr; }
 
-  /**
-   * @brief Prevents removing cards from the target pile.
-   * @return Always returns false since cards cannot be removed from a
-   * TargetPile.
-   */
-  bool TransferCard(Pile& other) override { return false; }
-
   void updateVisuals() override;
 
  private:

@@ -1,6 +1,7 @@
 #include "pile.hpp"
 
 #include <QDebug>
+#include <stack>
 
 Pile::Pile(QGraphicsItem* parent)
     : QGraphicsObject(parent), rect_(0, 0, 100, 150) {}
@@ -19,6 +20,7 @@ void Pile::AddCard(std::unique_ptr<Card>& card) {
   card->setPos(0, 0);
   connect(card.get(), &Card::cardClicked, this, &Pile::onCardClicked);
   connect(card.get(), &Card::cardDragged, this, &Pile::onCardDragged);
+  connect(card.get(), &Card::moveAuto, this, &Pile::cardMoveAutoSlot);
   cards_.push_back(std::move(card));
 }
 
@@ -30,23 +32,64 @@ unique_ptr<Card> Pile::RemoveCard() {
   cardPtr->setParentItem(nullptr);
   disconnect(cardPtr.get(), &Card::cardClicked, this, &Pile::onCardClicked);
   disconnect(cardPtr.get(), &Card::cardDragged, this, &Pile::onCardDragged);
+  qDebug() << "before pop";
   cards_.pop_back();
+  qDebug() << "after pop";
   return cardPtr;
 }
 
-bool Pile::TransferCard(Pile& other) {
-  if (cards_.empty()) {
-    return false;
-  }
-  if (!other.IsValid(*cards_.back())) {
-    return false;
-  }
-  unique_ptr<Card> card = RemoveCard();
-  other.AddCard(card);
-  updateVisuals();
-  other.updateVisuals();
+void Pile::TransferCard(Pile& other, size_t nof) {
+  qDebug() << "TransferCard called with nof =" << nof;
+  qDebug() << "Current pile size:" << this->Size();
+  qDebug() << "Other pile size before transfer:" << other.Size();
 
-  return true;
+  if (!this->Empty() && nof <= this->Size()) {
+    if (nof == 1) {
+      qDebug() << "Transferring one card";
+      unique_ptr<Card> card = RemoveCard();
+      qDebug() << "Remove succes";
+      other.AddCard(card);  // Use std::move to transfer ownership
+      qDebug() << "add success";
+      updateVisuals();
+      other.updateVisuals();
+    } else {
+      qDebug() << "Transferring multiple cards";
+      stack<unique_ptr<Card>> aux;
+      size_t i = 0;
+      while (i < nof && !cards_.empty()) {
+        qDebug() << "Removing card" << i + 1;
+        aux.push(RemoveCard());  // Use std::move to transfer ownership
+        ++i;
+      }
+      while (!aux.empty()) {
+        qDebug() << "Adding card to other pile";
+        other.AddCard(aux.top());  // Use std::move to transfer ownership
+        aux.pop();
+      }
+      updateVisuals();
+      other.updateVisuals();
+    }
+  } else {
+    qDebug() << "TransferCard conditions not met: Empty or nof > Size";
+  }
+
+  qDebug() << "Other pile size after transfer:" << other.Size();
+}
+
+int Pile::cardIndexFromBack(Card* card) const {
+  if (this->Empty()) {
+    return -1;
+  }
+  auto backIt = cards_.end();
+  int i = 1;
+  while (backIt != cards_.begin()) {
+    backIt--;
+    if (backIt->get() == card) {
+      return i;
+    }
+    i++;
+  }
+  return -1;
 }
 
 QRectF Pile::boundingRect() const { return rect_; }
@@ -61,3 +104,4 @@ void Pile::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
 
 void Pile::onCardClicked(Card* card) {}
 void Pile::onCardDragged(Card* card, const QPointF& newPosition) {}
+void Pile::cardMoveAutoSlot(Card* card) { emit cardMoveAuto(card, this); }

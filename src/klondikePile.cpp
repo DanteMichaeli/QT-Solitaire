@@ -32,33 +32,18 @@ bool KlondikePile::IsValid(const Card& card) {
   return diffColor && isNextLower;
 }
 
-bool KlondikePile::TransferSubPile(KlondikePile& other, size_t nofCards) {
-  if (nofCards > cards_.size()) {
-    return false;
-  }
-  size_t start = cards_.size() - nofCards;
-  if (!other.IsValid(*cards_[start])) {
-    return false;
-  }
-  for (size_t i = start; i < cards_.size(); i++) {
-    other.AddCard(cards_[i]);
-  }
-  for (size_t j = 0; j < nofCards; j++) {
-    RemoveCard();
-  }
-  return true;
-}
-
+// TO BE EDITED!
 unique_ptr<Card> KlondikePile::RemoveCard() {
   auto cardPtr = Pile::RemoveCard();
-  if (cardPtr != nullptr) {
-    cards_.back()->flipUp();
+  if (!this->Empty()) {
+    this->getTopCard()->flipUp();
   }
   return cardPtr;
 }
 
 void KlondikePile::updateVisuals() {
   int i = 0;
+  qDebug() << "updated";
   for (auto card = cards_.begin(); card != cards_.end(); card++, i++) {
     (*card)->setPos(0, i * PILE_YOFFSET);
   }

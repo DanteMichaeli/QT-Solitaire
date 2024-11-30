@@ -40,6 +40,8 @@ class Pile : public QGraphicsObject {
 
   vector<unique_ptr<Card>>& getCards() { return cards_; }
 
+  int cardIndexFromBack(Card* card) const;
+
   /**
    * @brief Add a card to the pile.
    * @param card A unique pointer to the Card to add.
@@ -47,18 +49,18 @@ class Pile : public QGraphicsObject {
   void AddCard(std::unique_ptr<Card>& card);
 
   /**
-   * @brief A function that moves a card to another pile.
-   * @param other The target pile to which cards are moved to.
-   * @return true if the card is successfully moved, false otherwise.
-   */
-  virtual bool TransferCard(Pile& other);
-
-  /**
    * @brief Removes and returns the top card from the pile.
    * @return A unique pointer to the top Card object, or nullptr if the pile
    * is empty.
    */
   virtual unique_ptr<Card> RemoveCard();
+
+  /**
+   * @brief A function that moves a card to another pile.
+   * @param other The target pile to which cards are moved to.
+   * @return true if the card is successfully moved, false otherwise.
+   */
+  void TransferCard(Pile& other, size_t nof = 1);
 
   /**
    * @brief Pure virtual function to check if a card can be added to the pile.
@@ -72,6 +74,7 @@ class Pile : public QGraphicsObject {
 
  signals:
   void cardMoved(Card* card, Pile* fromPile, Pile* toPile);
+  void cardMoveAuto(Card* card, Pile* fromPile);
 
  protected:
   QRectF boundingRect() const override;
@@ -86,8 +89,8 @@ class Pile : public QGraphicsObject {
 
  private slots:
   virtual void onCardClicked(Card* card);
-
   void onCardDragged(Card* card, const QPointF& newPosition);
+  void cardMoveAutoSlot(Card* card);
 
  private:
   QRectF rect_;

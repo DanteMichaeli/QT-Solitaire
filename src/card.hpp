@@ -136,6 +136,7 @@ class Card : public QGraphicsObject {
   bool isDraggable();
 
  signals:
+  void moveAuto(Card* card);
   void cardClicked(Card* card);
   void cardDragged(Card* card, const QPointF& newPosition);
 
