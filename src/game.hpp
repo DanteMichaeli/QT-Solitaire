@@ -18,7 +18,10 @@ class Game : public QObject {
 
   ~Game() {}
 
-  void initGame();
+  void initDeck();
+  void initWastePile();
+  void initKlondikePiles();
+  void initTargetPiles();
 
   Deck* getDeck() const { return deck_.get(); }
 
@@ -28,14 +31,21 @@ class Game : public QObject {
 
   vector<unique_ptr<TargetPile>>& getTPiles() { return targetPiles_; }
 
+  void toggleHardMode() { hardMode = !hardMode; }
+
+  void firstLegalMove(Card* card, Pile* fromPile);
+
  private slots:
   void deckClicked();
+  bool moveCard(Card* card, Pile* fromPile, Pile* toPile);
+  bool moveCardAuto(Card* card, Pile* fromPile);
 
  private:
   unique_ptr<Deck> deck_;
   unique_ptr<WastePile> wastePile_;
   vector<unique_ptr<KlondikePile>> klondikePiles_;
   vector<unique_ptr<TargetPile>> targetPiles_;
+  bool hardMode = false;
 };
 
 #endif

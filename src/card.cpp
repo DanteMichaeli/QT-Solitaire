@@ -129,5 +129,10 @@ void Card::mouseMoveEvent(QGraphicsSceneMouseEvent* event) {
 }
 
 void Card::mouseReleaseEvent(QGraphicsSceneMouseEvent* event) {
+  if (event->button() == Qt::LeftButton && this->isClickable()) {
+    if ((event->pos() - prevPos_).manhattanLength() < 2) {
+      emit moveAuto(this);
+    }
+  }
   QGraphicsItem::mouseReleaseEvent(event);
 }

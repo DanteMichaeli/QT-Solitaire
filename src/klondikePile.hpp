@@ -38,15 +38,6 @@ class KlondikePile : public Pile {
   bool IsValid(const Card& card) override;
 
   /**
-   * @brief Attempt to move a specified number of cards to
-   * another KlondikePile.
-   * @param other The destination to which cards are moved to.
-   * @param nofCards The number of cards to move.
-   * @return true if the cards are successfully moved, false otherwise.
-   */
-  bool TransferSubPile(KlondikePile& other, size_t nofCards);
-
-  /**
    * @brief Removes the top card from the pile and returns it.
    *        If the new top card is face-down, it flips it face-up.
    * @return A unique pointer to the removed Card, or nullptr if the pile is
