@@ -32,7 +32,7 @@ TEST_CASE("Deck Peek", "[deck]") {
   QGuiApplication app(argc, argv);
 
   Deck deck;
-  REQUIRE_NOTHROW(deck.Peek());  // Should not throw an exception
+  REQUIRE_NOTHROW(deck.getTopCard());  // Should not throw an exception
 }
 
 TEST_CASE("Deck Deal Card", "[deck]") {
@@ -41,7 +41,7 @@ TEST_CASE("Deck Deal Card", "[deck]") {
   QGuiApplication app(argc, argv);
 
   Deck deck;
-  auto card = deck.dealCard();
+  auto card = deck.RemoveCard();
   REQUIRE(card != nullptr);  // Should return a card
   REQUIRE(deck.Empty() ==
           false);  // Deck should not be empty after dealing one card
@@ -54,7 +54,7 @@ TEST_CASE("Deck Empty Check", "[deck]") {
 
   Deck deck;
   while (!deck.Empty()) {
-    deck.dealCard();
+    deck.RemoveCard();
   }
   REQUIRE(deck.Empty() ==
           true);  // Deck should be empty after dealing all cards
@@ -67,7 +67,7 @@ TEST_CASE("Deck Add Card", "[deck]") {
 
   Deck deck;
   auto card = std::make_unique<Card>(Suit::HEARTS, Rank::ACE);
-  deck.AddCard(std::move(card));
+  deck.AddCard(card);
   REQUIRE(deck.Empty() ==
           false);  // Deck should not be empty after adding a card
 }

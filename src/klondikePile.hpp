@@ -1,6 +1,7 @@
 #ifndef KLONDIKEPILE_HPP
 #define KLONDIKEPILE_HPP
 
+#include "deck.hpp"
 #include "pile.hpp"
 
 /**
@@ -10,6 +11,7 @@
  * the Klondike game rules.
  */
 class KlondikePile : public Pile {
+  Q_OBJECT
  public:
   /**
    * @brief Constructs a pile with a specified number of cards dealt from a
@@ -52,9 +54,9 @@ class KlondikePile : public Pile {
    */
   unique_ptr<Card> RemoveCard() override;
 
- protected:
-  // TODO:
-  void mousePressEvent(QGraphicsSceneMouseEvent* event) override;
+  void updateVisuals() override;
+
+  vector<Card*> getSubPile(Card* card);
 };
 
 #endif

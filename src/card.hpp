@@ -1,8 +1,9 @@
 #ifndef CARD_HPP
 #define CARD_HPP
 
-#include <QGraphicsPixmapItem>
+#include <QGraphicsObject>
 #include <QGraphicsSceneMouseEvent>
+#include <QPainter>
 #include <iostream>
 #include <sstream>
 #include <string>
@@ -42,11 +43,23 @@ enum Rank {
 enum Color { BLACK, RED };
 
 /**
+ * @brief Array of all possible suits, used to initialize a deck.
+ */
+constexpr Suit allSuits[] = {CLUBS, DIAMONDS, SPADES, HEARTS};
+
+/**
+ * @brief Array of all possible ranks, used to initialize a deck.
+ */
+constexpr Rank allRanks[] = {ACE,   TWO,  THREE, FOUR, FIVE,  SIX, SEVEN,
+                             EIGHT, NINE, TEN,   JACK, QUEEN, KING};
+
+/**
  * @class Card
  * @brief Represents a single playing card with a suit, rank, color, and face-up
  * status.
  */
-class Card : public QGraphicsPixmapItem {
+class Card : public QGraphicsObject {
+  Q_OBJECT
  public:
   /**
    * @brief Constructs a new Card object with specified suit and rank.
@@ -119,9 +132,30 @@ class Card : public QGraphicsPixmapItem {
    */
   void flipDown();
 
+  bool isClickable();
+  bool isDraggable();
+
+ signals:
+  void cardClicked(Card* card);
+  void cardDragged(Card* card, const QPointF& newPosition);
+
+ protected:
+  QRectF boundingRect() const override;
+
+  void paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
+             QWidget* widget = nullptr) override;
+
+  void mousePressEvent(QGraphicsSceneMouseEvent* event) override;
+  void mouseMoveEvent(QGraphicsSceneMouseEvent* event) override;
+  void mouseReleaseEvent(QGraphicsSceneMouseEvent* event) override;
+
  private:
   QPixmap frontImage_;  ///< The front image of the card.
   QPixmap backImage_;   ///< The back image of the card.
+  QPixmap pixmap_;      ///< Current pixmap.
+
+  QPointF prevPos_;
+  vector<Card*> selectedSubpile_;
 
   Suit suit_;    ///< Suit of the card (CLUBS, DIAMONDS, SPADES, HEARTS).
   Rank rank_;    ///< Rank of the card (ACE to KING).

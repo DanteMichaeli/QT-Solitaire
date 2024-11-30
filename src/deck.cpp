@@ -2,29 +2,45 @@
 
 #include <QDebug>
 
-Deck::Deck(QGraphicsItem* parent) : QGraphicsPixmapItem(parent) {
+#include "wastePile.hpp"
+
+Deck::Deck(QGraphicsItem* parent) : Pile(parent) {
   // Add cards to deck
   for (Suit suit : allSuits) {
     for (Rank rank : allRanks) {
-      cards_.push_back(std::make_unique<Card>(suit, rank));
+      qDebug() << "add" << rank;
+      auto card = std::make_unique<Card>(suit, rank);
+      // card->hide();
+      AddCard(card);
     }
   }
-  // Load the deck image (face-down)
-  QString frontImagePath = ":/cards/face_down.png";
-  if (!frontImage_.load(frontImagePath)) {
-    qDebug() << "Failed to load deck image:" << frontImagePath;
-  }
-  setPixmap(frontImage_);
+  // getTopCard().show();
+  qDebug() << "Size:" << Size();
+  qDebug() << "Cards:" << cards_.size();
+  updateVisuals();
 }
+
+void Deck::Shuffle(unsigned long seed) {
+  if (seed == 0) {
+    // Default seed is based on system time.
+    seed = chrono::high_resolution_clock::now().time_since_epoch().count();
+  }
+  mt19937 generator(seed);
+  shuffle(cards_.begin(), cards_.end(), generator);
+}
+
+// TODO:
+bool Deck::IsValid(const Card& card) {
+  if (static_cast<WastePile*>(card.parentItem()) != nullptr) {
+    return true;
+  }
+  return false;
+}
+
+void Deck::updateVisuals() {}
 
 void Deck::mousePressEvent(QGraphicsSceneMouseEvent* event) {
-  if (!Empty()) {
-    Shuffle();
-    qDebug() << "Deck shuffled.";
-  } else {
-    qDebug() << "Deck is empty.";
-  }
-
-  // Call the base class implementation (optional, if you want default behavior)
-  QGraphicsPixmapItem::mousePressEvent(event);
+  emit deckClicked();
 }
+
+void Deck::onCardClicked(Card* card) { emit deckClicked(); }

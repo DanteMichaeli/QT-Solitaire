@@ -15,7 +15,7 @@ TEST_CASE("WastePile Cards Only Added Through AddFromDeck", "[wastepile]") {
 
   // loop through all cards in deck, and check isValid for each one
   for (int i = 0; i < 52; i++) {
-    auto card = deck.dealCard();
+    auto card = deck.RemoveCard();
     REQUIRE(pile.IsValid(*card) == false);
   }
 }
@@ -34,7 +34,7 @@ TEST_CASE("WastePile Working AddFromDeck and AddToDeck", "[wastepile]") {
 
   // empty deck
   while (!deck.Empty()) {
-    deck.dealCard();
+    deck.RemoveCard();
   }
 
   // move all cards from waste pile back to deck
