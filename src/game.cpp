@@ -59,16 +59,40 @@ bool Game::moveCard(Card* card, Pile* fromPile, Pile* toPile) {
     return false;
   }
 
-  int i = fromPile->cardIndexFromBack(card);
-  qDebug() << i;
+  int i = fromPile->cardIndexFromBack(card);  // Index of the card being moved
+  qDebug() << "Card index from back: " << i;
 
+  // Check if the move is valid
   if (toPile->IsValid(*card)) {
-    fromPile->TransferCard(*toPile, i);
+    // If the destination is a target pile, ensure only the top card is moved
+    if (dynamic_cast<TargetPile*>(toPile)) {
+      if (i != 1) {  // Ensure the card is the topmost card
+        qDebug() << "Cannot move non-top card to a target pile.";
+        return false;
+      }
+    }
+
+    // Perform the card transfer
+    fromPile->TransferCard(*toPile, i);  // i will be 0 for target pile moves
     fromPile->updateVisuals();
     toPile->updateVisuals();
+
+    // Check win condition
+    if (hasWon()) {
+      std::cout << "You won!" << std::endl;
+    }
     return true;
   }
   return false;
+}
+
+bool Game::hasWon() {
+  for (auto& ptr : targetPiles_) {
+    if (ptr->Size() != 13) {
+      return false;
+    }
+  }
+  return true;
 }
 
 bool Game::moveCardAuto(Card* card, Pile* fromPile) {
