@@ -14,9 +14,22 @@ KlondikePile::KlondikePile(Deck& deck, size_t nofCards, size_t nofFacingUp,
       card->flipUp();
     }
     AddCard(card);
-    updateVisuals();  // Initialize the visual representation
   }
+  updateVisuals();
   qDebug() << "KlondikePile created with" << cards_.size() << "cards.";
+}
+
+bool KlondikePile::flipTopCard(bool value) {
+  if (!this->Empty()) {
+    Card* topCard = getTopCard();
+    if (!value) {
+      topCard->flipDown();
+    } else if (!topCard->isFaceUp()) {
+      topCard->flipUp();
+      return true;
+    }
+  }
+  return false;
 }
 
 bool KlondikePile::IsValid(const Card& card) {
@@ -30,15 +43,6 @@ bool KlondikePile::IsValid(const Card& card) {
   bool diffColor = card.GetColor() != top->GetColor();
   bool isNextLower = card.GetRank() == top->GetRank() - 1;
   return diffColor && isNextLower;
-}
-
-// TO BE EDITED!
-unique_ptr<Card> KlondikePile::RemoveCard() {
-  auto cardPtr = Pile::RemoveCard();
-  if (!this->Empty()) {
-    this->getTopCard()->flipUp();
-  }
-  return cardPtr;
 }
 
 void KlondikePile::updateVisuals() {
