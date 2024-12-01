@@ -17,7 +17,6 @@ Deck::Deck(QGraphicsItem* parent) : Pile(parent) {
   // getTopCard().show();
   qDebug() << "Size:" << Size();
   qDebug() << "Cards:" << cards_.size();
-  updateVisuals();
 }
 
 void Deck::Shuffle(unsigned long seed) {
@@ -37,10 +36,24 @@ bool Deck::IsValid(const Card& card) {
   return false;
 }
 
+bool Deck::recycle(WastePile& pile, bool shuffle) {
+  if (this->Empty() && !pile.Empty()) {
+    while (!pile.Empty()) {
+      auto cardPtr = pile.RemoveCard();
+      cardPtr->flipDown();
+      this->AddCard(cardPtr);
+    }
+    if (shuffle) {
+      this->Shuffle();
+    }
+    return true;
+  }
+  return false;
+}
+
 void Deck::updateVisuals() {}
 
 void Deck::mousePressEvent(QGraphicsSceneMouseEvent* event) {
-  emit deckClicked();
+  qDebug() << "send signal";
+  emit cardClickMove(nullptr, this);
 }
-
-void Deck::onCardClicked(Card* card) { emit deckClicked(); }

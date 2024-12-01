@@ -24,6 +24,8 @@ class KlondikePile : public Pile {
   KlondikePile(Deck& deck, size_t nofCards = 0, size_t nofFacingUp = 0,
                QGraphicsItem* parent = nullptr);
 
+  bool flipTopCard(bool value);
+
   /**
    * @brief Checks if a card can be legally added to this pile based on Klondike
    * Solitaire rules.
@@ -36,14 +38,6 @@ class KlondikePile : public Pile {
    * lower than the top card.
    */
   bool IsValid(const Card& card) override;
-
-  /**
-   * @brief Removes the top card from the pile and returns it.
-   *        If the new top card is face-down, it flips it face-up.
-   * @return A unique pointer to the removed Card, or nullptr if the pile is
-   * empty.
-   */
-  unique_ptr<Card> RemoveCard() override;
 
   void updateVisuals() override;
 

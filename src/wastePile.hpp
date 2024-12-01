@@ -1,10 +1,11 @@
 #ifndef WASTEPILE_HPP
 #define WASTEPILE_HPP
 
-#include "deck.hpp"
 #include "pile.hpp"
 
 using namespace std;
+
+class Deck;
 
 /**
  * @class WastePile
@@ -38,7 +39,7 @@ class WastePile : public Pile {
    * @param deck The deck from which cards are dealt.
    * @param nofCards The number of cards to add to the waste pile.
    */
-  void AddFromDeck(Deck& deck, size_t nofCards);
+  int AddFromDeck(Deck& deck, size_t nofCards);
 
   /**
    * @brief Moves all cards from the waste pile back to the deck.
@@ -47,7 +48,6 @@ class WastePile : public Pile {
    * after transferring the cards.
    * @return true if the transfer is successful, false if the deck is not empty.
    */
-  bool AddToDeck(Deck& deck, bool shuffle = false);
 
   void updateVisuals() override;
 };

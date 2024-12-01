@@ -38,13 +38,6 @@ class TargetPile : public Pile {
    */
   bool IsValid(const Card& card) override;
 
-  /**
-   * @brief Prevents removing cards from the target pile.
-   * @return Always returns nullptr since cards cannot be removed from a
-   * TargetPile.
-   */
-  unique_ptr<Card> RemoveCard() override { return nullptr; }
-
   void updateVisuals() override;
 
  private:

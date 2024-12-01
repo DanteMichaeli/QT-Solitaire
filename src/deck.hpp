@@ -12,6 +12,8 @@
 
 using namespace std;
 
+class WastePile;
+
 /**
  * @class Deck
  * @brief Represents a deck of cards with operations for shuffling, dealing, and
@@ -33,12 +35,11 @@ class Deck : public Pile {
    */
   void Shuffle(unsigned long seed = 0);
 
+  bool recycle(WastePile& pile, bool shuffle = false);
+
   bool IsValid(const Card& card) override;
 
   void updateVisuals() override;
-
- signals:
-  void deckClicked();
 
  protected:
   /**
@@ -46,9 +47,6 @@ class Deck : public Pile {
    * @param event The mouse event triggered by clicking on the deck.
    */
   void mousePressEvent(QGraphicsSceneMouseEvent* event) override;
-
- private slots:
-  void onCardClicked(Card* card) override;
 };
 
 #endif

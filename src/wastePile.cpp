@@ -1,33 +1,23 @@
 #include "wastePile.hpp"
 
+#include <QDebug>
+
+#include "deck.hpp"
+
 WastePile::WastePile(QGraphicsItem* parent) : Pile(parent) {}
 
 bool WastePile::IsValid(const Card& card) { return false; }
 
-void WastePile::AddFromDeck(Deck& deck, size_t nofCards) {
+int WastePile::AddFromDeck(Deck& deck, size_t nofCards) {
   for (size_t i = 0; i < nofCards; i++) {
     auto cardPtr = deck.RemoveCard();
     if (cardPtr == nullptr) {
-      break;
+      return i;
     }
     cardPtr->flipUp();
     this->AddCard(cardPtr);
   }
-}
-
-bool WastePile::AddToDeck(Deck& deck, bool shuffle) {
-  if (deck.Empty()) {
-    while (!cards_.empty()) {
-      auto cardPtr = this->RemoveCard();
-      cardPtr->flipDown();
-      deck.AddCard(cardPtr);
-    }
-    if (shuffle) {
-      deck.Shuffle();
-    }
-    return true;
-  }
-  return false;
+  return nofCards;
 }
 
 void WastePile::updateVisuals() {

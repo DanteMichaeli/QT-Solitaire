@@ -53,7 +53,7 @@ class Pile : public QGraphicsObject {
    * @return A unique pointer to the top Card object, or nullptr if the pile
    * is empty.
    */
-  virtual unique_ptr<Card> RemoveCard();
+  unique_ptr<Card> RemoveCard();
 
   /**
    * @brief A function that moves a card to another pile.
@@ -74,7 +74,7 @@ class Pile : public QGraphicsObject {
 
  signals:
   void cardMoved(Card* card, Pile* fromPile, QPointF newScenePos);
-  void cardMoveAuto(Card* card, Pile* fromPile);
+  void cardClickMove(Card* card, Pile* fromPile);
 
  protected:
   QRectF boundingRect() const override;
@@ -88,7 +88,7 @@ class Pile : public QGraphicsObject {
   vector<unique_ptr<Card>> cards_;
 
  private slots:
-  virtual void onCardClicked(Card* card);
+  void onCardClicked(Card* card);
   void onCardDragged(Card* card, const QPointF& newScenePos);
 
  private:

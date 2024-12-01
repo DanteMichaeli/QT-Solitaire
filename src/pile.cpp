@@ -90,7 +90,7 @@ void Pile::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
   painter->drawRect(rect_);
 }
 
-void Pile::onCardClicked(Card* card) { emit cardMoveAuto(card, this); }
+void Pile::onCardClicked(Card* card) { emit cardClickMove(card, this); }
 void Pile::onCardDragged(Card* card, const QPointF& newScenePos) {
   emit cardMoved(card, this, newScenePos);
 }
