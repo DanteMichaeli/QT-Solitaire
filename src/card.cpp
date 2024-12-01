@@ -1,6 +1,7 @@
 #include "card.hpp"
 
 #include <QDebug>
+#include <QGraphicsScene>
 
 #include "deck.hpp"
 #include "klondikePile.hpp"
@@ -112,12 +113,12 @@ void Card::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
   painter->drawPixmap(0, 0, pixmap_);
 }
 
+void Card::returnToPrevPos() { this->setPos(prevPos_); }
+
 // TODO:
 void Card::mousePressEvent(QGraphicsSceneMouseEvent* event) {
-  qDebug() << isClickable();
   if (event->button() == Qt::LeftButton && this->isClickable()) {
-    prevPos_ = event->pos();
-    emit cardClicked(this);
+    prevPos_ = this->pos();
   }
   QGraphicsItem::mousePressEvent(event);
 }
@@ -130,9 +131,12 @@ void Card::mouseMoveEvent(QGraphicsSceneMouseEvent* event) {
 
 void Card::mouseReleaseEvent(QGraphicsSceneMouseEvent* event) {
   if (event->button() == Qt::LeftButton && this->isClickable()) {
-    if ((event->pos() - prevPos_).manhattanLength() < 2) {
-      emit moveAuto(this);
+    QPointF newPos = this->pos();
+    if ((newPos - prevPos_).manhattanLength() < 2) {
+      emit cardClicked(this);
+    } else {
+      emit cardDragged(this, event->scenePos());
     }
+    QGraphicsItem::mouseReleaseEvent(event);
   }
-  QGraphicsItem::mouseReleaseEvent(event);
 }

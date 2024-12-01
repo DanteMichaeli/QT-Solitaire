@@ -20,8 +20,8 @@ void Game::initDeck() {
 
 void Game::initWastePile() {
   wastePile_ = std::make_unique<WastePile>();
-  connect(wastePile_.get(), &Pile::cardMoved, this, &Game::moveCard);
-  connect(wastePile_.get(), &Pile::cardMoveAuto, this, &Game::moveCardAuto);
+  connect(wastePile_.get(), &Pile::cardMoved, this, &Game::handleAutoMove);
+  connect(wastePile_.get(), &Pile::cardMoveAuto, this, &Game::handleAutoMove);
 }
 
 void Game::initKlondikePiles() {
@@ -30,18 +30,18 @@ void Game::initKlondikePiles() {
       throw std::out_of_range("pile empty");
     }
     klondikePiles_[i] = std::make_unique<KlondikePile>(*deck_, i + 1, 1);
-    connect(klondikePiles_[i].get(), &Pile::cardMoved, this, &Game::moveCard);
+    connect(klondikePiles_[i].get(), &Pile::cardMoved, this, &Game::handleMove);
     connect(klondikePiles_[i].get(), &Pile::cardMoveAuto, this,
-            &Game::moveCardAuto);
+            &Game::handleAutoMove);
   }
 }
 
 void Game::initTargetPiles() {
   for (size_t i = 0; i < TARGET_PILE_AM; ++i) {
     targetPiles_[i] = std::make_unique<TargetPile>(allSuits[i]);
-    connect(targetPiles_[i].get(), &Pile::cardMoved, this, &Game::moveCard);
+    connect(targetPiles_[i].get(), &Pile::cardMoved, this, &Game::handleMove);
     connect(targetPiles_[i].get(), &Pile::cardMoveAuto, this,
-            &Game::moveCardAuto);
+            &Game::handleAutoMove);
   }
 }
 
@@ -54,35 +54,27 @@ void Game::deckClicked() {
   }
 }
 
-bool Game::moveCard(Card* card, Pile* fromPile, Pile* toPile) {
-  if (fromPile->Empty()) {
-    return false;
+void Game::move(Card* card, Pile* fromPile, Pile* toPile) {
+  if (attemptMove(card, fromPile, toPile)) {
+    if (hasWon()) {
+      cout << "You won!" << endl;
+    }
   }
+}
 
-  int i = fromPile->cardIndexFromBack(card);  // Index of the card being moved
-  qDebug() << "Card index from back: " << i;
-
-  // Check if the move is valid
-  if (toPile->IsValid(*card)) {
-    // If the destination is a target pile, ensure only the top card is moved
-    if (dynamic_cast<TargetPile*>(toPile)) {
-      if (i != 1) {  // Ensure the card is the topmost card
-        qDebug() << "Cannot move non-top card to a target pile.";
-        return false;
+bool Game::attemptMove(Card* card, Pile* fromPile, Pile* toPile) {
+  if (toPile != nullptr) {
+    int i = fromPile->cardIndexFromBack(card);
+    if (i == 1 || dynamic_cast<TargetPile*>(toPile) == nullptr) {
+      if (toPile->IsValid(*card)) {
+        fromPile->TransferCard(*toPile, i);
+        fromPile->updateVisuals();
+        toPile->updateVisuals();
+        return true;
       }
     }
-
-    // Perform the card transfer
-    fromPile->TransferCard(*toPile, i);  // i will be 0 for target pile moves
-    fromPile->updateVisuals();
-    toPile->updateVisuals();
-
-    // Check win condition
-    if (hasWon()) {
-      std::cout << "You won!" << std::endl;
-    }
-    return true;
   }
+  card->returnToPrevPos();  // Return the card to original position;
   return false;
 }
 
@@ -95,31 +87,47 @@ bool Game::hasWon() {
   return true;
 }
 
-bool Game::moveCardAuto(Card* card, Pile* fromPile) {
-  if (!hardMode) {
-    if (fromPile->Empty()) {
-      return false;
-    }
-    firstLegalMove(card, fromPile);
-    return true;
+void Game::handleAutoMove(Card* card, Pile* fromPile) {
+  if (!hardMode && !fromPile->Empty()) {
+    move(card, fromPile, findLegalPile(card));
   }
-  return false;
 }
 
-void Game::firstLegalMove(Card* card, Pile* fromPile) {
-  for (auto& ptr : targetPiles_) {
-    Pile* toPile = ptr.get();
-    if (toPile != fromPile && toPile->IsValid(*card)) {
-      moveCard(card, fromPile, toPile);
-      return;
-    }
+void Game::handleMove(Card* card, Pile* fromPile, QPointF scenePosition) {
+  if (!fromPile->Empty()) {
+    move(card, fromPile, findPile(scenePosition));
   }
+}
 
-  for (auto& ptr : klondikePiles_) {
-    Pile* toPile = ptr.get();
-    if (toPile != fromPile && toPile->IsValid(*card)) {
-      moveCard(card, fromPile, toPile);
-      return;
+Pile* Game::findLegalPile(Card* card) {
+  for (auto& ptr : targetPiles_) {
+    Pile* pile = ptr.get();
+    if (pile != card->parentItem() && pile->IsValid(*card)) {
+      return pile;
     }
   }
+  for (auto& ptr : klondikePiles_) {
+    Pile* pile = ptr.get();
+    if (pile != card->parentItem() && pile->IsValid(*card)) {
+      return pile;
+    }
+  }
+  return nullptr;
+}
+
+Pile* Game::findPile(QPointF scenePosition) {
+  qDebug() << scenePosition;
+  for (auto& ptr : targetPiles_) {
+    Pile* pile = ptr.get();
+    if (pile->contains(pile->mapFromScene(scenePosition))) {
+      return pile;
+    }
+  }
+  for (auto& ptr : klondikePiles_) {
+    Pile* pile = ptr.get();
+    if (pile->contains(pile->mapFromScene(scenePosition))) {
+      return pile;
+    }
+  }
+  return nullptr;
 }

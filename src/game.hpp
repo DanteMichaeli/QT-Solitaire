@@ -33,14 +33,18 @@ class Game : public QObject {
 
   void toggleHardMode() { hardMode = !hardMode; }
 
-  void firstLegalMove(Card* card, Pile* fromPile);
+  Pile* findLegalPile(Card* card);
+  Pile* findPile(QPointF scenePosition);
+
+  bool attemptMove(Card* card, Pile* fromPile, Pile* toPile);
+  void move(Card* card, Pile* fromPile, Pile* toPile);
 
   bool hasWon();
 
  private slots:
   void deckClicked();
-  bool moveCard(Card* card, Pile* fromPile, Pile* toPile);
-  bool moveCardAuto(Card* card, Pile* fromPile);
+  void handleMove(Card* card, Pile* fromPile, QPointF scenePosition);
+  void handleAutoMove(Card* card, Pile* fromPile);
 
  private:
   unique_ptr<Deck> deck_;
@@ -48,6 +52,7 @@ class Game : public QObject {
   vector<unique_ptr<KlondikePile>> klondikePiles_;
   vector<unique_ptr<TargetPile>> targetPiles_;
   bool hardMode = false;
+  bool isWon = false;
 };
 
 #endif

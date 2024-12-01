@@ -65,3 +65,5 @@ vector<Card*> KlondikePile::getSubPile(Card* card) {
   }
   return subPile;
 }
+
+QRectF KlondikePile::boundingRect() const { return QRect(-10, -10, 120, 500); }

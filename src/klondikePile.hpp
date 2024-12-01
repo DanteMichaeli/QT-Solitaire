@@ -48,6 +48,9 @@ class KlondikePile : public Pile {
   void updateVisuals() override;
 
   vector<Card*> getSubPile(Card* card);
+
+ protected:
+  QRectF boundingRect() const override;
 };
 
 #endif

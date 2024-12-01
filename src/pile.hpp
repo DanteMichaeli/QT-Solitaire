@@ -73,7 +73,7 @@ class Pile : public QGraphicsObject {
   virtual void updateVisuals() = 0;  // Refresh the appearance of the pile
 
  signals:
-  void cardMoved(Card* card, Pile* fromPile, Pile* toPile);
+  void cardMoved(Card* card, Pile* fromPile, QPointF newScenePos);
   void cardMoveAuto(Card* card, Pile* fromPile);
 
  protected:
@@ -89,8 +89,7 @@ class Pile : public QGraphicsObject {
 
  private slots:
   virtual void onCardClicked(Card* card);
-  void onCardDragged(Card* card, const QPointF& newPosition);
-  void cardMoveAutoSlot(Card* card);
+  void onCardDragged(Card* card, const QPointF& newScenePos);
 
  private:
   QRectF rect_;
