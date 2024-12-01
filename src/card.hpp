@@ -135,10 +135,11 @@ class Card : public QGraphicsObject {
   bool isClickable();
   bool isDraggable();
 
+  void returnToPrevPos();
+
  signals:
-  void moveAuto(Card* card);
   void cardClicked(Card* card);
-  void cardDragged(Card* card, const QPointF& newPosition);
+  void cardDragged(Card* card, const QPointF& newScenePos);
 
  protected:
   QRectF boundingRect() const override;
@@ -156,7 +157,6 @@ class Card : public QGraphicsObject {
   QPixmap pixmap_;      ///< Current pixmap.
 
   QPointF prevPos_;
-  vector<Card*> selectedSubpile_;
 
   Suit suit_;    ///< Suit of the card (CLUBS, DIAMONDS, SPADES, HEARTS).
   Rank rank_;    ///< Rank of the card (ACE to KING).
