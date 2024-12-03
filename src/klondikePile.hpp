@@ -27,6 +27,17 @@ class KlondikePile : public Pile {
   bool flipTopCard(bool value);
 
   /**
+   * @brief Flips the top card up/down.
+   *
+   * In game class, if flipping is succesfull, adds points for the player.
+   *
+   * @param value Boolean value. True for flip up, false for down.
+   * @return true when card is flipped up.
+   * @return false otherwise.
+   */
+  bool flipCard(bool faceUp, int indexFromBack = 1);
+
+  /**
    * @brief Checks if a card can be legally added to this pile based on Klondike
    * Solitaire rules.
    * @param card The card to check for validity.

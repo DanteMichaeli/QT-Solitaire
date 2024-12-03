@@ -27,7 +27,6 @@ Card::Card(Suit s, Rank r, QGraphicsItem* parent)
   }
 
   setScale(SCALING_FACTOR);
-  updateCardImage();
 }
 
 Card::~Card() { std::cout << "Card destroyed" << std::endl; }
@@ -67,14 +66,26 @@ QString Card::cardToQString() const {
 
 void Card::flipUp() {
   faceUp_ = true;
-  updateCardImage();
+  update();
 }
 
 void Card::flipDown() {
   faceUp_ = false;
-  updateCardImage();
+  update();
 }
 
+void Card::toggleFace() {
+  faceUp_ ^= true;
+  update();
+}
+
+/*
+Card is clickabe if:
+
+- It is faceUp and in klondike pile
+- It is part of deck
+- It is top card of wastepile
+*/
 bool Card::isClickable() {
   Pile* pile = static_cast<Pile*>(this->parentItem());
   if (dynamic_cast<KlondikePile*>(pile) != nullptr) {
@@ -89,17 +100,16 @@ bool Card::isClickable() {
   return false;
 }
 
+/*
+Card is draggable if:
+
+- Not in deck and clickable
+*/
 bool Card::isDraggable() {
   if (dynamic_cast<Deck*>(this->parentItem()) != nullptr) {
     return false;
   }
   return isClickable();
-}
-
-void Card::updateCardImage() {
-  // Update the pixmap based on whether the card is face-up or face-down
-  pixmap_ = isFaceUp() ? frontImage_ : backImage_;
-  update();
 }
 
 QRectF Card::boundingRect() const {
@@ -110,6 +120,7 @@ void Card::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
                  QWidget* widget) {
   Q_UNUSED(option);
   Q_UNUSED(widget);
+  pixmap_ = this->isFaceUp() ? frontImage_ : backImage_;
   painter->drawPixmap(0, 0, pixmap_);
 }
 

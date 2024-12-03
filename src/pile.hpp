@@ -32,14 +32,35 @@ class Pile : public QGraphicsObject {
    */
   virtual ~Pile();
 
+  /**
+   * @brief Get the size of pile container.
+   * @return point value of size.
+   */
   int Size() const { return cards_.size(); }
 
+  /**
+   * @brief Check whether pile container is empty.
+   * @return true if empty.
+   * @return false otherwise.
+   */
   bool Empty() const { return cards_.empty(); }
 
+  /**
+   * @brief Get the pointer to the card that is on top of teh pile.
+   * @return Card pointer if pile is not empty, otherwise nullptr.
+   */
   Card* getTopCard() const;
 
   vector<unique_ptr<Card>>& getCards() { return cards_; }
-
+  /**
+   * @brief Get the index of a card, going from top to bottom.
+   *
+   * Index starts from 1 as this represents how many cards are in the subpile
+   * that constsit of this card and all the cards on top of it.
+   *
+   * @param card to be searched for.
+   * @return size of subpile or 0 if card is not found.
+   */
   int cardIndexFromBack(Card* card) const;
 
   /**
@@ -73,26 +94,74 @@ class Pile : public QGraphicsObject {
   virtual void updateVisuals() = 0;  // Refresh the appearance of the pile
 
  signals:
+  /**
+   * @brief Signal emitted when a card is moved.
+   *
+   * This signal is triggered when a card is moved to a new position within the
+   * scene.
+   *
+   * @param card Pointer to the card being moved.
+   * @param fromPile Pointer to the originating pile.
+   * @param newScenePos The new position of the card in scene coordinates.
+   */
   void cardMoved(Card* card, Pile* fromPile, QPointF newScenePos);
+
+  /**
+   * @brief Signal emitted when a card is clicked to initiate a move.
+   *
+   * This signal is triggered when a card is clicked and a move is initiated
+   * based on the click interaction.
+   *
+   * @param card Pointer to the card being moved.
+   * @param fromPile Pointer to the originating pile.
+   */
   void cardClickMove(Card* card, Pile* fromPile);
 
  protected:
+  /**
+   * @brief Returns the bounding rectangle of the item.
+   *
+   * This function defines the area within which the item can be drawn and
+   * interacted with.
+   *
+   * @return A QRectF object specifying the bounding rectangle.
+   */
   QRectF boundingRect() const override;
 
+  /**
+   * @brief Paints the pile slot on the scene.
+   * @param painter Pointer to the QPainter used for drawing.
+   * @param option Provides style options for the item.
+   * @param widget Optional pointer to the widget being painted on.
+   */
   void paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
              QWidget* widget = nullptr) override;
 
-  /**
-   * @brief Collection of unique pointers to Card objects in the pile.
-   */
-  vector<unique_ptr<Card>> cards_;
+  vector<unique_ptr<Card>> cards_;  ///< All the cards inside this pile.
 
  private slots:
+  /**
+   * @brief Slot called when a card is clicked.
+   *
+   * Handles the logic for when a card is clicked within the scene.
+   *
+   * @param card Pointer to the clicked card.
+   */
   void onCardClicked(Card* card);
+
+  /**
+   * @brief Slot called when a card is dragged.
+   *
+   * Handles the logic for when a card is dragged to a new position in the
+   * scene.
+   *
+   * @param card Pointer to the dragged card.
+   * @param newScenePos The new position of the card in scene coordinates.
+   */
   void onCardDragged(Card* card, const QPointF& newScenePos);
 
  private:
-  QRectF rect_;
+  QRectF rect_;  ///< The rectangle defining the item’s boundaries.
 };
 
 #endif

@@ -75,11 +75,6 @@ class Card : public QGraphicsObject {
   ~Card();
 
   /**
-   * @brief Updates the image shown based on the value of faceUp_.
-   */
-  void updateCardImage();
-
-  /**
    * @brief Gets the suit of the card.
    * @return Suit of the card.
    */
@@ -123,40 +118,103 @@ class Card : public QGraphicsObject {
   QString cardToQString() const;
 
   /**
-   * @brief Sets the card to face-up.
+   * @brief Sets the card to face-up. Also repaints the pixmap.
    */
   void flipUp();
 
   /**
-   * @brief Sets the card to face-down.
+   * @brief Sets the card to face-down. Also repaints the pixmap.
    */
   void flipDown();
 
+  /**
+   * @brief Toggle card face. Also repaints the pixmap.
+   */
+  void toggleFace();
+
+  /**
+   * @brief Check whether this card is eligible to recieve mouse clicks.
+   * @return true
+   * @return false
+   */
   bool isClickable();
+
+  /**
+   * @brief Check whether this card is movable (/draggable).
+   * @return true
+   * @return false
+   */
   bool isDraggable();
+
+  /**
+   * @brief If a valid move is not found, this function returns the card to its
+   * original position (=the position before a mouseMoveEvent)
+   */
 
   void returnToPrevPos();
 
  signals:
+  /**
+   * @brief Signal emitted when a card is clicked.
+   * @param card Pointer to the card that was clicked.
+   */
   void cardClicked(Card* card);
+
+  /**
+   * @brief Signal emitted when a card is dragged to a new position.
+   * @param card Pointer to the card being dragged.
+   * @param newScenePos The new position of the card in scene coordinates.
+   */
   void cardDragged(Card* card, const QPointF& newScenePos);
 
  protected:
+  /**
+   * @brief Returns the bounding rectangle of the card item.
+   *
+   * This function defines the bounding area for the card, which is used
+   * for collision detection.
+   *
+   * @return A QRectF object defining the bounding rectangle.
+   */
   QRectF boundingRect() const override;
 
+  /**
+   * @brief Paints the card item on the scene.
+   *
+   * This function is called during the rendering process to draw the
+   * card's appearance using the provided painter.
+   *
+   * @param painter Pointer to the QPainter used for drawing.
+   * @param option Provides style options for the item.
+   * @param widget Optional pointer to the widget being painted on.
+   */
   void paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
              QWidget* widget = nullptr) override;
 
+  /**
+   * @brief Handles mouse press events on the card.
+   * @param event Pointer to the mouse event object.
+   */
   void mousePressEvent(QGraphicsSceneMouseEvent* event) override;
+
+  /**
+   * @brief Handles mouse move events on the card.
+   * @param event Pointer to the mouse event object.
+   */
   void mouseMoveEvent(QGraphicsSceneMouseEvent* event) override;
+
+  /**
+   * @brief Handles mouse release events on the card.
+   * @param event Pointer to the mouse event object.
+   */
   void mouseReleaseEvent(QGraphicsSceneMouseEvent* event) override;
 
  private:
   QPixmap frontImage_;  ///< The front image of the card.
   QPixmap backImage_;   ///< The back image of the card.
   QPixmap pixmap_;      ///< Current pixmap.
-
-  QPointF prevPos_;
+  QPointF prevPos_;     ///< The previous position of the card. Determined when
+                        ///< mousePressEvent is triggered.
 
   Suit suit_;    ///< Suit of the card (CLUBS, DIAMONDS, SPADES, HEARTS).
   Rank rank_;    ///< Rank of the card (ACE to KING).
