@@ -16,6 +16,8 @@ find_package(Qt6 COMPONENTS Core Gui Widgets REQUIRED)
 # Include directories
 include_directories(${Qt6Widgets_INCLUDE_DIRS})
 include_directories(${CMAKE_SOURCE_DIR}/src)  # Add this line to include the src directory
+# Add the miniaudio directory to the include path
+include_directories(${CMAKE_SOURCE_DIR}/libs/miniaudio)
 
 # Automatically find all .cpp / .hpp / .c / .h files in the src/ directory and subdirectories
 file(GLOB_RECURSE SOURCES_C_CPP "src/*.c" "src/*.cpp")

@@ -213,6 +213,16 @@ git submodule add https://github.com/catchorg/Catch2.git
 git submodule update --init --recursive
 ```
 
+### 6. Set up Miniaudio lirbary for sounds:
+
+From the src dir, run the following commands
+
+```bash
+cd libs/
+git submodule add https://github.com/mackron/miniaudio.git
+git submodule update --init --recursive
+```
+
 Clean and regenerate your build directory:
 
 ```bash

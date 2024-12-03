@@ -5,6 +5,7 @@
 #include <stack>
 
 #include "deck.hpp"
+#include "gui/gameSoundManager.hpp"
 #include "klondikePile.hpp"
 #include "targetPile.hpp"
 #include "wastePile.hpp"
@@ -85,6 +86,7 @@ class Game : public QObject {
   bool hardMode = false;
   bool isWon = false;
   stack<Move> movehistory_;
+  GameSoundManager soundManager_;
 };
 
 #endif

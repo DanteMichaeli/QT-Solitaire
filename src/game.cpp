@@ -78,6 +78,9 @@ int Game::attemptMove(Card* card, Pile* fromPile, Pile* toPile) {
     if (i == 1 || dynamic_cast<TargetPile*>(toPile) == nullptr) {
       if (toPile->IsValid(*card)) {
         fromPile->TransferCard(*toPile, i);
+        soundManager_.playSound(
+            "src/assets/sounds/"
+            "move.wav");
         fromPile->updateVisuals();
         toPile->updateVisuals();
         return i;
