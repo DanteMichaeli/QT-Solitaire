@@ -19,13 +19,14 @@ KlondikePile::KlondikePile(Deck& deck, size_t nofCards, size_t nofFacingUp,
   qDebug() << "KlondikePile created with" << cards_.size() << "cards.";
 }
 
-bool KlondikePile::flipTopCard(bool value) {
+bool KlondikePile::flipCard(bool faceUp, int indexFromBack) {
   if (!this->Empty()) {
-    Card* topCard = getTopCard();
-    if (!value) {
-      topCard->flipDown();
-    } else if (!topCard->isFaceUp()) {
-      topCard->flipUp();
+    int size = this->Size();
+    Card* card = cards_[size - indexFromBack].get();
+    if (!faceUp) {
+      card->flipDown();
+    } else if (!card->isFaceUp()) {
+      card->flipUp();
       return true;
     }
   }
@@ -47,7 +48,6 @@ bool KlondikePile::IsValid(const Card& card) {
 
 void KlondikePile::updateVisuals() {
   int i = 0;
-  qDebug() << "updated";
   for (auto card = cards_.begin(); card != cards_.end(); card++, i++) {
     (*card)->setPos(0, i * PILE_YOFFSET);
   }

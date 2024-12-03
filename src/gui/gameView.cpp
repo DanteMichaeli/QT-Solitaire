@@ -1,6 +1,8 @@
 #include "gameView.hpp"
 
 #include <QDebug>
+#include <QGraphicsProxyWidget>
+#include <QPushButton>
 
 #include "klondikePile.hpp"
 #include "targetPile.hpp"
@@ -39,16 +41,23 @@ void GameView::initializeGame() {
     scene->addItem(ptr.get());
     ptr.get()->setPos(200 + i * 150, 150);
     i++;
-    qDebug() << "KlondikePile" << i << "added to the scene.";
   }
 
   auto& tPiles = game_->getTPiles();
-  qDebug() << tPiles.size();
   i = 0;
   for (auto& ptr : tPiles) {
     scene->addItem(ptr.get());
     ptr.get()->setPos(1250, 150 + 160 * i);
     i++;
-    qDebug() << "KlondikePile" << i << "added to the scene.";
   }
+
+  // Create the button with text "Undo"
+  QPushButton* undoButton = new QPushButton("Undo");
+
+  // Connect the button's clicked signal to a lambda or slot
+  connect(undoButton, &QPushButton::clicked, game_.get(), &Game::handleUndo);
+
+  // Add the button to the scene using QGraphicsProxyWidget
+  QGraphicsProxyWidget* proxyWidget = scene->addWidget(undoButton);
+  proxyWidget->setPos(70, 500);  // Set the position of the button in the scene
 }

@@ -6,7 +6,7 @@
 Pile::Pile(QGraphicsItem* parent)
     : QGraphicsObject(parent), rect_(0, 0, 100, 150) {}
 
-Pile::~Pile() { qDebug() << "Pile destroyed."; }
+Pile::~Pile() {}
 
 Card* Pile::getTopCard() const {
   if (!this->Empty()) {
@@ -36,35 +36,23 @@ unique_ptr<Card> Pile::RemoveCard() {
 }
 
 void Pile::TransferCard(Pile& other, size_t nof) {
-  qDebug() << "TransferCard called with nof =" << nof;
-  qDebug() << "Current pile size:" << this->Size();
-  qDebug() << "Other pile size before transfer:" << other.Size();
-
   if (!this->Empty() && nof <= this->Size()) {
     if (nof == 1) {
-      qDebug() << "Transferring one card";
       unique_ptr<Card> card = RemoveCard();
       other.AddCard(card);
     } else {
-      qDebug() << "Transferring multiple cards";
       stack<unique_ptr<Card>> aux;
       size_t i = 0;
       while (i < nof && !cards_.empty()) {
-        qDebug() << "Removing card" << i + 1;
         aux.push(RemoveCard());
         ++i;
       }
       while (!aux.empty()) {
-        qDebug() << "Adding card to other pile";
         other.AddCard(aux.top());
         aux.pop();
       }
     }
-  } else {
-    qDebug() << "TransferCard conditions not met: Empty or nof > Size";
   }
-
-  qDebug() << "Other pile size after transfer:" << other.Size();
 }
 
 int Pile::cardIndexFromBack(Card* card) const {

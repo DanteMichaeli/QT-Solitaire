@@ -6,6 +6,7 @@ Game::Game(QObject* parent)
     : klondikePiles_(KLONDIKE_PILE_AM),
       targetPiles_(TARGET_PILE_AM),
       points_(0),
+      maxHistory_(100),
       QObject(parent) {
   initDeck();
   initWastePile();
@@ -46,30 +47,96 @@ void Game::initTargetPiles() {
   }
 }
 
-void Game::move(Move move) {
-  movehistory_.push(move);
-  updatePoints(move.type_);
+void Game::logMove(Move& move) {
+  addToHistory(move);
+  points_ += move.pointChange_;
+
+  // Determine if top card is flipped in KlondikePile.
   KlondikePile* kPile = dynamic_cast<KlondikePile*>(move.fromPile_);
-  if (kPile != nullptr) {
-    if (kPile->flipTopCard(true)) {
-      movehistory_.push(Move(TURN_OVER_KLONDIKE, kPile, nullptr, 0));
-      updatePoints(TURN_OVER_KLONDIKE);
-    }
+  if (kPile && kPile->flipCard(true)) {
+    Move flipMove =
+        Move(FLIP_KLONDIKE, move.fromPile_, move.toPile_, 0, turnOverPoints);
+    addToHistory(flipMove);
+    points_ += flipMove.pointChange_;
   }
+  // Update visuals
   move.fromPile_->updateVisuals();
   move.toPile_->updateVisuals();
-  qDebug() << points_;
   if (hasWon()) {
     cout << "You won!" << endl;
   }
 }
 
-void Game::updatePoints(MoveType move) {
-  if ((points_ - move) < 0) {
-    points_ = 0;
-  } else {
-    points_ += move;
+void Game::addToHistory(Move& move) {
+  if (movehistory_.size() >= maxHistory_) {
+    movehistory_.pop_front();
   }
+  movehistory_.push_back(move);
+}
+
+void Game::undo() {
+  if (!movehistory_.empty()) {
+    Move& move = movehistory_.back();
+    movehistory_.pop_back();
+
+    // If last move is card flip, do 2 undos in that sense.
+    if (move.type_ == FLIP_KLONDIKE) {
+      static_cast<KlondikePile*>(move.fromPile_)->flipCard(false);
+      move = movehistory_.back();
+      movehistory_.pop_back();
+      points_ -= move.pointChange_;
+    }
+
+    if (move.type_ == RECYCLE_DECK) {
+      static_cast<Deck*>(move.toPile_)->undoRecycle(*wastePile_);
+    } else if (move.type_ == DECK_TO_WASTE) {
+      static_cast<WastePile*>(move.toPile_)
+          ->undoAddFromDeck(*deck_, move.nofCards_);
+    } else {
+      move.toPile_->TransferCard(*move.fromPile_, move.nofCards_);
+    }
+    // Update board
+    points_ -= move.pointChange_;
+    move.toPile_->updateVisuals();
+    move.fromPile_->updateVisuals();
+  }
+}
+
+int Game::pointChange(MoveType move) {
+  int rawChange;
+  switch (move) {
+    case (WASTE_TO_KLONDIKE):
+      rawChange = wToKPoints;
+      break;
+    case (WASTE_TO_TARGET):
+      rawChange = wToTPoints;
+      break;
+    case (KLONDIKE_TO_TARGET):
+      rawChange = kToTPoints;
+      break;
+    case (KLONDIKE_TO_KLONDIKE):
+      rawChange = kToKPoints;
+      break;
+    case (FLIP_KLONDIKE):
+      rawChange = turnOverPoints;
+      break;
+    case (TARGET_TO_KLONDIKE):
+      rawChange = tToKPoints;
+      break;
+    case (DECK_TO_WASTE):
+      rawChange = dToWPoints;
+      break;
+    case (RECYCLE_DECK):
+      rawChange = recycleDeckPoints;
+      break;
+    default:
+      rawChange = 0;
+  }
+
+  if (rawChange < 0 && points_ - rawChange < 0) {
+    rawChange = -points_;
+  }
+  return rawChange;
 }
 
 int Game::attemptMove(Card* card, Pile* fromPile, Pile* toPile) {
@@ -95,7 +162,7 @@ int Game::attemptDeckMove() {
   if (!deck_->Empty()) {
     int amount = 1;  // TODO: dynamic amount
     return wastePile_->AddFromDeck(*deck_, amount);
-  } else if (deck_->recycle(*wastePile_, false)) {
+  } else if (deck_->recycle(*wastePile_)) {
     return -1;
   }
   return 0;
@@ -126,6 +193,12 @@ MoveType Game::determineMove(Pile* fromPile, Pile* toPile) {
   } else if (dynamic_cast<TargetPile*>(fromPile) &&
              dynamic_cast<KlondikePile*>(toPile)) {
     return TARGET_TO_KLONDIKE;
+  } else if (dynamic_cast<Deck*>(fromPile) &&
+             dynamic_cast<WastePile*>(toPile)) {
+    return DECK_TO_WASTE;
+  } else if (dynamic_cast<WastePile*>(fromPile) &&
+             dynamic_cast<Deck*>(toPile)) {
+    return RECYCLE_DECK;
   }
   return UNKNOWN;
 }
@@ -136,8 +209,8 @@ void Game::handleAutoMove(Card* card, Pile* fromPile) {
     int howMany = attemptMove(card, fromPile, toPile);
     if (howMany != 0) {
       MoveType type = determineMove(fromPile, toPile);
-      Move thisMove = Move(type, fromPile, toPile, howMany);
-      move(thisMove);
+      Move move = Move(type, fromPile, toPile, howMany, pointChange(type));
+      logMove(move);
     }
   }
 }
@@ -148,22 +221,28 @@ void Game::handleMove(Card* card, Pile* fromPile, QPointF scenePosition) {
     int howMany = attemptMove(card, fromPile, toPile);
     if (howMany != 0) {
       MoveType type = determineMove(fromPile, toPile);
-      Move thisMove = Move(type, fromPile, toPile, howMany);
-      move(thisMove);
+      Move move = Move(type, fromPile, toPile, howMany, pointChange(type));
+      logMove(move);
     }
   }
 }
 
 void Game::handleDeckClicked() {
-  qDebug() << "works";
-  int res = attemptDeckMove();
-  if (res != 0) {
-    Move thisMove =
-        (res > 0) ? Move(DECK_TO_WASTE, deck_.get(), wastePile_.get(), res)
-                  : Move(RECYCLE_DECK, wastePile_.get(), deck_.get(), 0);
-    move(thisMove);
+  int howMany = attemptDeckMove();
+  if (howMany != 0) {
+    if (howMany > 0) {
+      Move move = Move(DECK_TO_WASTE, deck_.get(), wastePile_.get(), howMany,
+                       dToWPoints);
+      logMove(move);
+    } else {
+      Move move = Move(RECYCLE_DECK, wastePile_.get(), deck_.get(), 0,
+                       recycleDeckPoints);
+      logMove(move);
+    }
   }
 }
+
+void Game::handleUndo() { undo(); }
 
 Pile* Game::findLegalPile(Card* card) {
   for (auto& ptr : targetPiles_) {
@@ -182,7 +261,6 @@ Pile* Game::findLegalPile(Card* card) {
 }
 
 Pile* Game::findPile(QPointF scenePosition) {
-  qDebug() << scenePosition;
   for (auto& ptr : targetPiles_) {
     Pile* pile = ptr.get();
     if (pile->contains(pile->mapFromScene(scenePosition))) {

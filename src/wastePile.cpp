@@ -20,6 +20,17 @@ int WastePile::AddFromDeck(Deck& deck, size_t nofCards) {
   return nofCards;
 }
 
+void WastePile::undoAddFromDeck(Deck& deck, size_t nofCards) {
+  for (size_t i = 0; i < nofCards; i++) {
+    auto cardPtr = this->RemoveCard();
+    if (cardPtr == nullptr) {
+      break;
+    }
+    cardPtr->flipDown();
+    deck.AddCard(cardPtr);
+  }
+}
+
 void WastePile::updateVisuals() {
   int size = cards_.size();
   int i = 0;

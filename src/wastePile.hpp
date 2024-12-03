@@ -41,13 +41,7 @@ class WastePile : public Pile {
    */
   int AddFromDeck(Deck& deck, size_t nofCards);
 
-  /**
-   * @brief Moves all cards from the waste pile back to the deck.
-   * @param deck The deck to which the waste pile cards are added.
-   * @param shuffle Default value is false but if set to true, shuffles the deck
-   * after transferring the cards.
-   * @return true if the transfer is successful, false if the deck is not empty.
-   */
+  void undoAddFromDeck(Deck& deck, size_t nofCards);
 
   void updateVisuals() override;
 };

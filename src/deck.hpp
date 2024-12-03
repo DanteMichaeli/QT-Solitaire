@@ -35,7 +35,15 @@ class Deck : public Pile {
    */
   void Shuffle(unsigned long seed = 0);
 
-  bool recycle(WastePile& pile, bool shuffle = false);
+  /**
+   * @brief Add all cards from waste pile to the deck.
+   * @param pile Waste pile that the cards are gathered from.
+   * @return true if waste pile is not empty.
+   * @return false otherwise.
+   */
+  bool recycle(WastePile& pile);
+
+  void undoRecycle(WastePile& pile);
 
   bool IsValid(const Card& card) override;
 
