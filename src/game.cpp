@@ -65,6 +65,8 @@ void Game::logMove(Move& move) {
   prevHint_ = nullptr;
   if (hasWon()) {
     cout << "You won!" << endl;
+
+    emit gameWon(points_);
   }
 }
 

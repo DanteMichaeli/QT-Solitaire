@@ -56,6 +56,9 @@ using namespace std;
  * game.
  */
 class Game : public QObject {
+
+    Q_OBJECT
+
  public:
   // Start table of move points.
   static const int wToKPoints = 5;
@@ -198,6 +201,9 @@ class Game : public QObject {
   void hint();
 
   Card* findHint();
+
+ signals:
+  void gameWon(int points);
 
  private slots:
   /**
