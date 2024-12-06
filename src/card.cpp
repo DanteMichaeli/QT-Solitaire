@@ -2,6 +2,7 @@
 
 #include <QDebug>
 #include <QGraphicsScene>
+#include <QSize>
 
 #include "deck.hpp"
 #include "klondikePile.hpp"
@@ -27,6 +28,11 @@ Card::Card(Suit s, Rank r, QGraphicsItem* parent)
   }
 
   setScale(SCALING_FACTOR);
+  glowEffect_ = new QGraphicsDropShadowEffect(this);
+  glowEffect_->setBlurRadius(0);  // No glow by default
+  glowEffect_->setColor(Qt::darkRed);
+  glowEffect_->setOffset(0, 0);
+  setGraphicsEffect(glowEffect_);
 }
 
 Card::~Card() { std::cout << "Card destroyed" << std::endl; }
@@ -79,6 +85,11 @@ void Card::toggleFace() {
   update();
 }
 
+void Card::toggleFace() {
+  faceUp_ ^= true;
+  update();
+}
+
 /*
 Card is clickabe if:
 
@@ -112,6 +123,10 @@ bool Card::isDraggable() {
   return isClickable();
 }
 
+bool Card::operator==(Card& card) {
+  return suit_ == card.GetSuit() && rank_ == card.GetRank();
+}
+
 QRectF Card::boundingRect() const {
   return QRectF(0, 0, pixmap_.width(), pixmap_.height());
 }
@@ -124,30 +139,90 @@ void Card::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
   painter->drawPixmap(0, 0, pixmap_);
 }
 
-void Card::returnToPrevPos() { this->setPos(prevPos_); }
-
-// TODO:
 void Card::mousePressEvent(QGraphicsSceneMouseEvent* event) {
   if (event->button() == Qt::LeftButton && this->isClickable()) {
     prevPos_ = this->pos();
+    auto parent = this->parentItem();
+    parent->setZValue(parent->zValue() + 1);
+    auto kPile = dynamic_cast<KlondikePile*>(parent);
+    if (kPile != nullptr) {
+      cardsAbove_ = kPile->getCardsAbove(this);
+    }
   }
   QGraphicsItem::mousePressEvent(event);
 }
 
 void Card::mouseMoveEvent(QGraphicsSceneMouseEvent* event) {
   if (this->isDraggable() && (event->pos() - prevPos_).manhattanLength() > 0) {
-    QGraphicsItem::mouseMoveEvent(event);
+    QPointF delta = event->scenePos() - event->lastScenePos();
+    for (auto& card : cardsAbove_) {
+      card->setPos(card->pos() + delta);
+    }
   }
 }
 
 void Card::mouseReleaseEvent(QGraphicsSceneMouseEvent* event) {
+  cardsAbove_.clear();
+  auto parent = this->parentItem();
+  parent->setZValue(parent->zValue() - 1);
+
   if (event->button() == Qt::LeftButton && this->isClickable()) {
     QPointF newPos = this->pos();
-    if ((newPos - prevPos_).manhattanLength() < 2) {
+    int dist = (newPos - prevPos_).manhattanLength();
+    if (dist == 0) {
       emit cardClicked(this);
-    } else {
+    } else if (dist >= 10) {
       emit cardDragged(this, event->scenePos());
+    } else {
+      static_cast<Pile*>(this->parentItem())->updateVisuals();
     }
     QGraphicsItem::mouseReleaseEvent(event);
   }
+}
+
+// Not working :( not in use currently
+// Should combine all pixmaps of cardsAbove_ and update card "image" to it.
+// Problem: pixmap width / height calculations cause some kind of error.
+// Result is that combined pixmap clips some cards and leaves artifacts.
+void Card::createDragPixmap() {
+  int offset = 0;
+  int totalWidth = pixmap_.width();
+  int totalHeight = pixmap_.height() + (cardsAbove_.size() - 1) * offset;
+
+  QPixmap combinedPixmap(totalWidth, totalHeight);
+  combinedPixmap.fill(Qt::transparent);
+  QPainter painter(&combinedPixmap);
+  int currentY = 0;
+  for (auto& card : cardsAbove_) {
+    auto& pxm = card->getPixmap();
+    painter.drawPixmap(0, currentY, pxm);
+    currentY += offset;
+  }
+  painter.end();
+  tmpDragMap_ = combinedPixmap;
+}
+
+void Card::startGlowing() {
+  // Glow-in animation
+  QPropertyAnimation* animationIn = new QPropertyAnimation(this, "glowRadius");
+  animationIn->setDuration(500);
+  animationIn->setStartValue(0);
+  animationIn->setEndValue(110);
+  animationIn->setEasingCurve(QEasingCurve::OutQuad);
+
+  // Pause at maximum glow
+  QTimer::singleShot(1000, this, [this]() { startGlowingOut(); });
+
+  animationIn->start(QAbstractAnimation::DeleteWhenStopped);
+}
+
+void Card::startGlowingOut() {
+  // Glow-out animation
+  QPropertyAnimation* animationOut = new QPropertyAnimation(this, "glowRadius");
+  animationOut->setDuration(500);
+  animationOut->setStartValue(110);
+  animationOut->setEndValue(0);
+  animationOut->setEasingCurve(QEasingCurve::InQuad);
+
+  animationOut->start(QAbstractAnimation::DeleteWhenStopped);
 }

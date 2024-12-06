@@ -12,7 +12,7 @@ Card* Pile::getTopCard() const {
   if (!this->Empty()) {
     return cards_.back().get();
   }
-  throw std::out_of_range("pile empty");
+  return nullptr;
 }
 
 void Pile::AddCard(std::unique_ptr<Card>& card) {
@@ -35,6 +35,14 @@ unique_ptr<Card> Pile::RemoveCard() {
   return cardPtr;
 }
 
+Card* Pile::getCardFromBack(size_t i) {
+  int index = cards_.size() - 1 - i;
+  if (index >= 0 && index < cards_.size()) {
+    return cards_[index].get();
+  }
+  return nullptr;
+}
+
 void Pile::TransferCard(Pile& other, size_t nof) {
   if (!this->Empty() && nof <= this->Size()) {
     if (nof == 1) {
@@ -53,6 +61,20 @@ void Pile::TransferCard(Pile& other, size_t nof) {
       }
     }
   }
+}
+
+vector<Card*> Pile::getCardsAbove(Card* card) {
+  vector<Card*> above;
+  bool found = false;
+  for (auto& cardPtr : cards_) {
+    if (!found && cardPtr.get() == card) {
+      found = true;
+    }
+    if (found) {
+      above.push_back(cardPtr.get());
+    }
+  }
+  return above;
 }
 
 int Pile::cardIndexFromBack(Card* card) const {
