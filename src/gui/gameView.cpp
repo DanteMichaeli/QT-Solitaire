@@ -51,11 +51,16 @@ void GameView::initializeGame() {
     i++;
   }
 
+
+
   // Create the button with text "Undo"
   QPushButton* undoButton = new QPushButton("Undo");
 
   // Connect the button's clicked signal to a lambda or slot
   connect(undoButton, &QPushButton::clicked, this, [&]() { game_->undo(); });
+
+  //win from game
+  connect(game_.get(), &Game::gameWon, this, &GameView::handleGameWon);
 
   // Add the button to the scene using QGraphicsProxyWidget
   QGraphicsProxyWidget* undoProxyWidget = scene->addWidget(undoButton);
@@ -71,4 +76,10 @@ void GameView::initializeGame() {
   QGraphicsProxyWidget* hintProxyWidget = scene->addWidget(hintButton);
   hintProxyWidget->setPos(70,
                           535);  // Set the position of the button in the scene
+}
+
+
+void GameView::handleGameWon(int points)
+{
+    emit gameWon(points);  // Relay signal to MainWindow.
 }

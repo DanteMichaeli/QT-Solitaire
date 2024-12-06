@@ -30,9 +30,13 @@ class MainWindow : public QMainWindow {
  private:
   Ui::MainWindow *ui;
   QStackedWidget *stackedWidget;  // Main window's pages
-  GameView *gameView;             // Game view page
+  GameView *gameView = nullptr;             // Game view page
 
   void switchToPage(int pageIndex);
+
+  private slots:
+  void onGameWon(int points);
+
 };
 
 #endif  // MAINWINDOW_H

@@ -15,12 +15,22 @@
  */
 
 class GameView : public QGraphicsView {
- public:
+
+Q_OBJECT
+
+public:
   GameView(QWidget *parent = nullptr);
 
   void initializeGame();  // Initializes the scene and game components
 
+  signals:
+  void gameWon(int points);  // Relay signal to MainWindow.
+
+  private slots:
+  void handleGameWon(int points);
+
  private:
+
   QGraphicsScene *scene;  // The scene containing all graphical items
   unique_ptr<Game> game_;
 };
