@@ -53,21 +53,4 @@ void KlondikePile::updateVisuals() {
   }
 }
 
-vector<Card*> KlondikePile::getSubPile(Card* card) {
-  int i = 0;
-  int size = cards_.size();
-  while (i < size) {
-    if (cards_[i].get() == card) {
-      break;
-    }
-    i++;
-  }
-  vector<Card*> subPile(size - i);
-  while (i < size) {
-    subPile.push_back(cards_[i].get());
-    i++;
-  }
-  return subPile;
-}
-
 QRectF KlondikePile::boundingRect() const { return QRect(-10, -10, 120, 500); }

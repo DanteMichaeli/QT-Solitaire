@@ -62,6 +62,7 @@ void Game::logMove(Move& move) {
   // Update visuals
   move.fromPile_->updateVisuals();
   move.toPile_->updateVisuals();
+  prevHint_ = nullptr;
   if (hasWon()) {
     cout << "You won!" << endl;
   }
@@ -154,7 +155,6 @@ int Game::attemptMove(Card* card, Pile* fromPile, Pile* toPile) {
       }
     }
   }
-  card->returnToPrevPos();  // Return the card to original position;
   return 0;
 }
 
@@ -203,6 +203,59 @@ MoveType Game::determineMove(Pile* fromPile, Pile* toPile) {
   return UNKNOWN;
 }
 
+void Game::hint() {
+  if (prevHint_ == nullptr) {
+    prevHint_ = findHint();
+  }
+  if (prevHint_ != nullptr) {
+    prevHint_->startGlowing();
+  }
+}
+
+Card* Game::findHint() {
+  // Check each card in each Klondike pile
+  for (auto& klondikePile : klondikePiles_) {
+    int i = 0;
+    Card* currentCard = klondikePile->getCardFromBack(i);
+    while (currentCard != nullptr && currentCard->isFaceUp()) {
+      for (auto& tp : targetPiles_) {
+        if (tp->IsValid(*currentCard)) {
+          return currentCard;
+        }
+      }
+      if (currentCard->GetRank() != KING) {
+        for (auto& kp : klondikePiles_) {
+          if (kp != klondikePile && kp->IsValid(*currentCard)) {
+            Card* cardBelow = klondikePile->getCardFromBack(i + 1);
+            if (cardBelow == nullptr || !cardBelow->isFaceUp()) {
+              return currentCard;
+            }
+          }
+        }
+      }
+      i++;
+      currentCard = klondikePile->getCardFromBack(i);
+    }
+  }
+  Card* wasteTopCard = wastePile_->getTopCard();
+  if (wasteTopCard != nullptr) {
+    for (auto& tp : targetPiles_) {
+      if (tp->IsValid(*wasteTopCard)) {
+        return wasteTopCard;
+      }
+    }
+    for (auto& kp : klondikePiles_) {
+      if (kp->IsValid(*wasteTopCard)) {
+        return wasteTopCard;
+      }
+    }
+  }
+  if (!deck_->Empty()) {
+    return deck_->getTopCard();
+  }
+  return nullptr;
+}
+
 void Game::handleAutoMove(Card* card, Pile* fromPile) {
   if (!hardMode && !fromPile->Empty()) {
     Pile* toPile = findLegalPile(card);
@@ -223,6 +276,8 @@ void Game::handleMove(Card* card, Pile* fromPile, QPointF scenePosition) {
       MoveType type = determineMove(fromPile, toPile);
       Move move = Move(type, fromPile, toPile, howMany, pointChange(type));
       logMove(move);
+    } else {
+      fromPile->updateVisuals();  // Return to original position
     }
   }
 }

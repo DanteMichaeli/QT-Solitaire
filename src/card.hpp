@@ -1,9 +1,12 @@
 #ifndef CARD_HPP
 #define CARD_HPP
 
+#include <QGraphicsDropShadowEffect>
 #include <QGraphicsObject>
 #include <QGraphicsSceneMouseEvent>
 #include <QPainter>
+#include <QPropertyAnimation>
+#include <QTimer>
 #include <iostream>
 #include <sstream>
 #include <string>
@@ -60,6 +63,7 @@ constexpr Rank allRanks[] = {ACE,   TWO,  THREE, FOUR, FIVE,  SIX, SEVEN,
  */
 class Card : public QGraphicsObject {
   Q_OBJECT
+  Q_PROPERTY(qreal glowRadius READ glowRadius WRITE setGlowRadius)
  public:
   /**
    * @brief Constructs a new Card object with specified suit and rank.
@@ -110,6 +114,8 @@ class Card : public QGraphicsObject {
    */
   Color GetColor() const { return color_; }
 
+  const QPixmap& getPixmap() const { return pixmap_; }
+
   /**
    * @brief Returns a Qstring representation of the card, including its rank and
    * suit.
@@ -146,12 +152,13 @@ class Card : public QGraphicsObject {
    */
   bool isDraggable();
 
-  /**
-   * @brief If a valid move is not found, this function returns the card to its
-   * original position (=the position before a mouseMoveEvent)
-   */
+  bool operator==(Card& card);
 
-  void returnToPrevPos();
+  qreal glowRadius() const { return glowEffect_->blurRadius(); }
+
+  void setGlowRadius(qreal radius) { glowEffect_->setBlurRadius(radius); }
+
+  void startGlowing();
 
  signals:
   /**
@@ -209,17 +216,27 @@ class Card : public QGraphicsObject {
    */
   void mouseReleaseEvent(QGraphicsSceneMouseEvent* event) override;
 
+  void startGlowingOut();
+
  private:
+  void createDragPixmap();
+
   QPixmap frontImage_;  ///< The front image of the card.
   QPixmap backImage_;   ///< The back image of the card.
   QPixmap pixmap_;      ///< Current pixmap.
-  QPointF prevPos_;     ///< The previous position of the card. Determined when
-                        ///< mousePressEvent is triggered.
+  QPointF prevPos_;     ///< The previous position of the card.
+
+  QGraphicsDropShadowEffect* glowEffect_;
+  QTimer* timer_;
 
   Suit suit_;    ///< Suit of the card (CLUBS, DIAMONDS, SPADES, HEARTS).
   Rank rank_;    ///< Rank of the card (ACE to KING).
   bool faceUp_;  ///< Face-up status of the card.
   Color color_;  ///< Color of the card (BLACK or RED).
+  vector<Card*> cardsAbove_;  ///< vector of all the cards that are on top of
+                              ///< this card in a pile.
+
+  QPixmap tmpDragMap_;  // currently not in use.
 };
 
 #endif

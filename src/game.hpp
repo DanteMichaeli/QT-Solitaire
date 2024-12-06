@@ -195,8 +195,9 @@ class Game : public QObject {
    */
   bool hasWon();
 
- public slots:
-  void handleUndo();
+  void hint();
+
+  Card* findHint();
 
  private slots:
   /**
@@ -233,6 +234,7 @@ class Game : public QObject {
   deque<Move> movehistory_;  ///< Stack storing the history of moves.
   size_t maxHistory_;  ///< The maximium amount of moves stored in the history.
   GameSoundManager soundManager_;  ///< Game sound manager.
+  Card* prevHint_;
 };
 
 #endif

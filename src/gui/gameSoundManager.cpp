@@ -1,5 +1,5 @@
 #define MINIAUDIO_IMPLEMENTATION
-#include "GameSoundManager.hpp"
+#include "gameSoundManager.hpp"
 
 #include <filesystem>
 #include <iostream>

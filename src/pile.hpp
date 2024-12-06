@@ -51,6 +51,8 @@ class Pile : public QGraphicsObject {
    */
   Card* getTopCard() const;
 
+  Card* getCardFromBack(size_t i);
+
   vector<unique_ptr<Card>>& getCards() { return cards_; }
   /**
    * @brief Get the index of a card, going from top to bottom.
@@ -82,6 +84,8 @@ class Pile : public QGraphicsObject {
    * @return true if the card is successfully moved, false otherwise.
    */
   void TransferCard(Pile& other, size_t nof = 1);
+
+  vector<Card*> getCardsAbove(Card* card);
 
   /**
    * @brief Pure virtual function to check if a card can be added to the pile.
