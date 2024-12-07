@@ -72,9 +72,6 @@ void MainWindow::startGame() {
     delete gameView;
     gameView = nullptr;
   }
-
-  ui->menuGame->menuAction()->setVisible(true);
-
   // Create a new GameView
   gameView = new GameView(this);
   connect(gameView, &GameView::gameWon, this, &MainWindow::onGameWon);
@@ -84,6 +81,8 @@ void MainWindow::startGame() {
 
   // Switch to the game page
   switchToPage(2);
+  QSizeF size = this->size();
+  gameView->updateLayout(size);
 }
 
 void MainWindow::openSettings() { switchToPage(1); }
@@ -96,3 +95,11 @@ void MainWindow::onGameWon(int points) {
 void MainWindow::quit() { this->close(); }
 
 MainWindow::~MainWindow() { delete ui; }
+
+void MainWindow::resizeEvent(QResizeEvent *event) {
+  QSizeF newSize = event->size();
+  if (gameView != nullptr) {
+    gameView->updateLayout(newSize);
+  }
+  QMainWindow::resizeEvent(event);
+}

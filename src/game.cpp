@@ -6,6 +6,7 @@ Game::Game(QObject* parent)
     : klondikePiles_(KLONDIKE_PILE_AM),
       targetPiles_(TARGET_PILE_AM),
       points_(0),
+      moves_(0),
       maxHistory_(100),
       QObject(parent) {
   initDeck();
@@ -23,7 +24,7 @@ void Game::initDeck() {
 
 void Game::initWastePile() {
   wastePile_ = std::make_unique<WastePile>();
-  connect(wastePile_.get(), &Pile::cardMoved, this, &Game::handleAutoMove);
+  connect(wastePile_.get(), &Pile::cardMoved, this, &Game::handleMove);
   connect(wastePile_.get(), &Pile::cardClickMove, this, &Game::handleAutoMove);
 }
 
@@ -50,13 +51,14 @@ void Game::initTargetPiles() {
 
 void Game::logMove(Move& move) {
   addToHistory(move);
+  moves_++;
   points_ += move.pointChange_;
 
   // Determine if top card is flipped in KlondikePile.
   KlondikePile* kPile = dynamic_cast<KlondikePile*>(move.fromPile_);
   if (kPile && kPile->flipCard(true)) {
-    Move flipMove =
-        Move(FLIP_KLONDIKE, move.fromPile_, move.toPile_, 0, turnOverPoints);
+    Move flipMove(FLIP_KLONDIKE, move.fromPile_, move.toPile_, 0,
+                  turnOverPoints);
     addToHistory(flipMove);
     points_ += flipMove.pointChange_;
   }
@@ -64,7 +66,8 @@ void Game::logMove(Move& move) {
   move.fromPile_->updateVisuals();
   move.toPile_->updateVisuals();
   prevHint_ = nullptr;
-  prevHint_ = nullptr;
+
+  emit gameStateChange(points_, moves_);
 
   if (hasWon()) {
     updateStats();
@@ -101,15 +104,16 @@ void Game::addToHistory(Move& move) {
 
 void Game::undo() {
   if (!movehistory_.empty()) {
+    moves_--;
     Move& move = movehistory_.back();
     movehistory_.pop_back();
 
     // If last move is card flip, do 2 undos in that sense.
     if (move.type_ == FLIP_KLONDIKE) {
       static_cast<KlondikePile*>(move.fromPile_)->flipCard(false);
+      points_ -= move.pointChange_;
       move = movehistory_.back();
       movehistory_.pop_back();
-      points_ -= move.pointChange_;
     }
 
     if (move.type_ == RECYCLE_DECK) {
@@ -124,6 +128,7 @@ void Game::undo() {
     points_ -= move.pointChange_;
     move.toPile_->updateVisuals();
     move.fromPile_->updateVisuals();
+    emit gameStateChange(points_, moves_);
   }
 }
 
@@ -157,8 +162,7 @@ int Game::pointChange(MoveType move) {
     default:
       rawChange = 0;
   }
-
-  if (rawChange < 0 && points_ - rawChange < 0) {
+  if (rawChange < 0 && points_ + rawChange < 0) {
     rawChange = -points_;
   }
   return rawChange;
@@ -185,7 +189,7 @@ int Game::attemptMove(Card* card, Pile* fromPile, Pile* toPile) {
 
 int Game::attemptDeckMove() {
   if (!deck_->Empty()) {
-    int amount = 1;  // TODO: dynamic amount
+    int amount = hardMode ? 3 : 1;
     return wastePile_->AddFromDeck(*deck_, amount);
   } else if (deck_->recycle(*wastePile_)) {
     return -1;
@@ -239,19 +243,24 @@ void Game::hint() {
 }
 
 Card* Game::findHint() {
+  // Klondike to Target / Klondike
   for (auto& klondikePile : klondikePiles_) {
     int i = 0;
     Card* currentCard = klondikePile->getCardFromBack(i);
     while (currentCard != nullptr && currentCard->isFaceUp()) {
-      for (auto& tp : targetPiles_) {
-        if (tp->IsValid(*currentCard)) {
-          return currentCard;
+      // Check Target Piles
+      if (currentCard == klondikePile->getTopCard()) {
+        for (auto& tp : targetPiles_) {
+          if (tp->IsValid(*currentCard)) {
+            return currentCard;
+          }
         }
       }
-      if (currentCard->GetRank() != KING) {
+      // Check Klondike Piles
+      Card* cardBelow = klondikePile->getCardFromBack(i + 1);
+      if (currentCard->GetRank() != KING || cardBelow != nullptr) {
         for (auto& kp : klondikePiles_) {
           if (kp != klondikePile && kp->IsValid(*currentCard)) {
-            Card* cardBelow = klondikePile->getCardFromBack(i + 1);
             if (cardBelow == nullptr || !cardBelow->isFaceUp()) {
               return currentCard;
             }
@@ -262,6 +271,7 @@ Card* Game::findHint() {
       currentCard = klondikePile->getCardFromBack(i);
     }
   }
+  // Waste to Target / Klondike
   Card* wasteTopCard = wastePile_->getTopCard();
   if (wasteTopCard != nullptr) {
     for (auto& tp : targetPiles_) {
@@ -275,6 +285,7 @@ Card* Game::findHint() {
       }
     }
   }
+  // Else give hint to deck
   if (!deck_->Empty()) {
     return deck_->getTopCard();
   }
@@ -287,7 +298,7 @@ void Game::handleAutoMove(Card* card, Pile* fromPile) {
     int howMany = attemptMove(card, fromPile, toPile);
     if (howMany != 0) {
       MoveType type = determineMove(fromPile, toPile);
-      Move move = Move(type, fromPile, toPile, howMany, pointChange(type));
+      Move move(type, fromPile, toPile, howMany, pointChange(type));
       logMove(move);
     }
   }
@@ -299,7 +310,7 @@ void Game::handleMove(Card* card, Pile* fromPile, QPointF scenePosition) {
     int howMany = attemptMove(card, fromPile, toPile);
     if (howMany != 0) {
       MoveType type = determineMove(fromPile, toPile);
-      Move move = Move(type, fromPile, toPile, howMany, pointChange(type));
+      Move move(type, fromPile, toPile, howMany, pointChange(type));
       logMove(move);
     } else {
       fromPile->updateVisuals();  // Return to original position
@@ -311,12 +322,12 @@ void Game::handleDeckClicked() {
   int howMany = attemptDeckMove();
   if (howMany != 0) {
     if (howMany > 0) {
-      Move move = Move(DECK_TO_WASTE, deck_.get(), wastePile_.get(), howMany,
-                       dToWPoints);
+      Move move(DECK_TO_WASTE, deck_.get(), wastePile_.get(), howMany,
+                dToWPoints);
       logMove(move);
     } else {
-      Move move = Move(RECYCLE_DECK, wastePile_.get(), deck_.get(), 0,
-                       recycleDeckPoints);
+      Move move(RECYCLE_DECK, wastePile_.get(), deck_.get(), 0,
+                pointChange(RECYCLE_DECK));
       logMove(move);
     }
   }

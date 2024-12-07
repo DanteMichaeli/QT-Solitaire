@@ -59,7 +59,6 @@ using namespace std;
  */
 class Game : public QObject {
   Q_OBJECT
-
  public:
   // Start table of move points.
   static const int wToKPoints = 5;
@@ -200,15 +199,19 @@ class Game : public QObject {
    */
   bool hasWon();
 
+  void hint();
+
+  Card* findHint();
+
   /**
    * @brief Updates game stats into file
    *
    */
   void updateStats();
 
-  void hint();
-
-  Card* findHint();
+ signals:
+  void gameStateChange(int points, int moves);
+  void gameWon(int _t1);
 
  private slots:
   /**
@@ -234,15 +237,13 @@ class Game : public QObject {
    */
   void handleAutoMove(Card* card, Pile* fromPile);
 
- signals:
-  void gameWon(int _t1);
-
  private:
   unique_ptr<Deck> deck_;                           ///< The deck of cards.
   unique_ptr<WastePile> wastePile_;                 ///< The waste pile.
   vector<unique_ptr<KlondikePile>> klondikePiles_;  ///< The Klondike piles.
   vector<unique_ptr<TargetPile>> targetPiles_;      ///< The target piles.
-  int points_;               ///< The player's current score.
+  int points_;  ///< The player's current score.
+  int moves_;
   bool hardMode = false;     ///< Indicates if the game is in hard mode.
   bool isWon = false;        ///< Indicates if the game has been won.
   deque<Move> movehistory_;  ///< Stack storing the history of moves.

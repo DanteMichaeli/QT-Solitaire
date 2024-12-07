@@ -87,6 +87,11 @@ class Pile : public QGraphicsObject {
 
   vector<Card*> getCardsAbove(Card* card);
 
+  double getScaledWidth() { return rect_.width() * this->scale(); }
+  double getScaledHeigh() { return rect_.height() * this->scale(); }
+  double getWidth() { return rect_.width(); }
+  double getHeigh() { return rect_.height(); }
+
   /**
    * @brief Pure virtual function to check if a card can be added to the pile.
    *        Must be implemented by derived classes.

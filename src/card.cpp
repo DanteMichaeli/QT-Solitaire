@@ -29,10 +29,28 @@ Card::Card(Suit s, Rank r, QGraphicsItem *parent)
 
   setScale(SCALING_FACTOR);
   glowEffect_ = new QGraphicsDropShadowEffect(this);
-  glowEffect_->setBlurRadius(0);  // No glow by default
+  glowEffect_->setBlurRadius(0);
   glowEffect_->setColor(Qt::darkRed);
   glowEffect_->setOffset(0, 0);
   setGraphicsEffect(glowEffect_);
+
+  // Glow-in animation
+  glowIn_ = new QPropertyAnimation(this, "glowRadius");
+  glowIn_->setDuration(500);
+  glowIn_->setStartValue(0);
+  glowIn_->setEndValue(110);
+  glowIn_->setEasingCurve(QEasingCurve::OutQuad);
+
+  glowOut_ = new QPropertyAnimation(this, "glowRadius");
+  glowOut_->setDuration(500);
+  glowOut_->setStartValue(110);
+  glowOut_->setEndValue(0);
+  glowOut_->setEasingCurve(QEasingCurve::InQuad);
+
+  glowTimer_ = new QTimer(this);
+  glowTimer_->setSingleShot(true);
+
+  isGlowing_ = false;
 }
 
 Card::~Card() { std::cout << "Card destroyed" << std::endl; }
@@ -102,10 +120,7 @@ bool Card::isClickable() {
   if (dynamic_cast<WastePile *>(pile) != nullptr) {
     return pile->getTopCard() == this;
   }
-  if (dynamic_cast<Deck *>(pile) != nullptr) {
-    return true;
-  }
-  return false;
+  return true;
 }
 
 /*
@@ -138,12 +153,17 @@ void Card::paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
 
 void Card::mousePressEvent(QGraphicsSceneMouseEvent *event) {
   if (event->button() == Qt::LeftButton && this->isClickable()) {
+    if (isGlowing_) {
+      stopGlowingAnimation();
+    }
     prevPos_ = this->pos();
     auto parent = this->parentItem();
-    parent->setZValue(parent->zValue() + 1);
+    parent->setZValue(parent->zValue() + 5);
     auto kPile = dynamic_cast<KlondikePile *>(parent);
     if (kPile != nullptr) {
       cardsAbove_ = kPile->getCardsAbove(this);
+    } else {
+      cardsAbove_.push_back(this);
     }
   }
   QGraphicsItem::mousePressEvent(event);
@@ -151,9 +171,13 @@ void Card::mousePressEvent(QGraphicsSceneMouseEvent *event) {
 
 void Card::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
   if (this->isDraggable() && (event->pos() - prevPos_).manhattanLength() > 0) {
-    QPointF delta = event->scenePos() - event->lastScenePos();
+    // Map the scene delta to the parent's local coordinate system
+    QGraphicsItem *parentItem = this->parentItem();
+    QPointF parentDelta = parentItem->mapFromScene(event->scenePos()) -
+                          parentItem->mapFromScene(event->lastScenePos());
+
     for (auto &card : cardsAbove_) {
-      card->setPos(card->pos() + delta);
+      card->setPos(card->pos() + parentDelta);
     }
   }
 }
@@ -161,12 +185,12 @@ void Card::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
 void Card::mouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
   cardsAbove_.clear();
   auto parent = this->parentItem();
-  parent->setZValue(parent->zValue() - 1);
+  parent->setZValue(parent->zValue() - 5);
 
   if (event->button() == Qt::LeftButton && this->isClickable()) {
     QPointF newPos = this->pos();
     int dist = (newPos - prevPos_).manhattanLength();
-    if (dist == 0) {
+    if (dist == 0 && dynamic_cast<TargetPile *>(parent) == nullptr) {
       emit cardClicked(this);
     } else if (dist >= 10) {
       emit cardDragged(this, event->scenePos());
@@ -200,26 +224,39 @@ void Card::createDragPixmap() {
 }
 
 void Card::startGlowing() {
-  // Glow-in animation
-  QPropertyAnimation *animationIn = new QPropertyAnimation(this, "glowRadius");
-  animationIn->setDuration(500);
-  animationIn->setStartValue(0);
-  animationIn->setEndValue(110);
-  animationIn->setEasingCurve(QEasingCurve::OutQuad);
+  if (isGlowing_) {
+    return;
+  }
+  isGlowing_ = true;
 
-  // Pause at maximum glow
-  QTimer::singleShot(1000, this, [this]() { startGlowingOut(); });
-
-  animationIn->start(QAbstractAnimation::DeleteWhenStopped);
+  connect(glowTimer_, &QTimer::timeout, this, &Card::startGlowingOut);
+  glowTimer_->start(1000);
+  glowIn_->start();
 }
 
 void Card::startGlowingOut() {
   // Glow-out animation
-  QPropertyAnimation *animationOut = new QPropertyAnimation(this, "glowRadius");
-  animationOut->setDuration(500);
-  animationOut->setStartValue(110);
-  animationOut->setEndValue(0);
-  animationOut->setEasingCurve(QEasingCurve::InQuad);
+  connect(glowOut_, &QPropertyAnimation::finished, this,
+          [this]() { isGlowing_ = false; });
+  glowOut_->start();
+}
 
-  animationOut->start(QAbstractAnimation::DeleteWhenStopped);
+void Card::stopGlowingAnimation() {
+  QVariant glow = 110;
+  if (glowIn_->state() == QAbstractAnimation::Running) {
+    glow = glowIn_->currentValue();
+  } else if (glowOut_->state() == QAbstractAnimation::Running) {
+    glow = glowOut_->currentValue();
+  }
+
+  QPropertyAnimation *fastGlowOut = new QPropertyAnimation(this, "glowRadius");
+  fastGlowOut->setStartValue(glow);
+  fastGlowOut->setEndValue(0);
+  fastGlowOut->setDuration(75);
+  connect(fastGlowOut, &QPropertyAnimation::finished, this,
+          [this]() { isGlowing_ = false; });
+  fastGlowOut->start(QAbstractAnimation::DeleteWhenStopped);
+  glowIn_->stop();
+  glowOut_->stop();
+  glowTimer_->stop();
 }
