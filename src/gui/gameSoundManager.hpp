@@ -15,6 +15,9 @@ class GameSoundManager {
   ~GameSoundManager();
 
   void playSound(const std::string& filePath);  // Enqueue a sound for playback
+  void playMoveSound();                         // Play a move sound
+  void playWinSound();                          // Play a win sound
+  void playShuffleSound();                      // Play a shuffle deck sound
   void stop();                                  // Stop the audio thread
 
  private:
