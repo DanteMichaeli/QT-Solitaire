@@ -34,6 +34,27 @@ void GameSoundManager::playSound(const std::string& filePath) {
   cv_.notify_one();  // Notify the audio thread
 }
 
+// Play a move sound
+void GameSoundManager::playMoveSound() {
+  playSound(
+      "src/assets/sounds/"
+      "move.wav");
+}
+
+// Play a win sound
+void GameSoundManager::playWinSound() {
+  playSound(
+      "src/assets/sounds/"
+      "win.wav");
+}
+
+// Play a shuffle deck sound
+void GameSoundManager::playShuffleSound() {
+  playSound(
+      "src/assets/sounds/"
+      "shuffle.wav");
+}
+
 // Stop the audio thread
 void GameSoundManager::stop() {
   {

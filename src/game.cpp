@@ -174,9 +174,7 @@ int Game::attemptMove(Card* card, Pile* fromPile, Pile* toPile) {
     if (i == 1 || dynamic_cast<TargetPile*>(toPile) == nullptr) {
       if (toPile->IsValid(*card)) {
         fromPile->TransferCard(*toPile, i);
-        soundManager_.playSound(
-            "src/assets/sounds/"
-            "move.wav");
+        soundManager_.playMoveSound();
         fromPile->updateVisuals();
         toPile->updateVisuals();
         return i;
@@ -192,6 +190,7 @@ int Game::attemptDeckMove() {
     int amount = hardMode ? 3 : 1;
     return wastePile_->AddFromDeck(*deck_, amount);
   } else if (deck_->recycle(*wastePile_)) {
+    soundManager_.playShuffleSound();
     return -1;
   }
   return 0;
@@ -203,6 +202,7 @@ bool Game::hasWon() {
       return false;
     }
   }
+  soundManager_.playWinSound();
   return true;
 }
 
