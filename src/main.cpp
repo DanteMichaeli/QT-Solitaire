@@ -11,6 +11,8 @@
  */
 
 int main(int argc, char *argv[]) {
+  // creates a stat file
+  createInitialStatsFile("stats.csv");
   QApplication app(argc, argv);
 
   MainWindow mainWindow;

@@ -18,6 +18,7 @@ void Game::initDeck() {
   deck_ = std::make_unique<Deck>();
   deck_->Shuffle();
   connect(deck_.get(), &Pile::cardClickMove, this, &Game::handleDeckClicked);
+  timer.start();
 }
 
 void Game::initWastePile() {
@@ -40,7 +41,7 @@ void Game::initKlondikePiles() {
 
 void Game::initTargetPiles() {
   for (size_t i = 0; i < TARGET_PILE_AM; ++i) {
-    targetPiles_[i] = std::make_unique<TargetPile>(allSuits[i]);
+    targetPiles_[i] = std::make_unique<TargetPile>();
     connect(targetPiles_[i].get(), &Pile::cardMoved, this, &Game::handleMove);
     connect(targetPiles_[i].get(), &Pile::cardClickMove, this,
             &Game::handleAutoMove);
@@ -63,11 +64,32 @@ void Game::logMove(Move& move) {
   move.fromPile_->updateVisuals();
   move.toPile_->updateVisuals();
   prevHint_ = nullptr;
+  prevHint_ = nullptr;
+
   if (hasWon()) {
+    updateStats();
     cout << "You won!" << endl;
 
     emit gameWon(points_);
   }
+}
+
+void Game::updateStats() {
+  GameStats stats = fromCSV("stats.csv");
+  std::cout << stats.games << std::endl;
+
+  stats.hintCount += hints_;
+  stats.avgMoves = (movehistory_.size() + stats.avgMoves * stats.games) /
+                   (stats.games + 1.0);
+  stats.avgPoints =
+      (points_ + stats.avgPoints * stats.games) / (stats.games + 1.0);
+  stats.wins += 1;
+  stats.avgTime = (timer.elapsed() / 100.0 + stats.avgTime * stats.games) /
+                  (stats.games + 1.0);
+  stats.games += 1;
+  std::cout << stats.games << std::endl;
+
+  saveStatsToCSV("stats.csv", stats);
 }
 
 void Game::addToHistory(Move& move) {
@@ -157,6 +179,7 @@ int Game::attemptMove(Card* card, Pile* fromPile, Pile* toPile) {
       }
     }
   }
+  fromPile->updateVisuals();  // Return the card to original position;
   return 0;
 }
 
@@ -210,12 +233,12 @@ void Game::hint() {
     prevHint_ = findHint();
   }
   if (prevHint_ != nullptr) {
+    hints_ += 1;
     prevHint_->startGlowing();
   }
 }
 
 Card* Game::findHint() {
-  // Check each card in each Klondike pile
   for (auto& klondikePile : klondikePiles_) {
     int i = 0;
     Card* currentCard = klondikePile->getCardFromBack(i);
@@ -298,8 +321,6 @@ void Game::handleDeckClicked() {
     }
   }
 }
-
-void Game::handleUndo() { undo(); }
 
 Pile* Game::findLegalPile(Card* card) {
   for (auto& ptr : targetPiles_) {

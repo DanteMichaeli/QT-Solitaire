@@ -142,6 +142,7 @@ class Pile : public QGraphicsObject {
              QWidget* widget = nullptr) override;
 
   vector<unique_ptr<Card>> cards_;  ///< All the cards inside this pile.
+  QRectF rect_;  ///< The rectangle defining the item’s boundaries.
 
  private slots:
   /**
@@ -163,9 +164,6 @@ class Pile : public QGraphicsObject {
    * @param newScenePos The new position of the card in scene coordinates.
    */
   void onCardDragged(Card* card, const QPointF& newScenePos);
-
- private:
-  QRectF rect_;  ///< The rectangle defining the item’s boundaries.
 };
 
 #endif

@@ -21,7 +21,7 @@ class TargetPile : public Pile {
    * @param suit The suit that this TargetPile will accept (CLUBS, DIAMONDS,
    * HEARTS, or SPADES).
    */
-  TargetPile(Suit suit, QGraphicsItem* parent = nullptr);
+  TargetPile(QGraphicsItem *parent = nullptr);
 
   /**
    * @brief Checks if a card can be legally added to this pile.
@@ -36,9 +36,13 @@ class TargetPile : public Pile {
    * - If the pile is non-empty, the card must have a rank exactly one higher
    * than the current top card.
    */
-  bool IsValid(const Card& card) override;
+  bool IsValid(const Card &card) override;
 
   void updateVisuals() override;
+
+ protected:
+  void paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
+             QWidget *widget = nullptr) override;
 
  private:
   Suit suit_;  ///< The suit required for cards in this TargetPile (CLUBS,
