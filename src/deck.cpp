@@ -9,7 +9,6 @@ Deck::Deck(QGraphicsItem* parent) : Pile(parent) {
   for (Suit suit : allSuits) {
     for (Rank rank : allRanks) {
       auto card = std::make_unique<Card>(suit, rank);
-      // card->hide();
       AddCard(card);
     }
   }
@@ -22,22 +21,19 @@ void Deck::Shuffle(unsigned long seed) {
   }
   mt19937 generator(seed);
   shuffle(cards_.begin(), cards_.end(), generator);
+
+  for (int i = 0; i < Size(); i++) {
+    cards_[i]->setZValue(i);
+  }
 }
 
-// TODO:
-bool Deck::IsValid(const Card& card) {
-  if (static_cast<WastePile*>(card.parentItem()) != nullptr) {
-    return true;
-  }
-  return false;
-}
+bool Deck::IsValid(const Card& card) { return false; }
 
 bool Deck::recycle(WastePile& pile) {
   if (this->Empty() && !pile.Empty()) {
     while (!pile.Empty()) {
-      auto cardPtr = pile.RemoveCard();
-      cardPtr->flipDown();
-      this->AddCard(cardPtr);
+      pile.getTopCard()->flipDown();
+      pile.TransferCard(*this);
     }
     return true;
   }
@@ -46,13 +42,16 @@ bool Deck::recycle(WastePile& pile) {
 
 void Deck::undoRecycle(WastePile& pile) {
   while (!this->Empty()) {
-    auto cardPtr = RemoveCard();
-    cardPtr->flipUp();
-    pile.AddCard(cardPtr);
+    getTopCard()->flipUp();
+    TransferCard(pile);
   }
 }
 
-void Deck::updateVisuals() {}
+void Deck::updateVisuals() {
+  if (!Empty()) {
+    getTopCard()->show();
+  }
+}
 
 void Deck::mousePressEvent(QGraphicsSceneMouseEvent* event) {
   emit cardClickMove(nullptr, this);

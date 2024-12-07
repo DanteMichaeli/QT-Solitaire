@@ -2,8 +2,10 @@
 
 #include <QDebug>
 #include <QGraphicsProxyWidget>
+#include <QHBoxLayout>
 #include <QPushButton>
 
+#include "klondikeLayout.hpp"
 #include "klondikePile.hpp"
 #include "targetPile.hpp"
 #include "wastePile.hpp"
@@ -12,70 +14,72 @@ GameView::GameView(QWidget *parent)
     : QGraphicsView(parent),
       scene(new QGraphicsScene(this)),
       game_(std::make_unique<Game>()) {
-  setScene(scene);
-  setAlignment(Qt::AlignLeft | Qt::AlignTop);
-  setBackgroundBrush(QBrush(QColor(0x3C9B3F)));
-  scene->setSceneRect(scene->itemsBoundingRect());
   initializeGame();
   viewport()->update();
 }
 
 void GameView::initializeGame() {
+  setScene(scene);
+  setSceneRect(0, 0, width(), height());
+  setAlignment(Qt::AlignLeft | Qt::AlignTop);
+  setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+  setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+  setBackgroundBrush(QBrush(QColor(0x3C9B3F)));
+  this->setRenderHint(QPainter::Antialiasing, true);
   scene->clear();
-
-  // Initialize the deck
-  Deck *deck = game_->getDeck();
-  scene->addItem(deck);
-  deck->setPos(70, 70);
-  qDebug() << "Deck initialized with 52 cards.";
-
-  WastePile *wastePile = game_->getWPile();
-  scene->addItem(wastePile);
-  wastePile->setPos(70, 250);
-
-  // Create and add all seven Klondike piles to the tableau
-
-  auto &kPiles = game_->getKPiles();
-  size_t i = 0;
-  for (auto &ptr : kPiles) {
-    scene->addItem(ptr.get());
-    ptr.get()->setPos(200 + i * 150, 150);
-    i++;
-  }
-
-  auto &tPiles = game_->getTPiles();
-  i = 0;
-  for (auto &ptr : tPiles) {
-    scene->addItem(ptr.get());
-    ptr.get()->setPos(1250, 150 + 160 * i);
-    i++;
-  }
-
-  // Create the button with text "Undo"
-  QPushButton *undoButton = new QPushButton("Undo");
-
-  // Connect the button's clicked signal to a lambda or slot
-  connect(undoButton, &QPushButton::clicked, this, [&]() { game_->undo(); });
-
-  // win from game
+  layout_ = make_unique<KlondikeLayout>(scene, game_.get());
   connect(game_.get(), &Game::gameWon, this, &GameView::handleGameWon);
 
-  // Add the button to the scene using QGraphicsProxyWidget
-  QGraphicsProxyWidget *undoProxyWidget = scene->addWidget(undoButton);
-  undoProxyWidget->setPos(70,
-                          500);  // Set the position of the button in the scene
+  QPushButton *undoButton = new QPushButton("Undo");
+  connect(undoButton, &QPushButton::clicked, this, [&]() { game_->undo(); });
 
-  // Create the button with text "Hndo"
   QPushButton *hintButton = new QPushButton("Hint");
-
   connect(hintButton, &QPushButton::clicked, this, [&]() { game_->hint(); });
 
-  // Add the button to the scene using QGraphicsProxyWidget
-  QGraphicsProxyWidget *hintProxyWidget = scene->addWidget(hintButton);
-  hintProxyWidget->setPos(70,
-                          535);  // Set the position of the button in the scene
+  pointsLabel_ = new QLabel("Points: 0");
+  moveLabel_ = new QLabel("Moves: 0");
+  connect(game_.get(), &Game::gameStateChange, this,
+          &GameView::handleGameStateChange);
+  pointsLabel_->setStyleSheet("color: white;");
+  moveLabel_->setStyleSheet("color: white;");
+
+  QWidget *toolbarWidget = new QWidget();
+  QHBoxLayout *toolbarLayout = new QHBoxLayout(toolbarWidget);
+  toolbarLayout->setContentsMargins(5, 5, 5, 5);
+  toolbarLayout->setSpacing(10);
+
+  toolbarLayout->addWidget(undoButton);
+  toolbarLayout->addWidget(hintButton);
+  toolbarLayout->addStretch();
+  toolbarLayout->addWidget(moveLabel_);
+  toolbarLayout->addWidget(pointsLabel_);
+
+  toolbarProxy_ = scene->addWidget(toolbarWidget);
+  toolbarProxy_->setPos(0, 0);
+  toolbarWidget->setStyleSheet(
+      "background-color: #964B00; "
+      "border-bottom: 2px solid #222222; "
+      "color: white;");
 }
 
-void GameView::handleGameWon(int points) {
-  emit gameWon(points);  // Relay signal to MainWindow.
+void GameView::updateLayout(QSizeF &newSize) {
+  layout_->resize(newSize);
+  updateToolbarSize();
 }
+
+void GameView::updateToolbarSize() {
+  if (toolbarProxy_) {
+    // Get the current scene size or view size
+    int toolbarWidth = this->viewport()->width();
+    int toolbarHeight = 40;  // Fixed height for the toolbar
+
+    // Set the size of the toolbar
+    toolbarProxy_->widget()->setFixedSize(toolbarWidth, toolbarHeight);
+  }
+}
+
+void GameView::handleGameStateChange(int points, int moves) {
+  pointsLabel_->setText(QString("Points: %1").arg(points));
+  moveLabel_->setText(QString("Moves: %1").arg(moves));
+}
+void GameView::handleGameWon(int points) { emit gameWon(points); }

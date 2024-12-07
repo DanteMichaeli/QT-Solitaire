@@ -218,6 +218,8 @@ class Card : public QGraphicsObject {
 
   void startGlowingOut();
 
+  void stopGlowingAnimation();
+
  private:
   void createDragPixmap();
 
@@ -227,7 +229,10 @@ class Card : public QGraphicsObject {
   QPointF prevPos_;     ///< The previous position of the card.
 
   QGraphicsDropShadowEffect* glowEffect_;
-  QTimer* timer_;
+  QPropertyAnimation* glowIn_;
+  QPropertyAnimation* glowOut_;
+  QTimer* glowTimer_;
+  bool isGlowing_;
 
   Suit suit_;    ///< Suit of the card (CLUBS, DIAMONDS, SPADES, HEARTS).
   Rank rank_;    ///< Rank of the card (ACE to KING).

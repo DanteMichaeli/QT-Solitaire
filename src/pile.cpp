@@ -47,6 +47,7 @@ void Pile::TransferCard(Pile& other, size_t nof) {
   if (!this->Empty() && nof <= this->Size()) {
     if (nof == 1) {
       unique_ptr<Card> card = RemoveCard();
+      card->setZValue(other.Size() + 1);
       other.AddCard(card);
     } else {
       stack<unique_ptr<Card>> aux;
@@ -56,7 +57,9 @@ void Pile::TransferCard(Pile& other, size_t nof) {
         ++i;
       }
       while (!aux.empty()) {
-        other.AddCard(aux.top());
+        auto& card = aux.top();
+        card->setZValue(other.Size() + 1);
+        other.AddCard(card);
         aux.pop();
       }
     }
@@ -96,7 +99,8 @@ void Pile::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
                  QWidget* widget) {
   Q_UNUSED(option);
   Q_UNUSED(widget);
-  painter->setBrush(Qt::lightGray);
+  painter->setBrush(Qt::transparent);
+  painter->setPen(Qt::darkGreen);
   painter->drawRect(rect_);
 }
 
