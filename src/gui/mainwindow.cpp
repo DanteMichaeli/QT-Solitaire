@@ -21,7 +21,7 @@ MainWindow::MainWindow(QWidget *parent)
   connect(ui->actionQuit, &QAction::triggered, this, &QApplication::quit);
 
   connect(ui->actionNew_Game, &QAction::triggered, this,
-          &MainWindow::startGame);
+          &MainWindow::dealNewGame);
 
   // Main menu button connections
 
@@ -30,6 +30,9 @@ MainWindow::MainWindow(QWidget *parent)
 
   connect(ui->settingsButton, &QPushButton::clicked, this,
           &MainWindow::openSettings);
+
+  connect(ui->statsButton, &QPushButton::clicked, this, &MainWindow::menuToStatistics);
+
   connect(ui->quitButton, &QPushButton::clicked, this, &MainWindow::quit);
 
   // settings menu button connections
@@ -37,7 +40,12 @@ MainWindow::MainWindow(QWidget *parent)
           &MainWindow::backToMenu);
 
   connect(ui->winToMenuButton, &QPushButton::clicked, this,
-          &MainWindow::backToMenu);
+          &MainWindow::backToMenuInit);
+
+  // stat to menu button
+  connect(ui->statsToMenuButton, &QPushButton::clicked, this, &MainWindow::backToMenu);
+
+  initNewGame();
 }
 
 void MainWindow::fullscreen()  // Fullscreen button functionality
@@ -60,29 +68,63 @@ void MainWindow::backToMenu() {
   switchToPage(0);
 }
 
+void MainWindow::backToMenuInit()
+{
+    backToMenu();
+    initNewGame();
+}
+
+void MainWindow::menuToStatistics()
+{
+    GameStats playStats = fromCSV("stats.csv");
+
+    ui->winsLCD->display(playStats.wins);
+    ui->lossesLCD->display(playStats.losses);
+    ui->winRateLCD->display(playStats.winRate);
+    ui->averageTimeLCD->display(playStats.avgTime);
+    ui->hintCountLCD->display(playStats.hintCount);
+    ui->averageMovesLCD->display(playStats.avgMoves);
+    ui->undoCountLCD->display(playStats.undoCount);
+    ui->averagePointsLCD->display(playStats.avgPoints);
+    ui->bestPointsLCD->display(playStats.bestPoints);
+    ui->leaveRateLCD->display(playStats.leaveRate);
+    ui->gamesLCD->display(playStats.games);
+
+    switchToPage(4);
+}
+
+
 void MainWindow::startGame() {
-  // Check if gameView already exists
-  if (gameView != nullptr) {
-    // Remove gameView from the stacked widget
-    int index = stackedWidget->indexOf(gameView);
-    if (index != -1) {
-      stackedWidget->removeWidget(gameView);
-    }
-    // Delete the old gameView
-    delete gameView;
-    gameView = nullptr;
-  }
-  // Create a new GameView
-  gameView = new GameView(this);
-  connect(gameView, &GameView::gameWon, this, &MainWindow::onGameWon);
-
-  // Insert the new GameView into the stacked widget
-  stackedWidget->insertWidget(2, gameView);  // Insert GameView at index 2
-
-  // Switch to the game page
   switchToPage(2);
-  QSizeF size = this->size();
-  gameView->updateLayout(size);
+  ui->menuGame->menuAction()->setVisible(true);
+}
+
+void MainWindow::initNewGame()
+{
+    // Check if gameView already exists
+    if (gameView != nullptr) {
+        // Remove gameView from the stacked widget
+        int index = stackedWidget->indexOf(gameView);
+        if (index != -1) {
+            stackedWidget->removeWidget(gameView);
+        }
+        // Delete the old gameView
+        delete gameView;
+        gameView = nullptr;
+    }
+
+    // Create a new GameView
+    gameView = new GameView(this);
+    connect(gameView, &GameView::gameWon, this, &MainWindow::onGameWon);
+
+    // Insert the new GameView into the stacked widget
+    stackedWidget->insertWidget(2, gameView);  // Insert GameView at index 2
+}
+
+void MainWindow::dealNewGame()
+{
+    initNewGame();
+    switchToPage(2);
 }
 
 void MainWindow::openSettings() { switchToPage(1); }
