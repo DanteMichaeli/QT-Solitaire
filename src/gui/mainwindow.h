@@ -28,13 +28,15 @@ class MainWindow : public QMainWindow {
 
   void backToMenu();
 
-  void backToMenuInit(); // go to main menu and initialize a new game
+  void backToMenuInit();  // go to main menu and initialize a new game
 
   void menuToStatistics();
 
   void initNewGame();
 
   void dealNewGame();
+
+  void resizeEvent(QResizeEvent *event);
 
  private:
   Ui::MainWindow *ui;
