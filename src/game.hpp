@@ -1,12 +1,14 @@
 #ifndef GAME_HPP
 #define GAME_HPP
 
+#include <QElapsedTimer>
 #include <QObject>
 #include <deque>
 
 #include "deck.hpp"
 #include "gui/gameSoundManager.hpp"
 #include "klondikePile.hpp"
+#include "stats.hpp"
 #include "targetPile.hpp"
 #include "wastePile.hpp"
 
@@ -56,8 +58,7 @@ using namespace std;
  * game.
  */
 class Game : public QObject {
-
-    Q_OBJECT
+  Q_OBJECT
 
  public:
   // Start table of move points.
@@ -65,6 +66,7 @@ class Game : public QObject {
   static const int wToTPoints = 10;
   static const int kToTPoints = 10;
   static const int kToKPoints = 0;
+
   static const int turnOverPoints = 5;
   static const int tToKPoints = -15;
   static const int dToWPoints = 0;
@@ -198,12 +200,15 @@ class Game : public QObject {
    */
   bool hasWon();
 
+  /**
+   * @brief Updates game stats into file
+   *
+   */
+  void updateStats();
+
   void hint();
 
   Card* findHint();
-
- signals:
-  void gameWon(int points);
 
  private slots:
   /**
@@ -229,6 +234,9 @@ class Game : public QObject {
    */
   void handleAutoMove(Card* card, Pile* fromPile);
 
+ signals:
+  void gameWon(int _t1);
+
  private:
   unique_ptr<Deck> deck_;                           ///< The deck of cards.
   unique_ptr<WastePile> wastePile_;                 ///< The waste pile.
@@ -240,7 +248,9 @@ class Game : public QObject {
   deque<Move> movehistory_;  ///< Stack storing the history of moves.
   size_t maxHistory_;  ///< The maximium amount of moves stored in the history.
   GameSoundManager soundManager_;  ///< Game sound manager.
-  Card* prevHint_;
+  Card* prevHint_ = nullptr;
+  int hints_ = 0;       ///< Amount of hints taken
+  QElapsedTimer timer;  ///< Timer for stats
 };
 
 #endif

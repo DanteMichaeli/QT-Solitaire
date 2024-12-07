@@ -1,27 +1,32 @@
 #include "mainwindow.h"
 
+#include "game.hpp"
+#include "stats.hpp"
 #include "ui_mainwindow.h"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent), ui(new Ui::MainWindow) {
-
   ui->setupUi(this);
 
   ui->menuGame->menuAction()->setVisible(
       false);  // hide gameview topbar menu option
 
-  resize(1400, 900); // window size
+  resize(1400, 900);  // window size
 
   stackedWidget = ui->stackedWidget;
   stackedWidget->setCurrentIndex(0);
   // topbar connections
   connect(ui->actionFullscreen, &QAction::triggered, this,
           &MainWindow::fullscreen);
-  connect(ui->actionQuit, &QAction::triggered, this, &MainWindow::quit);
+  connect(ui->actionQuit, &QAction::triggered, this, &QApplication::quit);
+
+  connect(ui->actionNew_Game, &QAction::triggered, this,
+          &MainWindow::startGame);
 
   // Main menu button connections
 
-  connect(ui->startGameButton, &QPushButton::clicked, this, &MainWindow::startGame);
+  connect(ui->startGameButton, &QPushButton::clicked, this,
+          &MainWindow::startGame);
 
   connect(ui->settingsButton, &QPushButton::clicked, this,
           &MainWindow::openSettings);
@@ -31,8 +36,8 @@ MainWindow::MainWindow(QWidget *parent)
   connect(ui->exitSettingsButton, &QPushButton::clicked, this,
           &MainWindow::backToMenu);
 
-  connect(ui->winToMenuButton, &QPushButton::clicked, this, &MainWindow::backToMenu);
-
+  connect(ui->winToMenuButton, &QPushButton::clicked, this,
+          &MainWindow::backToMenu);
 }
 
 void MainWindow::fullscreen()  // Fullscreen button functionality
@@ -56,36 +61,36 @@ void MainWindow::backToMenu() {
 }
 
 void MainWindow::startGame() {
-    // Check if gameView already exists
-    if (gameView != nullptr)
-    {
-        // Remove gameView from the stacked widget
-        int index = stackedWidget->indexOf(gameView);
-        if (index != -1) {
-            stackedWidget->removeWidget(gameView);
-        }
-        // Delete the old gameView
-        delete gameView;
-        gameView = nullptr;
+  // Check if gameView already exists
+  if (gameView != nullptr) {
+    // Remove gameView from the stacked widget
+    int index = stackedWidget->indexOf(gameView);
+    if (index != -1) {
+      stackedWidget->removeWidget(gameView);
     }
+    // Delete the old gameView
+    delete gameView;
+    gameView = nullptr;
+  }
 
-    // Create a new GameView
-    gameView = new GameView(this);
-    connect(gameView, &GameView::gameWon, this, &MainWindow::onGameWon);
+  ui->menuGame->menuAction()->setVisible(true);
 
-    // Insert the new GameView into the stacked widget
-    stackedWidget->insertWidget(2, gameView);  // Insert GameView at index 2
+  // Create a new GameView
+  gameView = new GameView(this);
+  connect(gameView, &GameView::gameWon, this, &MainWindow::onGameWon);
 
-    // Switch to the game page
-    switchToPage(2);
+  // Insert the new GameView into the stacked widget
+  stackedWidget->insertWidget(2, gameView);  // Insert GameView at index 2
+
+  // Switch to the game page
+  switchToPage(2);
 }
 
 void MainWindow::openSettings() { switchToPage(1); }
 
-void MainWindow::onGameWon(int points)
-{
-    ui->pointsCounter->display(points);
-    switchToPage(3);
+void MainWindow::onGameWon(int points) {
+  ui->pointsCounter->display(points);
+  switchToPage(3);
 }
 
 void MainWindow::quit() { this->close(); }

@@ -9,7 +9,7 @@
 #include "targetPile.hpp"
 #include "wastePile.hpp"
 
-Card::Card(Suit s, Rank r, QGraphicsItem* parent)
+Card::Card(Suit s, Rank r, QGraphicsItem *parent)
     : suit_(s), rank_(r), faceUp_(false), QGraphicsObject(parent) {
   color_ = (s == Suit::SPADES || s == Suit::CLUBS) ? Color::BLACK : Color::RED;
 
@@ -47,6 +47,8 @@ QString Card::getSuitQstring() const {
       return QString("hearts");
     case Suit::SPADES:
       return QString("spades");
+    default:
+      return "";
   }
 }
 
@@ -85,11 +87,6 @@ void Card::toggleFace() {
   update();
 }
 
-void Card::toggleFace() {
-  faceUp_ ^= true;
-  update();
-}
-
 /*
 Card is clickabe if:
 
@@ -98,14 +95,14 @@ Card is clickabe if:
 - It is top card of wastepile
 */
 bool Card::isClickable() {
-  Pile* pile = static_cast<Pile*>(this->parentItem());
-  if (dynamic_cast<KlondikePile*>(pile) != nullptr) {
+  Pile *pile = static_cast<Pile *>(this->parentItem());
+  if (dynamic_cast<KlondikePile *>(pile) != nullptr) {
     return isFaceUp();
   }
-  if (dynamic_cast<WastePile*>(pile) != nullptr) {
+  if (dynamic_cast<WastePile *>(pile) != nullptr) {
     return pile->getTopCard() == this;
   }
-  if (dynamic_cast<Deck*>(pile) != nullptr) {
+  if (dynamic_cast<Deck *>(pile) != nullptr) {
     return true;
   }
   return false;
@@ -117,13 +114,13 @@ Card is draggable if:
 - Not in deck and clickable
 */
 bool Card::isDraggable() {
-  if (dynamic_cast<Deck*>(this->parentItem()) != nullptr) {
+  if (dynamic_cast<Deck *>(this->parentItem()) != nullptr) {
     return false;
   }
   return isClickable();
 }
 
-bool Card::operator==(Card& card) {
+bool Card::operator==(Card &card) {
   return suit_ == card.GetSuit() && rank_ == card.GetRank();
 }
 
@@ -131,20 +128,20 @@ QRectF Card::boundingRect() const {
   return QRectF(0, 0, pixmap_.width(), pixmap_.height());
 }
 
-void Card::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
-                 QWidget* widget) {
+void Card::paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
+                 QWidget *widget) {
   Q_UNUSED(option);
   Q_UNUSED(widget);
   pixmap_ = this->isFaceUp() ? frontImage_ : backImage_;
   painter->drawPixmap(0, 0, pixmap_);
 }
 
-void Card::mousePressEvent(QGraphicsSceneMouseEvent* event) {
+void Card::mousePressEvent(QGraphicsSceneMouseEvent *event) {
   if (event->button() == Qt::LeftButton && this->isClickable()) {
     prevPos_ = this->pos();
     auto parent = this->parentItem();
     parent->setZValue(parent->zValue() + 1);
-    auto kPile = dynamic_cast<KlondikePile*>(parent);
+    auto kPile = dynamic_cast<KlondikePile *>(parent);
     if (kPile != nullptr) {
       cardsAbove_ = kPile->getCardsAbove(this);
     }
@@ -152,16 +149,16 @@ void Card::mousePressEvent(QGraphicsSceneMouseEvent* event) {
   QGraphicsItem::mousePressEvent(event);
 }
 
-void Card::mouseMoveEvent(QGraphicsSceneMouseEvent* event) {
+void Card::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
   if (this->isDraggable() && (event->pos() - prevPos_).manhattanLength() > 0) {
     QPointF delta = event->scenePos() - event->lastScenePos();
-    for (auto& card : cardsAbove_) {
+    for (auto &card : cardsAbove_) {
       card->setPos(card->pos() + delta);
     }
   }
 }
 
-void Card::mouseReleaseEvent(QGraphicsSceneMouseEvent* event) {
+void Card::mouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
   cardsAbove_.clear();
   auto parent = this->parentItem();
   parent->setZValue(parent->zValue() - 1);
@@ -174,7 +171,7 @@ void Card::mouseReleaseEvent(QGraphicsSceneMouseEvent* event) {
     } else if (dist >= 10) {
       emit cardDragged(this, event->scenePos());
     } else {
-      static_cast<Pile*>(this->parentItem())->updateVisuals();
+      static_cast<Pile *>(this->parentItem())->updateVisuals();
     }
     QGraphicsItem::mouseReleaseEvent(event);
   }
@@ -193,8 +190,8 @@ void Card::createDragPixmap() {
   combinedPixmap.fill(Qt::transparent);
   QPainter painter(&combinedPixmap);
   int currentY = 0;
-  for (auto& card : cardsAbove_) {
-    auto& pxm = card->getPixmap();
+  for (auto &card : cardsAbove_) {
+    auto &pxm = card->getPixmap();
     painter.drawPixmap(0, currentY, pxm);
     currentY += offset;
   }
@@ -204,7 +201,7 @@ void Card::createDragPixmap() {
 
 void Card::startGlowing() {
   // Glow-in animation
-  QPropertyAnimation* animationIn = new QPropertyAnimation(this, "glowRadius");
+  QPropertyAnimation *animationIn = new QPropertyAnimation(this, "glowRadius");
   animationIn->setDuration(500);
   animationIn->setStartValue(0);
   animationIn->setEndValue(110);
@@ -218,7 +215,7 @@ void Card::startGlowing() {
 
 void Card::startGlowingOut() {
   // Glow-out animation
-  QPropertyAnimation* animationOut = new QPropertyAnimation(this, "glowRadius");
+  QPropertyAnimation *animationOut = new QPropertyAnimation(this, "glowRadius");
   animationOut->setDuration(500);
   animationOut->setStartValue(110);
   animationOut->setEndValue(0);
