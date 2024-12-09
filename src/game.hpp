@@ -6,6 +6,7 @@
 #include <deque>
 
 #include "deck.hpp"
+#include "settings.hpp"
 #include "gui/gameSoundManager.hpp"
 #include "klondikePile.hpp"
 #include "stats.hpp"
@@ -136,6 +137,8 @@ class Game : public QObject {
 
   int pointChange(MoveType move);
 
+  void changeSettings(Settings settings);
+
   /**
    * @brief Toggles hard mode for the game.
    */
@@ -213,7 +216,12 @@ class Game : public QObject {
   void gameStateChange(int points, int moves);
   void gameWon(int _t1);
 
+  public slots:
+
+  void updateSettingsSlot(Settings gameSettings);
+
  private slots:
+
   /**
    * @brief Handles the event when the deck is clicked.
    */
@@ -245,6 +253,7 @@ class Game : public QObject {
   int points_;  ///< The player's current score.
   int moves_;
   bool hardMode = false;     ///< Indicates if the game is in hard mode.
+  bool hintsEnabled = true;
   bool isWon = false;        ///< Indicates if the game has been won.
   deque<Move> movehistory_;  ///< Stack storing the history of moves.
   size_t maxHistory_;  ///< The maximium amount of moves stored in the history.

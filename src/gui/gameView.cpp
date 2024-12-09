@@ -10,7 +10,7 @@
 #include "targetPile.hpp"
 #include "wastePile.hpp"
 
-GameView::GameView(QWidget *parent)
+GameView::GameView(QWidget *parent, int volume)
     : QGraphicsView(parent),
       scene(new QGraphicsScene(this)),
       game_(std::make_unique<Game>()) {
@@ -30,10 +30,12 @@ void GameView::initializeGame() {
   layout_ = make_unique<KlondikeLayout>(scene, game_.get());
   connect(game_.get(), &Game::gameWon, this, &GameView::handleGameWon);
 
+  connect(this, &GameView::settingsRelaySignal, game_.get(), &Game::updateSettingsSlot);
+
   QPushButton *undoButton = new QPushButton("Undo");
   connect(undoButton, &QPushButton::clicked, this, [&]() { game_->undo(); });
 
-  QPushButton *hintButton = new QPushButton("Hint");
+  hintButton = new QPushButton("Hint");
   connect(hintButton, &QPushButton::clicked, this, [&]() { game_->hint(); });
 
   pointsLabel_ = new QLabel("Points: 0");
@@ -65,6 +67,24 @@ void GameView::initializeGame() {
 void GameView::updateLayout(QSizeF &newSize) {
   layout_->resize(newSize);
   updateToolbarSize();
+}
+
+void GameView::settingsRelaySlot(Settings gameSettings)
+{
+    emit settingsRelaySignal(gameSettings);
+
+    if(!gameSettings.isHintsEnabled)
+    {
+        hintButton->setEnabled(false);
+        hintButton->setStyleSheet("background-color: lightgray; color: gray;"); //make disabled gray out
+    }
+    else
+    {
+        hintButton->setEnabled(true);
+        hintButton->setStyleSheet("background-color: #964B00; border-bottom: 2px solid #222222; color: white;"); //if not disable make normal
+    }
+
+    qDebug() << "relaying settings";
 }
 
 void GameView::updateToolbarSize() {

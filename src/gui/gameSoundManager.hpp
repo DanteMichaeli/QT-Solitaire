@@ -19,7 +19,7 @@ class GameSoundManager {
   void playWinSound();                          // Play a win sound
   void playShuffleSound();                      // Play a shuffle deck sound
   void stop();                                  // Stop the audio thread
-
+  void setVolume(int volume);                             // set volume of sounds
  private:
   void audioThreadFunc();  // Thread function for processing sounds
 
