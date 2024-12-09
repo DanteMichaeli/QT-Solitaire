@@ -37,13 +37,18 @@ MainWindow::MainWindow(QWidget *parent)
 
   // settings menu button connections
   connect(ui->exitSettingsButton, &QPushButton::clicked, this,
-          &MainWindow::backToMenu);
+          &MainWindow::settingsToMenu);
 
   connect(ui->winToMenuButton, &QPushButton::clicked, this,
           &MainWindow::backToMenuInit);
 
   // stat to menu button
   connect(ui->statsToMenuButton, &QPushButton::clicked, this, &MainWindow::backToMenu);
+
+  //get initial settings
+  gameSettings.isHardModeEnabled = ui->hardModeCheckbox->isChecked();
+  gameSettings.isHintsEnabled = ui->hintsCheckbox->isChecked();
+  gameSettings.volume = ui->volumeSlider->value();
 
   initNewGame();
 }
@@ -66,6 +71,15 @@ void MainWindow::switchToPage(int pageIndex) {
 void MainWindow::backToMenu() {
   ui->menuGame->menuAction()->setVisible(false);
   switchToPage(0);
+}
+
+void MainWindow::settingsToMenu()
+{
+    gameSettings.isHardModeEnabled = ui->hardModeCheckbox->isChecked();
+    gameSettings.isHintsEnabled = ui->hintsCheckbox->isChecked();
+    gameSettings.volume = ui->volumeSlider->value();
+    emit settingsSignal(gameSettings);
+    switchToPage(0);
 }
 
 void MainWindow::backToMenuInit()
@@ -114,11 +128,15 @@ void MainWindow::initNewGame()
     }
 
     // Create a new GameView
-    gameView = new GameView(this);
+    gameView = new GameView(this, getVolume());
     connect(gameView, &GameView::gameWon, this, &MainWindow::onGameWon);
 
     // Insert the new GameView into the stacked widget
     stackedWidget->insertWidget(2, gameView);  // Insert GameView at index 2
+
+    // connect settings to new game
+    connect(this, &MainWindow::settingsSignal, gameView, &GameView::settingsRelaySlot);
+    emit settingsSignal(gameSettings);
 }
 
 void MainWindow::dealNewGame()
@@ -132,6 +150,11 @@ void MainWindow::openSettings() { switchToPage(1); }
 void MainWindow::onGameWon(int points) {
   ui->pointsCounter->display(points);
   switchToPage(3);
+}
+
+int MainWindow::getVolume()
+{
+    return ui->volumeSlider->value();
 }
 
 void MainWindow::quit() { this->close(); }
