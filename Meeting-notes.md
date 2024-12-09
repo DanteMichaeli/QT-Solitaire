@@ -236,3 +236,47 @@ A working app instance is created, with basic implementation of all the logical 
 ## Project status
 
 Most of the important pieces are created, but some functionality still missing for a proper working game. This should be fixed ASAP, and only then can we start making things pretty.
+
+# Meeting 9.12.2024 16:00-17:45
+
+**Participants**:
+
+1. Daniel Michaeli
+2. Kasper Tulonen
+
+## Summary of works
+
+1. Daniel Michaeli
+
+   Tried working on animations with Kasper, added sound library
+
+2. Ukko Ihamäki
+
+   Work on gui windows: win screen, settings, ...
+
+3. Kasper Tulonen
+
+   Worked on animations, drag and drop features, and hints
+
+4. Robin Runne
+
+   Implemented long-living statistics
+
+## Challenges
+
+1. Animations are not quite working yet.
+2. Sound effect introduced a noticeably delay. Worked with swapping QT multimedia for another library and using multithreading
+3. Code base has become quite complex. Might need to refactor some
+
+## Actions
+
+1. Fix animations
+2. Clean up code
+3. Implement other smaller features?
+
+> Please reflect these action decisions in your git commit messages so that
+> your group members and advisor can follow the progress.
+
+## Project status
+
+We have a working game! Small details like animations, sounds, gui details et.c. could still be implemented if time allows for it. We will probably not have enough time to get a second solitaire game mode up and running.
