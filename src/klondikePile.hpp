@@ -21,8 +21,7 @@ class KlondikePile : public Pile {
    * @param nofFacingUp The number of cards to flip face-up, starting from the
    * top.
    */
-  KlondikePile(Deck& deck, size_t nofCards = 0, size_t nofFacingUp = 0,
-               QGraphicsItem* parent = nullptr);
+  KlondikePile(QGraphicsItem* parent = nullptr);
 
   /**
    * @brief Flips the top card up/down.
