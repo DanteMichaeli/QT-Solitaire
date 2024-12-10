@@ -27,7 +27,6 @@ GameSoundManager::~GameSoundManager() {
 void GameSoundManager::playSound(const std::string& filePath) {
   {
     std::lock_guard<std::mutex> lock(queueMutex_);
-    std::cout << "[playSound] Enqueuing sound: " << filePath << std::endl;
 
     soundQueue_.push(filePath);
   }
@@ -90,16 +89,8 @@ void GameSoundManager::audioThreadFunc() {
       soundQueue_.pop();
     }
 
-    // Debug: Output the original file path
-    std::cout << "[audioThreadFunc] Original filePath: " << filePath
-              << std::endl;
-
     // Resolve relative path to absolute path
     std::string resolvedPath = std::filesystem::absolute(filePath).string();
-
-    // Debug: Output the resolved path
-    std::cout << "[audioThreadFunc] Resolved filePath: " << resolvedPath
-              << std::endl;
 
     // Play the sound
     if (ma_engine_play_sound(&engine_, resolvedPath.c_str(), NULL) !=

@@ -25,15 +25,29 @@ bool TargetPile::IsValid(const Card &card) {
 }
 
 void TargetPile::updateVisuals() {
-  // Render only top 2 cards (potentially for smooth animation)
-  int size = Size();
-  if (size == 0) {
-    return;
-  } else if (size <= 2) {
-    cards_[size - 1]->setPos(0, 0);
-  } else {
-    cards_[size - 1]->setPos(0, 0);
-    cards_[size - 3]->hide();
+  Card *card = this->getTopCard();
+  if (card != nullptr) {
+    // Get the card's previous position
+    QPointF prevPos = card->getPrevScenePos();
+    QPointF startPos = this->mapFromScene(prevPos);
+
+    // Set the start and end positions for the animation
+    QPointF endPos = QPointF(0, 1);
+    QPointF endScenePos = mapToScene(endPos);
+    card->setPrevScenePos(endScenePos);
+
+    // Start the animation
+    if (card->pos() != endPos) {
+      this->setZValue(5);
+      card->animateMove(startPos, endPos);
+    }
+  }
+}
+
+void TargetPile::setCardPrevScenePos() {
+  QPointF scenePos = mapToScene(QPointF(0, 1));
+  for (auto &card : cards_) {
+    card->setPrevScenePos(scenePos);
   }
 }
 
@@ -42,24 +56,7 @@ void TargetPile::paint(QPainter *painter,
                        QWidget *widget) {
   Q_UNUSED(option);
   Q_UNUSED(widget);
-  /*
-     QPainterPath path;
 
-     QFont font("Arial", 100, QFont::Bold);
-     QPointF center(rect_.width() / 4, rect_.height());
-     path.addText(center, font, "A");
-
-     // Set the pen for borders
-     painter->setBrush(QColor(0x52E457));  // Fill color
-     painter->setPen(Qt::NoPen);           // No outline (optional)
-
-     // Fill the text path
-     painter->fillPath(path, painter->brush());
-
-     painter->setBrush(Qt::transparent);
-     painter->setPen(Qt::black);
-     painter->drawRect(rect_);
-     */
   QPainterPath path;
 
   // Set font

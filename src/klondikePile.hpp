@@ -24,8 +24,6 @@ class KlondikePile : public Pile {
   KlondikePile(Deck& deck, size_t nofCards = 0, size_t nofFacingUp = 0,
                QGraphicsItem* parent = nullptr);
 
-  bool flipTopCard(bool value);
-
   /**
    * @brief Flips the top card up/down.
    *
@@ -51,6 +49,8 @@ class KlondikePile : public Pile {
   bool IsValid(const Card& card) override;
 
   void updateVisuals() override;
+
+  void setCardPrevScenePos() override;
 
  protected:
   QRectF boundingRect() const override;

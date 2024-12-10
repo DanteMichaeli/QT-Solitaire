@@ -102,6 +102,8 @@ class Pile : public QGraphicsObject {
 
   virtual void updateVisuals() = 0;  // Refresh the appearance of the pile
 
+  virtual void setCardPrevScenePos() = 0;
+
  signals:
   /**
    * @brief Signal emitted when a card is moved.

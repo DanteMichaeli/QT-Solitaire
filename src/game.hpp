@@ -168,6 +168,8 @@ class Game : public QObject {
    */
   int attemptMove(Card* card, Pile* fromPile, Pile* toPile);
 
+  void animateCardMovement(Card* card, Pile* fromPile, Pile* toPile);
+
   /**
    * @brief Attempts to move cards from the deck to the waste pile.
    * @return The point value of how many cards were moved.

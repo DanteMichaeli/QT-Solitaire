@@ -44,6 +44,8 @@ class WastePile : public Pile {
   void undoAddFromDeck(Deck& deck, size_t nofCards);
 
   void updateVisuals() override;
+
+  void setCardPrevScenePos() override;
 };
 
 #endif
