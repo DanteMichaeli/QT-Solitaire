@@ -196,6 +196,7 @@ int Game::attemptMove(Card* card, Pile* fromPile, Pile* toPile) {
 int Game::attemptDeckMove() {
   if (!deck_->Empty()) {
     int amount = hardMode ? 3 : 1;
+    soundManager_.playMoveSound();
     return wastePile_->AddFromDeck(*deck_, amount);
   } else if (deck_->recycle(*wastePile_)) {
     soundManager_.playShuffleSound();
