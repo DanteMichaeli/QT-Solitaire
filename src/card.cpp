@@ -10,7 +10,11 @@
 #include "wastePile.hpp"
 
 Card::Card(Suit s, Rank r, QGraphicsItem *parent)
-    : suit_(s), rank_(r), faceUp_(false), QGraphicsObject(parent) {
+    : suit_(s),
+      rank_(r),
+      faceUp_(false),
+      flipProgress_(180),
+      QGraphicsObject(parent) {
   color_ = (s == Suit::SPADES || s == Suit::CLUBS) ? Color::BLACK : Color::RED;
 
   // Enable selection and movement of the CardItem
@@ -28,6 +32,7 @@ Card::Card(Suit s, Rank r, QGraphicsItem *parent)
   }
 
   setScale(SCALING_FACTOR);
+
   glowEffect_ = new QGraphicsDropShadowEffect(this);
   glowEffect_->setBlurRadius(0);
   glowEffect_->setColor(Qt::darkRed);
@@ -53,9 +58,15 @@ Card::Card(Suit s, Rank r, QGraphicsItem *parent)
   isGlowing_ = false;
 
   // Moving animation
-  animation_ = new QPropertyAnimation(this, "pos");
-  animation_->setDuration(500);
-  animation_->setEasingCurve(QEasingCurve::InOutQuad);
+  moveAnimation_ = new QPropertyAnimation(this, "pos");
+  moveAnimation_->setDuration(500);
+  moveAnimation_->setEasingCurve(QEasingCurve::InOutQuad);
+
+  flipAnimation_ = new QPropertyAnimation(this, "flipProgress");
+  flipAnimation_->setDuration(250);
+  flipAnimation_->setStartValue(0);
+  flipAnimation_->setEndValue(180);
+  flipAnimation_->setEasingCurve(QEasingCurve::InOutQuad);
 }
 
 Card::~Card() { std::cout << "Card destroyed" << std::endl; }
@@ -97,17 +108,17 @@ QString Card::cardToQString() const {
 
 void Card::flipUp() {
   faceUp_ = true;
-  update();
+  flipAnim();
 }
 
 void Card::flipDown() {
   faceUp_ = false;
-  update();
+  flipAnim();
 }
 
 void Card::toggleFace() {
   faceUp_ ^= true;
-  update();
+  flipAnim();
 }
 
 /*
@@ -152,12 +163,14 @@ void Card::paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
                  QWidget *widget) {
   Q_UNUSED(option);
   Q_UNUSED(widget);
-  pixmap_ = this->isFaceUp() ? frontImage_ : backImage_;
+
+  int flipProg = flipProgress();
+  pixmap_ = (this->isFaceUp() == (flipProg >= 90)) ? frontImage_ : backImage_;
   painter->drawPixmap(0, 0, pixmap_);
 }
 
 void Card::mousePressEvent(QGraphicsSceneMouseEvent *event) {
-  if (animation_->state() != QAbstractAnimation::Running) {
+  if (moveAnimation_->state() != QAbstractAnimation::Running) {
     if (event->button() == Qt::LeftButton && this->isClickable()) {
       if (isGlowing_) {
         stopGlowingAnimation();
@@ -177,7 +190,7 @@ void Card::mousePressEvent(QGraphicsSceneMouseEvent *event) {
 }
 
 void Card::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
-  if (animation_->state() != QAbstractAnimation::Running) {
+  if (moveAnimation_->state() != QAbstractAnimation::Running) {
     if (this->isDraggable() &&
         (event->pos() - prevPos_).manhattanLength() > 0) {
       // Map the scene delta to the parent's local coordinate system
@@ -279,9 +292,11 @@ void Card::stopGlowingAnimation() {
 
 void Card::animateMove(QPointF &startPos, QPointF &endPos) {
   QGraphicsItem *parent = this->parentItem();
-  animation_->setStartValue(startPos);
-  animation_->setEndValue(endPos);
-  connect(animation_, &QAbstractAnimation::finished, this,
+  moveAnimation_->setStartValue(startPos);
+  moveAnimation_->setEndValue(endPos);
+  connect(moveAnimation_, &QAbstractAnimation::finished, this,
           [this, parent]() { parent->setZValue(1); });
-  animation_->start();
+  moveAnimation_->start();
 }
+
+void Card::flipAnim() { flipAnimation_->start(); }

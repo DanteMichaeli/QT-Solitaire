@@ -64,6 +64,8 @@ constexpr Rank allRanks[] = {ACE,   TWO,  THREE, FOUR, FIVE,  SIX, SEVEN,
 class Card : public QGraphicsObject {
   Q_OBJECT
   Q_PROPERTY(qreal glowRadius READ glowRadius WRITE setGlowRadius)
+  Q_PROPERTY(qreal flipProgress READ flipProgress WRITE setFlipProgress)
+
  public:
   /**
    * @brief Constructs a new Card object with specified suit and rank.
@@ -226,13 +228,35 @@ class Card : public QGraphicsObject {
 
   void stopGlowingAnimation();
 
+  qreal flipProgress() { return flipProgress_; }
+
+  void setFlipProgress(qreal progress) {
+    flipProgress_ = progress;
+
+    QTransform transform;
+    double scale = progress / 90.0;
+    double scaleHor = (progress < 90) ? 1 - scale : scale - 1;
+
+    QPointF center = this->boundingRect().center();
+    double scaledX = center.x() * this->scale();
+
+    transform.translate(scaledX, 1);
+    transform.scale(scaleHor, 1.0);
+    transform.translate(-scaledX, 1);
+    this->setTransform(transform);
+  }
+
+  void flipAnim();
+
  private:
   void createDragPixmap();
 
   QPixmap frontImage_;  ///< The front image of the card.
   QPixmap backImage_;   ///< The back image of the card.
   QPixmap pixmap_;      ///< Current pixmap.
-  QPointF prevPos_;     ///< The previous position of the card.
+
+  QPointF prevPos_;           ///< The previous position of the card.
+  vector<Card*> cardsAbove_;  ///< Cards that are above this card in a pile
 
   QGraphicsDropShadowEffect* glowEffect_;
   QPropertyAnimation* glowIn_;
@@ -240,14 +264,16 @@ class Card : public QGraphicsObject {
   QTimer* glowTimer_;
   bool isGlowing_;
 
+  QPropertyAnimation* moveAnimation_;
+  QPointF prevScenePos_;
+
+  QPropertyAnimation* flipAnimation_;
+  qreal flipProgress_;
+
   Suit suit_;    ///< Suit of the card (CLUBS, DIAMONDS, SPADES, HEARTS).
   Rank rank_;    ///< Rank of the card (ACE to KING).
   bool faceUp_;  ///< Face-up status of the card.
   Color color_;  ///< Color of the card (BLACK or RED).
-  vector<Card*> cardsAbove_;  ///< vector of all the cards that are on top of
-                              ///< this card in a pile.
-  QPropertyAnimation* animation_;
-  QPointF prevScenePos_;
 
   QPixmap tmpDragMap_;  // currently not in use.
 };
