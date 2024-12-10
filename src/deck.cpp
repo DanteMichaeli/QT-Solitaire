@@ -23,7 +23,7 @@ void Deck::Shuffle(unsigned long seed) {
   shuffle(cards_.begin(), cards_.end(), generator);
 
   for (int i = 0; i < Size(); i++) {
-    cards_[i]->setZValue(i);
+    cards_[i]->setZValue(i + 1);
   }
 }
 
@@ -47,9 +47,34 @@ void Deck::undoRecycle(WastePile& pile) {
   }
 }
 
+void Deck::setCardPrevScenePos() {
+  QPointF scenePos = mapToScene(QPointF(0, 1));
+  for (auto& card : cards_) {
+    card->setPrevScenePos(scenePos);
+  }
+}
+
 void Deck::updateVisuals() {
-  if (!Empty()) {
-    getTopCard()->show();
+  int i = Size();
+  QPointF endPos(0, 1);
+  QPointF endScenePos = mapToScene(endPos);
+  while (i > 0) {
+    i--;
+    // Get the card's previous position
+    Card* card = cards_[i].get();
+    QPointF prevPos = card->getPrevScenePos();
+    QPointF startPos = this->mapFromScene(prevPos);
+
+    // Set the start and end positions for the animation
+    card->setPrevScenePos(endScenePos);
+
+    // Start the animation
+    if (card->pos() != endPos) {
+      this->setZValue(6);
+      card->animateMove(startPos, endPos);
+    } else {
+      break;
+    }
   }
 }
 

@@ -28,17 +28,37 @@ void WastePile::undoAddFromDeck(Deck& deck, size_t nofCards) {
 }
 
 void WastePile::updateVisuals() {
-  int size = cards_.size();
-  int i = 0;
-  while (i < size - 3) {
-    cards_[i]->hide();
-    i++;
+  int show = 3;
+  int index = Size();
+  int i = std::max(Size() - show, 0);
+  while (index > 0) {
+    index--;
+    // Get the card's previous position
+    Card* card = cards_[index].get();
+    QPointF prevPos = card->getPrevScenePos();
+    QPointF startPos = this->mapFromScene(prevPos);
+
+    // Set the start and end positions for the animation
+    int j = (index >= i) ? index - i : 0;
+    QPointF endPos = QPointF(j * PILE_YOFFSET, 1);
+    QPointF endScenePos = mapToScene(endPos);
+    card->setPrevScenePos(endScenePos);
+
+    // Start the animation
+    if (card->pos() != endPos) {
+      this->setZValue(5);
+      card->animateMove(startPos, endPos);
+    } else {
+      break;
+    }
   }
-  int j = 0;
-  while (i < size) {
-    cards_[i]->setPos(j * PILE_YOFFSET, 0);
-    cards_[i]->show();
-    i++;
-    j++;
+}
+void WastePile::setCardPrevScenePos() {
+  int show = 3;
+  int i = std::max(Size() - show, 0);
+  for (int index = 0; index < Size(); index++) {
+    int j = (index >= i) ? index - i : 0;
+    QPointF scenePos = mapToScene(QPointF(j * PILE_YOFFSET, 1));
+    cards_[index]->setPrevScenePos(scenePos);
   }
 }

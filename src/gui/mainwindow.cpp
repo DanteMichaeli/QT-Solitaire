@@ -31,7 +31,8 @@ MainWindow::MainWindow(QWidget *parent)
   connect(ui->settingsButton, &QPushButton::clicked, this,
           &MainWindow::openSettings);
 
-  connect(ui->statsButton, &QPushButton::clicked, this, &MainWindow::menuToStatistics);
+  connect(ui->statsButton, &QPushButton::clicked, this,
+          &MainWindow::menuToStatistics);
 
   connect(ui->quitButton, &QPushButton::clicked, this, &MainWindow::quit);
 
@@ -43,9 +44,10 @@ MainWindow::MainWindow(QWidget *parent)
           &MainWindow::backToMenuInit);
 
   // stat to menu button
-  connect(ui->statsToMenuButton, &QPushButton::clicked, this, &MainWindow::backToMenu);
+  connect(ui->statsToMenuButton, &QPushButton::clicked, this,
+          &MainWindow::backToMenu);
 
-  //get initial settings
+  // get initial settings
   gameSettings.isHardModeEnabled = ui->hardModeCheckbox->isChecked();
   gameSettings.isHintsEnabled = ui->hintsCheckbox->isChecked();
   gameSettings.volume = ui->volumeSlider->value();
@@ -73,76 +75,73 @@ void MainWindow::backToMenu() {
   switchToPage(0);
 }
 
-void MainWindow::settingsToMenu()
-{
-    gameSettings.isHardModeEnabled = ui->hardModeCheckbox->isChecked();
-    gameSettings.isHintsEnabled = ui->hintsCheckbox->isChecked();
-    gameSettings.volume = ui->volumeSlider->value();
-    emit settingsSignal(gameSettings);
-    switchToPage(0);
+void MainWindow::settingsToMenu() {
+  gameSettings.isHardModeEnabled = ui->hardModeCheckbox->isChecked();
+  gameSettings.isHintsEnabled = ui->hintsCheckbox->isChecked();
+  gameSettings.volume = ui->volumeSlider->value();
+  emit settingsSignal(gameSettings);
+  switchToPage(0);
 }
 
-void MainWindow::backToMenuInit()
-{
-    backToMenu();
-    initNewGame();
+void MainWindow::backToMenuInit() {
+  backToMenu();
+  initNewGame();
 }
 
-void MainWindow::menuToStatistics()
-{
-    GameStats playStats = fromCSV("stats.csv");
+void MainWindow::menuToStatistics() {
+  GameStats playStats = fromCSV("stats.csv");
 
-    ui->winsLCD->display(playStats.wins);
-    ui->lossesLCD->display(playStats.losses);
-    ui->winRateLCD->display(playStats.winRate);
-    ui->averageTimeLCD->display(playStats.avgTime);
-    ui->hintCountLCD->display(playStats.hintCount);
-    ui->averageMovesLCD->display(playStats.avgMoves);
-    ui->undoCountLCD->display(playStats.undoCount);
-    ui->averagePointsLCD->display(playStats.avgPoints);
-    ui->bestPointsLCD->display(playStats.bestPoints);
-    ui->leaveRateLCD->display(playStats.leaveRate);
-    ui->gamesLCD->display(playStats.games);
+  ui->winsLCD->display(playStats.wins);
+  ui->lossesLCD->display(playStats.losses);
+  ui->winRateLCD->display(playStats.winRate);
+  ui->averageTimeLCD->display(playStats.avgTime);
+  ui->hintCountLCD->display(playStats.hintCount);
+  ui->averageMovesLCD->display(playStats.avgMoves);
+  ui->undoCountLCD->display(playStats.undoCount);
+  ui->averagePointsLCD->display(playStats.avgPoints);
+  ui->bestPointsLCD->display(playStats.bestPoints);
+  ui->leaveRateLCD->display(playStats.leaveRate);
+  ui->gamesLCD->display(playStats.games);
 
-    switchToPage(4);
+  switchToPage(4);
 }
-
 
 void MainWindow::startGame() {
   switchToPage(2);
   ui->menuGame->menuAction()->setVisible(true);
+  QSizeF size = this->size();
+  gameView->updateLayout(size);
 }
 
-void MainWindow::initNewGame()
-{
-    // Check if gameView already exists
-    if (gameView != nullptr) {
-        // Remove gameView from the stacked widget
-        int index = stackedWidget->indexOf(gameView);
-        if (index != -1) {
-            stackedWidget->removeWidget(gameView);
-        }
-        // Delete the old gameView
-        delete gameView;
-        gameView = nullptr;
+void MainWindow::initNewGame() {
+  // Check if gameView already exists
+  if (gameView != nullptr) {
+    // Remove gameView from the stacked widget
+    int index = stackedWidget->indexOf(gameView);
+    if (index != -1) {
+      stackedWidget->removeWidget(gameView);
     }
+    // Delete the old gameView
+    delete gameView;
+    gameView = nullptr;
+  }
 
-    // Create a new GameView
-    gameView = new GameView(this, getVolume());
-    connect(gameView, &GameView::gameWon, this, &MainWindow::onGameWon);
+  // Create a new GameView
+  gameView = new GameView(this, getVolume());
+  connect(gameView, &GameView::gameWon, this, &MainWindow::onGameWon);
 
-    // Insert the new GameView into the stacked widget
-    stackedWidget->insertWidget(2, gameView);  // Insert GameView at index 2
+  // Insert the new GameView into the stacked widget
+  stackedWidget->insertWidget(2, gameView);  // Insert GameView at index 2
 
-    // connect settings to new game
-    connect(this, &MainWindow::settingsSignal, gameView, &GameView::settingsRelaySlot);
-    emit settingsSignal(gameSettings);
+  // connect settings to new game
+  connect(this, &MainWindow::settingsSignal, gameView,
+          &GameView::settingsRelaySlot);
+  emit settingsSignal(gameSettings);
 }
 
-void MainWindow::dealNewGame()
-{
-    initNewGame();
-    switchToPage(2);
+void MainWindow::dealNewGame() {
+  initNewGame();
+  switchToPage(2);
 }
 
 void MainWindow::openSettings() { switchToPage(1); }
@@ -152,10 +151,7 @@ void MainWindow::onGameWon(int points) {
   switchToPage(3);
 }
 
-int MainWindow::getVolume()
-{
-    return ui->volumeSlider->value();
-}
+int MainWindow::getVolume() { return ui->volumeSlider->value(); }
 
 void MainWindow::quit() { this->close(); }
 

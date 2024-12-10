@@ -160,6 +160,12 @@ class Card : public QGraphicsObject {
 
   void startGlowing();
 
+  void animateMove(QPointF& startPos, QPointF& endPos);
+
+  void setPrevScenePos(QPointF& pos) { prevScenePos_ = pos; }
+
+  const QPointF& getPrevScenePos() const { return prevScenePos_; }
+
  signals:
   /**
    * @brief Signal emitted when a card is clicked.
@@ -240,6 +246,8 @@ class Card : public QGraphicsObject {
   Color color_;  ///< Color of the card (BLACK or RED).
   vector<Card*> cardsAbove_;  ///< vector of all the cards that are on top of
                               ///< this card in a pile.
+  QPropertyAnimation* animation_;
+  QPointF prevScenePos_;
 
   QPixmap tmpDragMap_;  // currently not in use.
 };

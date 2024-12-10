@@ -30,7 +30,8 @@ void GameView::initializeGame() {
   layout_ = make_unique<KlondikeLayout>(scene, game_.get());
   connect(game_.get(), &Game::gameWon, this, &GameView::handleGameWon);
 
-  connect(this, &GameView::settingsRelaySignal, game_.get(), &Game::updateSettingsSlot);
+  connect(this, &GameView::settingsRelaySignal, game_.get(),
+          &Game::updateSettingsSlot);
 
   QPushButton *undoButton = new QPushButton("Undo");
   connect(undoButton, &QPushButton::clicked, this, [&]() { game_->undo(); });
@@ -69,22 +70,21 @@ void GameView::updateLayout(QSizeF &newSize) {
   updateToolbarSize();
 }
 
-void GameView::settingsRelaySlot(Settings gameSettings)
-{
-    emit settingsRelaySignal(gameSettings);
+void GameView::settingsRelaySlot(Settings gameSettings) {
+  emit settingsRelaySignal(gameSettings);
 
-    if(!gameSettings.isHintsEnabled)
-    {
-        hintButton->setEnabled(false);
-        hintButton->setStyleSheet("background-color: lightgray; color: gray;"); //make disabled gray out
-    }
-    else
-    {
-        hintButton->setEnabled(true);
-        hintButton->setStyleSheet("background-color: #964B00; border-bottom: 2px solid #222222; color: white;"); //if not disable make normal
-    }
+  if (!gameSettings.isHintsEnabled) {
+    hintButton->setEnabled(false);
+    hintButton->setStyleSheet(
+        "background-color: lightgray; color: gray;");  // make disabled gray out
+  } else {
+    hintButton->setEnabled(true);
+    hintButton->setStyleSheet(
+        "background-color: #964B00; border-bottom: 2px solid #222222; color: "
+        "white;");  // if not disable make normal
+  }
 
-    qDebug() << "relaying settings";
+  qDebug() << "relaying settings";
 }
 
 void GameView::updateToolbarSize() {

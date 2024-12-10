@@ -45,6 +45,8 @@ class Deck : public Pile {
 
   void undoRecycle(WastePile& pile);
 
+  void setCardPrevScenePos() override;
+
   bool IsValid(const Card& card) override;
 
   void updateVisuals() override;

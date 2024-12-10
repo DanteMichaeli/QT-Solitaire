@@ -1,5 +1,6 @@
 #include "game.hpp"
 
+#include <QPropertyAnimation>
 #include <exception>
 
 Game::Game(QObject* parent)
@@ -168,15 +169,14 @@ int Game::pointChange(MoveType move) {
   return rawChange;
 }
 
-void Game::updateSettingsSlot(Settings settings)
-{
-    hardMode = settings.isHardModeEnabled;
-    hintsEnabled = settings.isHintsEnabled;
-    soundManager_.setVolume(settings.volume);
-    qDebug() << "Updated settings:";
-    qDebug() << "Volume:" << settings.volume;
-    qDebug() << "Hints Enabled:" << settings.isHintsEnabled;
-    qDebug() << "Hard Mode Enabled:" << settings.isHardModeEnabled;
+void Game::updateSettingsSlot(Settings settings) {
+  hardMode = settings.isHardModeEnabled;
+  hintsEnabled = settings.isHintsEnabled;
+  soundManager_.setVolume(settings.volume);
+  qDebug() << "Updated settings:";
+  qDebug() << "Volume:" << settings.volume;
+  qDebug() << "Hints Enabled:" << settings.isHintsEnabled;
+  qDebug() << "Hard Mode Enabled:" << settings.isHardModeEnabled;
 }
 
 int Game::attemptMove(Card* card, Pile* fromPile, Pile* toPile) {
@@ -186,13 +186,10 @@ int Game::attemptMove(Card* card, Pile* fromPile, Pile* toPile) {
       if (toPile->IsValid(*card)) {
         fromPile->TransferCard(*toPile, i);
         soundManager_.playMoveSound();
-        fromPile->updateVisuals();
-        toPile->updateVisuals();
         return i;
       }
     }
   }
-  fromPile->updateVisuals();  // Return the card to original position;
   return 0;
 }
 

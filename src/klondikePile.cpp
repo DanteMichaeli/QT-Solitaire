@@ -15,7 +15,6 @@ KlondikePile::KlondikePile(Deck& deck, size_t nofCards, size_t nofFacingUp,
     }
     deck.TransferCard(*this);
   }
-  updateVisuals();
   qDebug() << "KlondikePile created with" << cards_.size() << "cards.";
 }
 
@@ -47,9 +46,33 @@ bool KlondikePile::IsValid(const Card& card) {
 }
 
 void KlondikePile::updateVisuals() {
-  int i = 0;
-  for (auto card = cards_.begin(); card != cards_.end(); card++, i++) {
-    (*card)->setPos(0, i * PILE_YOFFSET);
+  int i = Size();
+  while (i > 0) {
+    i--;
+    // Get the card's previous position
+    Card* card = cards_[i].get();
+    QPointF prevPos = card->getPrevScenePos();
+    QPointF startPos = this->mapFromScene(prevPos);
+
+    // Set the start and end positions for the animation
+    QPointF endPos(0, 1 + i * PILE_YOFFSET);  // Offset for stacking
+    QPointF endScenePos = mapToScene(endPos);
+    card->setPrevScenePos(endScenePos);
+
+    // Start the animation
+    if (card->pos() != endPos) {
+      this->setZValue(5);
+      card->animateMove(startPos, endPos);
+    } else {
+      break;
+    }
+  }
+}
+
+void KlondikePile::setCardPrevScenePos() {
+  for (int i = 0; i < Size(); i++) {
+    QPointF scenePos = mapToScene(QPointF(0, 1 + i * PILE_YOFFSET));
+    cards_[i]->setPrevScenePos(scenePos);
   }
 }
 

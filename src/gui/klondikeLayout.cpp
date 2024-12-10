@@ -1,5 +1,7 @@
 #include "klondikeLayout.hpp"
 
+#include "gameView.hpp"
+
 KlondikeLayout::KlondikeLayout(QGraphicsScene* scene, Game* game)
     : Layout(scene, game) {
   init();
@@ -16,6 +18,7 @@ void KlondikeLayout::init() {
   // Create and add all seven Klondike piles to the tableau
   for (auto& ptr : game->getKPiles()) {
     scene->addItem(ptr.get());
+    ptr->updateVisuals();
   }
   for (auto& ptr : game->getTPiles()) {
     scene->addItem(ptr.get());
@@ -94,12 +97,15 @@ void KlondikeLayout::resize(QSizeF& newSize) {
   wPile->setScale(scale);
   deck->setPos(leftMpix + xDiff, topMpix + yDiff);
   wPile->setPos(leftMpix + 2 * xDiff + pWidth, topMpix + yDiff);
+  deck->setCardPrevScenePos();
+  wPile->setCardPrevScenePos();
 
   double xOffset = leftMpix + xDiff;
   double yOffset = topMpix + 2 * yDiff + pHeight;
   for (auto& kp : game->getKPiles()) {
     kp->setPos(xOffset, yOffset);
     kp->setScale(scale);
+    kp->setCardPrevScenePos();
     xOffset += xDiff + pWidth;
   }
 
@@ -108,6 +114,7 @@ void KlondikeLayout::resize(QSizeF& newSize) {
   for (auto& tp : game->getTPiles()) {
     tp->setPos(xOffset, yOffset);
     tp->setScale(scale);
+    tp->setCardPrevScenePos();
     xOffset += xDiff + pWidth;
   }
 }
