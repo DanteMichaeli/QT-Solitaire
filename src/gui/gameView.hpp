@@ -3,15 +3,15 @@
 
 #include <QGraphicsScene>
 #include <QGraphicsView>
-#include <QPushButton>
 #include <QLabel>
+#include <QPushButton>
 #include <QResizeEvent>
 #include <memory>
 #include <vector>
 
-#include "settings.hpp"
 #include "game.hpp"
 #include "layout.hpp"
+#include "settings.hpp"
 
 /**
  * @class GameView
@@ -30,16 +30,19 @@ class GameView : public QGraphicsView {
 
   void updateLayout(QSizeF &newSize);
 
-  public slots:
-  void settingsRelaySlot(Settings gameSettings); //get from mainwindow
+  void startGame() { game_->startGame(); }
 
-  signals:
+ public slots:
+  void settingsRelaySlot(Settings gameSettings);  // get from mainwindow
+
+ signals:
   void gameWon(int points);  // Relay signal to MainWindow.
-  void settingsRelaySignal(Settings gameSettings); //Relay to game
+  void settingsRelaySignal(Settings gameSettings);  // Relay to game
 
  protected slots:
   void handleGameStateChange(int points, int moves);
   void handleGameWon(int points);
+  void handleTimeElapsed(size_t elapsedTime);
 
  private:
   QGraphicsScene *scene;  // The scene containing all graphical items
@@ -48,7 +51,8 @@ class GameView : public QGraphicsView {
   QGraphicsProxyWidget *toolbarProxy_;
   QLabel *pointsLabel_;
   QLabel *moveLabel_;
-  QPushButton *hintButton;
+  QLabel *timerLabel_;
+  QPushButton *hintButton_;
   void updateToolbarSize();
 };
 #endif

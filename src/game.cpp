@@ -8,19 +8,22 @@ Game::Game(QObject* parent)
       targetPiles_(TARGET_PILE_AM),
       points_(0),
       moves_(0),
+      hints_(0),
+      undos_(0),
+      prevHint_(nullptr),
       maxHistory_(100),
       QObject(parent) {
   initDeck();
   initWastePile();
   initKlondikePiles();
   initTargetPiles();
+  initTimer();
 }
 
 void Game::initDeck() {
   deck_ = std::make_unique<Deck>();
   deck_->Shuffle();
   connect(deck_.get(), &Pile::cardClickMove, this, &Game::handleDeckClicked);
-  timer.start();
 }
 
 void Game::initWastePile() {
@@ -34,7 +37,7 @@ void Game::initKlondikePiles() {
     if (deck_->Empty()) {
       throw std::out_of_range("pile empty");
     }
-    klondikePiles_[i] = std::make_unique<KlondikePile>(*deck_, i + 1, 1);
+    klondikePiles_[i] = std::make_unique<KlondikePile>();
     connect(klondikePiles_[i].get(), &Pile::cardMoved, this, &Game::handleMove);
     connect(klondikePiles_[i].get(), &Pile::cardClickMove, this,
             &Game::handleAutoMove);
@@ -48,6 +51,32 @@ void Game::initTargetPiles() {
     connect(targetPiles_[i].get(), &Pile::cardClickMove, this,
             &Game::handleAutoMove);
   }
+}
+
+void Game::initTimer() {
+  elapsedTime_ = 0;
+  timer_ = new QTimer(this);
+  connect(timer_, &QTimer::timeout, this, &Game::elapseTime);
+}
+
+void Game::elapseTime() {
+  elapsedTime_++;
+  emit updateTime(elapsedTime_);
+}
+
+void Game::startGame() {
+  deck_->setCardPrevScenePos();
+  for (size_t i = 0; i < klondikePiles_.size(); i++) {
+    qDebug() << "Initializing KlondikePile with" << i << "cards.";
+    KlondikePile* klondikePile = klondikePiles_[i].get();
+    for (size_t j = 0; j <= i; j++) {
+      deck_->TransferCard(*klondikePile);
+    }
+    deck_->getTopCard()->flipUp();
+    deck_->TransferCard(*klondikePile);
+    klondikePile->updateVisuals();
+  }
+  timer_->start(1000);
 }
 
 void Game::logMove(Move& move) {
@@ -88,8 +117,8 @@ void Game::updateStats() {
   stats.avgPoints =
       (points_ + stats.avgPoints * stats.games) / (stats.games + 1.0);
   stats.wins += 1;
-  stats.avgTime = (timer.elapsed() / 100.0 + stats.avgTime * stats.games) /
-                  (stats.games + 1.0);
+  stats.avgTime =
+      (elapsedTime_ + stats.avgTime * stats.games) / (stats.games + 1.0);
   stats.games += 1;
   std::cout << stats.games << std::endl;
 

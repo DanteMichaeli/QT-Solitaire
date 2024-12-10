@@ -6,9 +6,9 @@
 #include <deque>
 
 #include "deck.hpp"
-#include "settings.hpp"
 #include "gui/gameSoundManager.hpp"
 #include "klondikePile.hpp"
+#include "settings.hpp"
 #include "stats.hpp"
 #include "targetPile.hpp"
 #include "wastePile.hpp"
@@ -104,6 +104,12 @@ class Game : public QObject {
    * @brief Initializes the target piles.
    */
   void initTargetPiles();
+
+  void initTimer();
+
+  void startGame();
+
+  void elapseTime();
 
   /**
    * @brief Retrieves the deck.
@@ -215,10 +221,11 @@ class Game : public QObject {
   void updateStats();
 
  signals:
+  void updateTime(size_t elapsedTime);
   void gameStateChange(int points, int moves);
   void gameWon(int _t1);
 
-  public slots:
+ public slots:
 
   void updateSettingsSlot(Settings gameSettings);
 
@@ -252,17 +259,23 @@ class Game : public QObject {
   unique_ptr<WastePile> wastePile_;                 ///< The waste pile.
   vector<unique_ptr<KlondikePile>> klondikePiles_;  ///< The Klondike piles.
   vector<unique_ptr<TargetPile>> targetPiles_;      ///< The target piles.
+
+  QTimer* timer_;
+  size_t elapsedTime_;
+
   int points_;  ///< The player's current score.
-  int moves_;
-  bool hardMode = false;     ///< Indicates if the game is in hard mode.
+  size_t moves_;
+  size_t hints_;
+  size_t undos_;
+
+  bool hardMode = false;  ///< Indicates if the game is in hard mode.
   bool hintsEnabled = true;
-  bool isWon = false;        ///< Indicates if the game has been won.
-  deque<Move> movehistory_;  ///< Stack storing the history of moves.
+  bool isWon = false;  ///< Indicates if the game has been won.
   size_t maxHistory_;  ///< The maximium amount of moves stored in the history.
+
+  deque<Move> movehistory_;        ///< Stack storing the history of moves.
   GameSoundManager soundManager_;  ///< Game sound manager.
-  Card* prevHint_ = nullptr;
-  int hints_ = 0;       ///< Amount of hints taken
-  QElapsedTimer timer;  ///< Timer for stats
+  Card* prevHint_;
 };
 
 #endif

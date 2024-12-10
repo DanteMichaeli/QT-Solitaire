@@ -111,6 +111,7 @@ void MainWindow::startGame() {
   ui->menuGame->menuAction()->setVisible(true);
   QSizeF size = this->size();
   gameView->updateLayout(size);
+  gameView->startGame();
 }
 
 void MainWindow::initNewGame() {

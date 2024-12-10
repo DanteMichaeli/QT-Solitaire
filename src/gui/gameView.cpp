@@ -4,6 +4,7 @@
 #include <QGraphicsProxyWidget>
 #include <QHBoxLayout>
 #include <QPushButton>
+#include <QTime>
 
 #include "klondikeLayout.hpp"
 #include "klondikePile.hpp"
@@ -36,15 +37,19 @@ void GameView::initializeGame() {
   QPushButton *undoButton = new QPushButton("Undo");
   connect(undoButton, &QPushButton::clicked, this, [&]() { game_->undo(); });
 
-  hintButton = new QPushButton("Hint");
-  connect(hintButton, &QPushButton::clicked, this, [&]() { game_->hint(); });
+  hintButton_ = new QPushButton("Hint");
+  connect(hintButton_, &QPushButton::clicked, this, [&]() { game_->hint(); });
 
   pointsLabel_ = new QLabel("Points: 0");
   moveLabel_ = new QLabel("Moves: 0");
+  timerLabel_ = new QLabel("0:00:00");
   connect(game_.get(), &Game::gameStateChange, this,
           &GameView::handleGameStateChange);
+  connect(game_.get(), &Game::updateTime, this, &GameView::handleTimeElapsed);
+
   pointsLabel_->setStyleSheet("color: white;");
   moveLabel_->setStyleSheet("color: white;");
+  timerLabel_->setStyleSheet("color: white;");
 
   QWidget *toolbarWidget = new QWidget();
   QHBoxLayout *toolbarLayout = new QHBoxLayout(toolbarWidget);
@@ -52,10 +57,11 @@ void GameView::initializeGame() {
   toolbarLayout->setSpacing(10);
 
   toolbarLayout->addWidget(undoButton);
-  toolbarLayout->addWidget(hintButton);
+  toolbarLayout->addWidget(hintButton_);
   toolbarLayout->addStretch();
   toolbarLayout->addWidget(moveLabel_);
   toolbarLayout->addWidget(pointsLabel_);
+  toolbarLayout->addWidget(timerLabel_);
 
   toolbarProxy_ = scene->addWidget(toolbarWidget);
   toolbarProxy_->setPos(0, 0);
@@ -74,12 +80,12 @@ void GameView::settingsRelaySlot(Settings gameSettings) {
   emit settingsRelaySignal(gameSettings);
 
   if (!gameSettings.isHintsEnabled) {
-    hintButton->setEnabled(false);
-    hintButton->setStyleSheet(
+    hintButton_->setEnabled(false);
+    hintButton_->setStyleSheet(
         "background-color: lightgray; color: gray;");  // make disabled gray out
   } else {
-    hintButton->setEnabled(true);
-    hintButton->setStyleSheet(
+    hintButton_->setEnabled(true);
+    hintButton_->setStyleSheet(
         "background-color: #964B00; border-bottom: 2px solid #222222; color: "
         "white;");  // if not disable make normal
   }
@@ -102,4 +108,10 @@ void GameView::handleGameStateChange(int points, int moves) {
   pointsLabel_->setText(QString("Points: %1").arg(points));
   moveLabel_->setText(QString("Moves: %1").arg(moves));
 }
+
 void GameView::handleGameWon(int points) { emit gameWon(points); }
+
+void GameView::handleTimeElapsed(size_t elapsedTime) {
+  QTime time = QTime(0, 0, 0).addSecs(elapsedTime);
+  timerLabel_->setText(time.toString("H:mm:ss"));
+}
