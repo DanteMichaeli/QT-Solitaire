@@ -5,7 +5,7 @@ KlondikePile::KlondikePile(QGraphicsItem* parent) : Pile(parent) {}
 bool KlondikePile::flipCard(bool faceUp, int indexFromBack) {
   if (!this->Empty()) {
     int size = this->Size();
-    Card* card = cards_[size - indexFromBack].get();
+    Card* card = cards_[size - indexFromBack];
     if (!faceUp) {
       card->flipDown();
     } else if (!card->isFaceUp()) {
@@ -23,7 +23,7 @@ bool KlondikePile::IsValid(const Card& card) {
   if (cards_.empty()) {
     return card.GetRank() == Rank::KING;
   }
-  Card* top = cards_.back().get();
+  Card* top = getTopCard();
   bool diffColor = card.GetColor() != top->GetColor();
   bool isNextLower = card.GetRank() == top->GetRank() - 1;
   return diffColor && isNextLower;
@@ -34,7 +34,7 @@ void KlondikePile::updateVisuals() {
   while (i > 0) {
     i--;
     // Get the card's previous position
-    Card* card = cards_[i].get();
+    Card* card = cards_[i];
     QPointF prevPos = card->getPrevScenePos();
     QPointF startPos = this->mapFromScene(prevPos);
 

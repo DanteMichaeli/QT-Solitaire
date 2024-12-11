@@ -53,7 +53,7 @@ class Pile : public QGraphicsObject {
 
   Card* getCardFromBack(size_t i);
 
-  vector<unique_ptr<Card>>& getCards() { return cards_; }
+  const vector<Card*>& getCards() const { return cards_; }
   /**
    * @brief Get the index of a card, going from top to bottom.
    *
@@ -69,14 +69,14 @@ class Pile : public QGraphicsObject {
    * @brief Add a card to the pile.
    * @param card A unique pointer to the Card to add.
    */
-  void AddCard(std::unique_ptr<Card>& card);
+  void AddCard(Card* card);
 
   /**
    * @brief Removes and returns the top card from the pile.
    * @return A unique pointer to the top Card object, or nullptr if the pile
    * is empty.
    */
-  unique_ptr<Card> RemoveCard();
+  Card* RemoveCard();
 
   /**
    * @brief A function that moves a card to another pile.
@@ -148,8 +148,8 @@ class Pile : public QGraphicsObject {
   void paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
              QWidget* widget = nullptr) override;
 
-  vector<unique_ptr<Card>> cards_;  ///< All the cards inside this pile.
-  QRectF rect_;  ///< The rectangle defining the item’s boundaries.
+  vector<Card*> cards_;  ///< All the cards inside this pile.
+  QRectF rect_;          ///< The rectangle defining the item’s boundaries.
 
  private slots:
   /**

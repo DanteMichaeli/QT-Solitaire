@@ -21,15 +21,17 @@ Game::Game(QObject* parent)
 }
 
 void Game::initDeck() {
-  deck_ = std::make_unique<Deck>();
+  deck_ = new Deck();
+  deck_->setParent(this);
   deck_->Shuffle();
-  connect(deck_.get(), &Pile::cardClickMove, this, &Game::handleDeckClicked);
+  connect(deck_, &Pile::cardClickMove, this, &Game::handleDeckClicked);
 }
 
 void Game::initWastePile() {
-  wastePile_ = std::make_unique<WastePile>();
-  connect(wastePile_.get(), &Pile::cardMoved, this, &Game::handleMove);
-  connect(wastePile_.get(), &Pile::cardClickMove, this, &Game::handleAutoMove);
+  wastePile_ = new WastePile();
+  wastePile_->setParent(this);
+  connect(wastePile_, &Pile::cardMoved, this, &Game::handleMove);
+  connect(wastePile_, &Pile::cardClickMove, this, &Game::handleAutoMove);
 }
 
 void Game::initKlondikePiles() {
@@ -37,19 +39,21 @@ void Game::initKlondikePiles() {
     if (deck_->Empty()) {
       throw std::out_of_range("pile empty");
     }
-    klondikePiles_[i] = std::make_unique<KlondikePile>();
-    connect(klondikePiles_[i].get(), &Pile::cardMoved, this, &Game::handleMove);
-    connect(klondikePiles_[i].get(), &Pile::cardClickMove, this,
-            &Game::handleAutoMove);
+    KlondikePile* klondikePile = new KlondikePile();
+    klondikePile->setParent(this);
+    klondikePiles_[i] = klondikePile;
+    connect(klondikePile, &Pile::cardMoved, this, &Game::handleMove);
+    connect(klondikePile, &Pile::cardClickMove, this, &Game::handleAutoMove);
   }
 }
 
 void Game::initTargetPiles() {
   for (size_t i = 0; i < TARGET_PILE_AM; ++i) {
-    targetPiles_[i] = std::make_unique<TargetPile>();
-    connect(targetPiles_[i].get(), &Pile::cardMoved, this, &Game::handleMove);
-    connect(targetPiles_[i].get(), &Pile::cardClickMove, this,
-            &Game::handleAutoMove);
+    TargetPile* targetPile = new TargetPile();
+    targetPile->setParent(this);
+    targetPiles_[i] = targetPile;
+    connect(targetPile, &Pile::cardMoved, this, &Game::handleMove);
+    connect(targetPile, &Pile::cardClickMove, this, &Game::handleAutoMove);
   }
 }
 
@@ -68,7 +72,7 @@ void Game::startGame() {
   deck_->setCardPrevScenePos();
   for (size_t i = 0; i < klondikePiles_.size(); i++) {
     qDebug() << "Initializing KlondikePile with" << i << "cards.";
-    KlondikePile* klondikePile = klondikePiles_[i].get();
+    KlondikePile* klondikePile = klondikePiles_[i];
     for (size_t j = 0; j <= i; j++) {
       deck_->TransferCard(*klondikePile);
     }
@@ -77,6 +81,12 @@ void Game::startGame() {
     klondikePile->updateVisuals();
   }
   timer_->start(1000);
+}
+
+Game::~Game() {
+  if (moves_ > 0) {
+    updateStats();
+  }
 }
 
 void Game::logMove(Move& move) {
@@ -100,27 +110,33 @@ void Game::logMove(Move& move) {
   emit gameStateChange(points_, moves_);
 
   if (hasWon()) {
-    updateStats();
-    cout << "You won!" << endl;
-
     emit gameWon(points_);
   }
 }
 
 void Game::updateStats() {
   GameStats stats = fromCSV("stats.csv");
-  std::cout << stats.games << std::endl;
+
+  stats.games++;
+  double games = static_cast<double>(stats.games);
+
+  isWon ? stats.wins++ : stats.losses++;
+  stats.winRate = stats.wins / games;
+
+  stats.totalTime += elapsedTime_;
+  if (isWon) stats.bestTime = std::max(stats.bestTime, elapsedTime_);
+  stats.avgTime = stats.totalTime / games;
+
+  stats.totalMoves += moves_;
+  if (isWon) stats.bestMoves = std::min(stats.bestMoves, moves_);
+  stats.avgMoves = stats.totalMoves / games;
 
   stats.hintCount += hints_;
-  stats.avgMoves = (movehistory_.size() + stats.avgMoves * stats.games) /
-                   (stats.games + 1.0);
-  stats.avgPoints =
-      (points_ + stats.avgPoints * stats.games) / (stats.games + 1.0);
-  stats.wins += 1;
-  stats.avgTime =
-      (elapsedTime_ + stats.avgTime * stats.games) / (stats.games + 1.0);
-  stats.games += 1;
-  std::cout << stats.games << std::endl;
+  stats.undoCount += undos_;
+
+  stats.totalPoints += points_;
+  if (isWon) stats.bestPoints = std::max(stats.bestPoints, points_);
+  stats.avgPoints = stats.totalPoints / games;
 
   saveStatsToCSV("stats.csv", stats);
 }
@@ -135,6 +151,7 @@ void Game::addToHistory(Move& move) {
 void Game::undo() {
   if (!movehistory_.empty()) {
     moves_--;
+    undos_++;
     Move& move = movehistory_.back();
     movehistory_.pop_back();
 
@@ -192,7 +209,7 @@ int Game::pointChange(MoveType move) {
     default:
       rawChange = 0;
   }
-  if (rawChange < 0 && points_ + rawChange < 0) {
+  if (rawChange < 0 && points_ < -rawChange) {
     rawChange = -points_;
   }
   return rawChange;
@@ -272,10 +289,10 @@ MoveType Game::determineMove(Pile* fromPile, Pile* toPile) {
 
 void Game::hint() {
   if (prevHint_ == nullptr) {
+    hints_ += 1;
     prevHint_ = findHint();
   }
   if (prevHint_ != nullptr) {
-    hints_ += 1;
     prevHint_->startGlowing();
   }
 }
@@ -360,26 +377,22 @@ void Game::handleDeckClicked() {
   int howMany = attemptDeckMove();
   if (howMany != 0) {
     if (howMany > 0) {
-      Move move(DECK_TO_WASTE, deck_.get(), wastePile_.get(), howMany,
-                dToWPoints);
+      Move move(DECK_TO_WASTE, deck_, wastePile_, howMany, dToWPoints);
       logMove(move);
     } else {
-      Move move(RECYCLE_DECK, wastePile_.get(), deck_.get(), 0,
-                pointChange(RECYCLE_DECK));
+      Move move(RECYCLE_DECK, wastePile_, deck_, 0, pointChange(RECYCLE_DECK));
       logMove(move);
     }
   }
 }
 
 Pile* Game::findLegalPile(Card* card) {
-  for (auto& ptr : targetPiles_) {
-    Pile* pile = ptr.get();
+  for (auto& pile : targetPiles_) {
     if (pile != card->parentItem() && pile->IsValid(*card)) {
       return pile;
     }
   }
-  for (auto& ptr : klondikePiles_) {
-    Pile* pile = ptr.get();
+  for (auto& pile : klondikePiles_) {
     if (pile != card->parentItem() && pile->IsValid(*card)) {
       return pile;
     }
@@ -388,14 +401,12 @@ Pile* Game::findLegalPile(Card* card) {
 }
 
 Pile* Game::findPile(QPointF scenePosition) {
-  for (auto& ptr : targetPiles_) {
-    Pile* pile = ptr.get();
+  for (auto& pile : targetPiles_) {
     if (pile->contains(pile->mapFromScene(scenePosition))) {
       return pile;
     }
   }
-  for (auto& ptr : klondikePiles_) {
-    Pile* pile = ptr.get();
+  for (auto& pile : klondikePiles_) {
     if (pile->contains(pile->mapFromScene(scenePosition))) {
       return pile;
     }

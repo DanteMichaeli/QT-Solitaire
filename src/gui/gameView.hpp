@@ -6,6 +6,7 @@
 #include <QLabel>
 #include <QPushButton>
 #include <QResizeEvent>
+#include <QToolButton>
 #include <memory>
 #include <vector>
 
@@ -13,18 +14,27 @@
 #include "layout.hpp"
 #include "settings.hpp"
 
+enum DropDownOption { NEW_GAME, SETTINGS, MAIN_MENU, QUIT };
+
 /**
  * @class GameView
  * @brief The main view for the Solitaire game, displaying the deck and a single
  * card.
  */
-
 class GameView : public QGraphicsView {
   Q_OBJECT
  public:
   GameView(QWidget *parent = nullptr, int volume = 100);
 
-  void initializeGame();  // Initializes the scene and game components
+  ~GameView() { qDebug() << "View destroyed"; }
+
+  void initView();
+
+  void initButtons();
+
+  void initLabels();
+
+  void initToolbar();
 
   Layout &getLayout() { return *layout_; }
 
@@ -32,12 +42,11 @@ class GameView : public QGraphicsView {
 
   void startGame() { game_->startGame(); }
 
- public slots:
   void settingsRelaySlot(Settings gameSettings);  // get from mainwindow
 
  signals:
   void gameWon(int points);  // Relay signal to MainWindow.
-  void settingsRelaySignal(Settings gameSettings);  // Relay to game
+  void dropdownSignal(DropDownOption option);
 
  protected slots:
   void handleGameStateChange(int points, int moves);
@@ -45,14 +54,18 @@ class GameView : public QGraphicsView {
   void handleTimeElapsed(size_t elapsedTime);
 
  private:
-  QGraphicsScene *scene;  // The scene containing all graphical items
-  unique_ptr<Game> game_;
+  QGraphicsScene *scene_;  // The scene containing all graphical items
+  Game *game_;
   unique_ptr<Layout> layout_;
-  QGraphicsProxyWidget *toolbarProxy_;
+
+  QWidget *toolbarWidget_;
   QLabel *pointsLabel_;
   QLabel *moveLabel_;
   QLabel *timerLabel_;
+
   QPushButton *hintButton_;
-  void updateToolbarSize();
+  QPushButton *undoButton_;
+  QToolButton *menuButton_;
+  void updateToolbarSize(QSizeF &size);
 };
 #endif

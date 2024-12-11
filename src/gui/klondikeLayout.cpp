@@ -17,11 +17,11 @@ void KlondikeLayout::init() {
 
   // Create and add all seven Klondike piles to the tableau
   for (auto& ptr : game->getKPiles()) {
-    scene->addItem(ptr.get());
+    scene->addItem(ptr);
     ptr->updateVisuals();
   }
   for (auto& ptr : game->getTPiles()) {
-    scene->addItem(ptr.get());
+    scene->addItem(ptr);
   }
 }
 

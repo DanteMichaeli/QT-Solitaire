@@ -66,9 +66,8 @@ void GameSoundManager::stop() {
   }
 }
 
-void GameSoundManager::setVolume(int volume)
-{
-    ma_engine_set_volume(&engine_, volume/50.0);
+void GameSoundManager::setVolume(int volume) {
+  ma_engine_set_volume(&engine_, volume / 100.0);
 }
 
 // Thread function for processing sounds

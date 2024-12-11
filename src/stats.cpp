@@ -2,6 +2,7 @@
 
 #include <filesystem>
 #include <fstream>
+#include <game.hpp>
 #include <iostream>
 #include <sstream>
 #include <string>
@@ -13,9 +14,10 @@ void createInitialStatsFile(const std::string& fileName) {
 
     if (file.is_open()) {
       // Write the header and initial values
-      file << "Wins,Losses,WinRate,AvgTime,AvgMoves,UndoCount,HintCount,"
-              "LeaveRate,BestPoints,AvgPoints,Games\n";
-      file << "0,0,0.0,0.0,0,0,0,0.0,0,0.0,0\n";
+      file << "Games,Wins,Losses,WinRate,TotalTime,BestTime,AvgTime,TotalMoves,"
+              "BestMoves,AvgMoves,UndoCount,HintCount,TotalPoints,BestPoints,"
+              "AvgPoints\n";
+      file << "0,0,0,0,0,0,0,0,0,0,0,0,0,0,0\n ";
 
       file.close();
       std::cout << "Initial stats file created: " << fileName << std::endl;
@@ -30,15 +32,17 @@ void saveStatsToCSV(const std::string& fileName, const GameStats& stats) {
 
   if (file.is_open()) {
     // Write header row
-    file << "Wins,Losses,WinRate,AvgTime,AvgMoves,UndoCount,HintCount,"
-            "LeaveRate,BestPoints,AvgPoints,games\n";
+    file << "Games,Wins,Losses,WinRate,TotalTime,BestTime,AvgTime,TotalMoves,"
+            "BestMoves,AvgMoves,UndoCount,HintCount,TotalPoints,BestPoints,"
+            "AvgPoints\n";
 
     // Write each record
-    file << stats.wins << "," << stats.losses << "," << stats.winRate << ","
-         << stats.avgTime << "," << stats.avgMoves << "," << stats.undoCount
-         << "," << stats.hintCount << "," << stats.leaveRate << ","
-         << stats.bestPoints << "," << stats.avgPoints << "," << stats.games
-         << "\n";
+    file << stats.games << "," << stats.wins << "," << stats.losses << ","
+         << stats.winRate << "," << stats.totalTime << "," << stats.bestTime
+         << "," << stats.avgTime << "," << stats.totalMoves << ","
+         << stats.bestMoves << "," << stats.avgMoves << "," << stats.undoCount
+         << "," << stats.hintCount << "," << stats.totalPoints << ","
+         << stats.bestPoints << "," << stats.avgPoints << "\n";
 
     file.close();
   } else {
@@ -62,27 +66,39 @@ GameStats fromCSV(const std::string& fileName) {
       std::string cell;
 
       std::getline(lineStream, cell, ',');
+      stats.games = std::stoi(cell);
+      std::getline(lineStream, cell, ',');
       stats.wins = std::stoi(cell);
       std::getline(lineStream, cell, ',');
       stats.losses = std::stoi(cell);
       std::getline(lineStream, cell, ',');
       stats.winRate = std::stod(cell);
+
+      std::getline(lineStream, cell, ',');
+      stats.totalTime = std::stod(cell);
+      std::getline(lineStream, cell, ',');
+      stats.bestTime = std::stod(cell);
       std::getline(lineStream, cell, ',');
       stats.avgTime = std::stod(cell);
+
+      std::getline(lineStream, cell, ',');
+      stats.totalMoves = std::stod(cell);
+      std::getline(lineStream, cell, ',');
+      stats.bestMoves = std::stod(cell);
       std::getline(lineStream, cell, ',');
       stats.avgMoves = std::stod(cell);
+
       std::getline(lineStream, cell, ',');
       stats.undoCount = std::stoi(cell);
       std::getline(lineStream, cell, ',');
       stats.hintCount = std::stoi(cell);
+
       std::getline(lineStream, cell, ',');
-      stats.leaveRate = std::stod(cell);
+      stats.totalPoints = std::stoull(cell);
       std::getline(lineStream, cell, ',');
-      stats.bestPoints = std::stoi(cell);
+      stats.bestPoints = std::stod(cell);
       std::getline(lineStream, cell, ',');
-      stats.avgPoints = std::stod(cell);
-      std::getline(lineStream, cell, ',');
-      stats.games = std::stoi(cell);
+      stats.avgPoints = std::stoi(cell);
     }
 
     file.close();

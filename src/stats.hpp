@@ -6,27 +6,35 @@
 #include <sstream>
 #include <string>
 
-#include "game.hpp"
+class Game;
 
 /**
  * @brief Stat tracking functions
  * Assumes all data is in the form of Wins, Losses, Win rate, Average time,
- * Average moves, undo count, hint count, Leave Rate, Best & average points
+ * Average moves, undo count, hint count, Best time, Best & average points
  *
  */
 
 struct GameStats {
-  int wins;
-  int losses;
+  size_t games;
+  size_t wins;
+  size_t losses;
   double winRate;
+
+  size_t totalTime;
+  size_t bestTime;
   double avgTime;
-  int avgMoves;
-  int undoCount;
-  int hintCount;
-  double leaveRate;
-  int bestPoints;
+
+  size_t totalMoves;
+  size_t bestMoves;
+  double avgMoves;
+
+  size_t undoCount;
+  size_t hintCount;
+
+  size_t totalPoints;
+  size_t bestPoints;
   double avgPoints;
-  int games;
 };
 
 void createInitialStatsFile(const std::string& fileName);
