@@ -10,6 +10,7 @@ Game::Game(QObject* parent)
       moves_(0),
       hints_(0),
       undos_(0),
+      isWon_(false),
       prevHint_(nullptr),
       maxHistory_(100),
       QObject(parent) {
@@ -73,7 +74,7 @@ void Game::startGame() {
   for (size_t i = 0; i < klondikePiles_.size(); i++) {
     qDebug() << "Initializing KlondikePile with" << i << "cards.";
     KlondikePile* klondikePile = klondikePiles_[i];
-    for (size_t j = 0; j <= i; j++) {
+    for (size_t j = 0; j < i; j++) {
       deck_->TransferCard(*klondikePile);
     }
     deck_->getTopCard()->flipUp();
@@ -110,6 +111,8 @@ void Game::logMove(Move& move) {
   emit gameStateChange(points_, moves_);
 
   if (hasWon()) {
+    isWon_ = true;
+    soundManager_.playWinSound();
     emit gameWon(points_);
   }
 }
@@ -120,22 +123,28 @@ void Game::updateStats() {
   stats.games++;
   double games = static_cast<double>(stats.games);
 
-  isWon ? stats.wins++ : stats.losses++;
+  isWon_ ? stats.wins++ : stats.losses++;
   stats.winRate = stats.wins / games;
 
   stats.totalTime += elapsedTime_;
-  if (isWon) stats.bestTime = std::max(stats.bestTime, elapsedTime_);
+  if (isWon_) stats.bestTime = std::max(stats.bestTime, elapsedTime_);
   stats.avgTime = stats.totalTime / games;
 
   stats.totalMoves += moves_;
-  if (isWon) stats.bestMoves = std::min(stats.bestMoves, moves_);
   stats.avgMoves = stats.totalMoves / games;
+  if (isWon_) {
+    if (stats.bestMoves != 0) {
+      stats.bestMoves = std::min(stats.bestMoves, moves_);
+    } else {
+      stats.bestMoves = moves_;
+    }
+  }
 
   stats.hintCount += hints_;
   stats.undoCount += undos_;
 
   stats.totalPoints += points_;
-  if (isWon) stats.bestPoints = std::max(stats.bestPoints, points_);
+  if (isWon_) stats.bestPoints = std::max(stats.bestPoints, points_);
   stats.avgPoints = stats.totalPoints / games;
 
   saveStatsToCSV("stats.csv", stats);
@@ -257,7 +266,6 @@ bool Game::hasWon() {
       return false;
     }
   }
-  soundManager_.playWinSound();
   return true;
 }
 

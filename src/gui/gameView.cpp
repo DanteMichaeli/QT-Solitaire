@@ -12,6 +12,7 @@
 
 #include "klondikeLayout.hpp"
 #include "klondikePile.hpp"
+#include "mainwindow.h"
 #include "targetPile.hpp"
 #include "wastePile.hpp"
 
@@ -180,7 +181,7 @@ void GameView::handleGameStateChange(int points, int moves) {
 
 void GameView::handleGameWon(int points) { emit gameWon(points); }
 
-void GameView::handleTimeElapsed(size_t elapsedTime) {
-  QTime time = QTime(0, 0, 0).addSecs(elapsedTime);
-  timerLabel_->setText(time.toString("H:mm:ss"));
+void GameView::handleTimeElapsed(unsigned long elapsedTime) {
+  QString newText = MainWindow::formatTime(elapsedTime);
+  timerLabel_->setText(newText);
 }

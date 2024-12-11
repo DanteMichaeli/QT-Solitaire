@@ -1,5 +1,7 @@
 #include "mainwindow.h"
 
+#include <QTime>
+
 #include "game.hpp"
 #include "stats.hpp"
 #include "ui_mainwindow.h"
@@ -28,8 +30,11 @@ MainWindow::MainWindow(QWidget *parent)
 
   // Main menu button connections
 
-  connect(ui->startGameButton, &QPushButton::clicked, this,
+  connect(ui->continueButton, &QPushButton::clicked, this,
           &MainWindow::startGame);
+
+  connect(ui->startGameButton, &QPushButton::clicked, this,
+          &MainWindow::dealNewGame);
 
   connect(ui->settingsButton, &QPushButton::clicked, this,
           &MainWindow::openSettings);
@@ -75,6 +80,8 @@ void MainWindow::switchToPage(int pageIndex) {
 
 void MainWindow::backToMenu() {
   ui->menuGame->menuAction()->setVisible(false);
+  (gameStarted_ == true) ? ui->continueButton->setEnabled(true)
+                         : ui->continueButton->setEnabled(false);
   switchToPage(0);
 }
 
@@ -82,28 +89,45 @@ void MainWindow::settingsToMenu() {
   gameSettings.isHardModeEnabled = ui->hardModeCheckbox->isChecked();
   gameSettings.isHintsEnabled = ui->hintsCheckbox->isChecked();
   gameSettings.volume = ui->volumeSlider->value();
+  gameView->settingsRelaySlot(gameSettings);
+  (gameStarted_ == true) ? ui->continueButton->setEnabled(true)
+                         : ui->continueButton->setEnabled(false);
   switchToPage(0);
 }
 
 void MainWindow::backToMenuInit() {
   backToMenu();
   initNewGame();
+  ui->continueButton->setEnabled(false);
 }
 
 void MainWindow::menuToStatistics() {
   GameStats playStats = fromCSV("stats.csv");
 
+  ui->gamesLCD->display(QString::number(playStats.games));
   ui->winsLCD->display(QString::number(playStats.wins));
   ui->lossesLCD->display(QString::number(playStats.losses));
-  ui->winRateLCD->display(QString::number(playStats.winRate));
-  ui->averageTimeLCD->display(QString::number(playStats.avgTime));
+  ui->winRateLCD->display(QString::number(playStats.winRate, 'f', 2));
+
+  QString tot = MainWindow::formatTime(playStats.totalTime);
+  QString best = MainWindow::formatTime(playStats.bestTime);
+  size_t avTime = playStats.avgTime;
+  QString avg = MainWindow::formatTime(avTime);
+
+  ui->totalTimeLCD->display(tot);
+  ui->bestTimeLCD->display(best);
+  ui->averageTimeLCD->display(avg);
+
+  ui->totalMovesLCD->display(QString::number(playStats.totalMoves));
+  ui->bestMovesLCD->display(QString::number(playStats.bestMoves));
+  ui->averageMovesLCD->display(QString::number(playStats.avgMoves, 'f', 2));
+
   ui->hintCountLCD->display(QString::number(playStats.hintCount));
-  ui->averageMovesLCD->display(QString::number(playStats.avgMoves));
   ui->undoCountLCD->display(QString::number(playStats.undoCount));
-  ui->averagePointsLCD->display(QString::number(playStats.avgPoints));
+
+  ui->totalPointsLCD->display(QString::number(playStats.totalPoints));
   ui->bestPointsLCD->display(QString::number(playStats.bestPoints));
-  ui->bestTimeLCD->display(QString::number(playStats.bestTime));
-  ui->gamesLCD->display(QString::number(playStats.games));
+  ui->averagePointsLCD->display(QString::number(playStats.avgPoints, 'f', 2));
 
   switchToPage(4);
 }
@@ -114,6 +138,7 @@ void MainWindow::startGame() {
   if (!gameStarted_) {
     QSizeF size = this->size();
     gameView->updateLayout(size);
+    gameView->settingsRelaySlot(gameSettings);
     gameView->startGame();
     gameStarted_ = true;
   }
@@ -176,6 +201,17 @@ void MainWindow::fromDropdownSlot(DropDownOption option) {
     default:
       return;
   }
+}
+
+QString MainWindow::formatTime(size_t seconds) {
+  size_t h = seconds / 3600;
+  size_t min = (seconds % 3600) / 60;
+  size_t sec = seconds % 60;
+
+  return QString("%1:%2:%3")
+      .arg(h)
+      .arg(min, 2, 10, QChar('0'))
+      .arg(sec, 2, 10, QChar('0'));
 }
 
 void MainWindow::resizeEvent(QResizeEvent *event) {
