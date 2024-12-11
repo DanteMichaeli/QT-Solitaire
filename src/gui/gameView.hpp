@@ -51,7 +51,7 @@ class GameView : public QGraphicsView {
  protected slots:
   void handleGameStateChange(int points, int moves);
   void handleGameWon(int points);
-  void handleTimeElapsed(size_t elapsedTime);
+  void handleTimeElapsed(unsigned long elapsedTime);
 
  private:
   QGraphicsScene *scene_;  // The scene containing all graphical items

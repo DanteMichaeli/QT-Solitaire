@@ -266,7 +266,7 @@ class Game : public QObject {
 
   bool hardMode = false;  ///< Indicates if the game is in hard mode.
   bool hintsEnabled = true;
-  bool isWon = false;  ///< Indicates if the game has been won.
+  bool isWon_;         ///< Indicates if the game has been won.
   size_t maxHistory_;  ///< The maximium amount of moves stored in the history.
 
   deque<Move> movehistory_;        ///< Stack storing the history of moves.

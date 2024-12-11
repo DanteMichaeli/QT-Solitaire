@@ -44,6 +44,8 @@ class MainWindow : public QMainWindow {
 
   void resizeEvent(QResizeEvent *event);
 
+  static QString formatTime(size_t seconds);
+
  private:
   Ui::MainWindow *ui;
   QStackedWidget *stackedWidget;  // Main window's pages
