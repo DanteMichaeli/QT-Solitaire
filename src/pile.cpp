@@ -6,39 +6,39 @@
 Pile::Pile(QGraphicsItem* parent)
     : QGraphicsObject(parent), rect_(0, 0, 100, 150) {}
 
-Pile::~Pile() {}
+Pile::~Pile() { qDebug() << "PILE destroyed"; }
 
 Card* Pile::getTopCard() const {
   if (!this->Empty()) {
-    return cards_.back().get();
+    return cards_.back();
   }
   return nullptr;
 }
 
-void Pile::AddCard(std::unique_ptr<Card>& card) {
+void Pile::AddCard(Card* card) {
   card->setParentItem(this);
   card->setPos(0, 0);
-  connect(card.get(), &Card::cardClicked, this, &Pile::onCardClicked);
-  connect(card.get(), &Card::cardDragged, this, &Pile::onCardDragged);
+  connect(card, &Card::cardClicked, this, &Pile::onCardClicked);
+  connect(card, &Card::cardDragged, this, &Pile::onCardDragged);
   cards_.push_back(std::move(card));
 }
 
-unique_ptr<Card> Pile::RemoveCard() {
+Card* Pile::RemoveCard() {
   if (cards_.empty()) {
     return nullptr;
   }
-  unique_ptr<Card> cardPtr = std::move(cards_.back());
-  cardPtr->setParentItem(nullptr);
-  disconnect(cardPtr.get(), &Card::cardClicked, this, &Pile::onCardClicked);
-  disconnect(cardPtr.get(), &Card::cardDragged, this, &Pile::onCardDragged);
+  Card* card = getTopCard();
+  card->setParentItem(nullptr);
+  disconnect(card, &Card::cardClicked, this, &Pile::onCardClicked);
+  disconnect(card, &Card::cardDragged, this, &Pile::onCardDragged);
   cards_.pop_back();
-  return cardPtr;
+  return card;
 }
 
 Card* Pile::getCardFromBack(size_t i) {
   int index = cards_.size() - 1 - i;
   if (index >= 0 && index < cards_.size()) {
-    return cards_[index].get();
+    return cards_[index];
   }
   return nullptr;
 }
@@ -46,11 +46,11 @@ Card* Pile::getCardFromBack(size_t i) {
 void Pile::TransferCard(Pile& other, size_t nof) {
   if (!this->Empty() && nof <= this->Size()) {
     if (nof == 1) {
-      unique_ptr<Card> card = RemoveCard();
+      Card* card = RemoveCard();
       card->setZValue(other.Size() + 1);
       other.AddCard(card);
     } else {
-      stack<unique_ptr<Card>> aux;
+      stack<Card*> aux;
       size_t i = 0;
       while (i < nof && !cards_.empty()) {
         aux.push(RemoveCard());
@@ -70,11 +70,11 @@ vector<Card*> Pile::getCardsAbove(Card* card) {
   vector<Card*> above;
   bool found = false;
   for (auto& cardPtr : cards_) {
-    if (!found && cardPtr.get() == card) {
+    if (!found && cardPtr == card) {
       found = true;
     }
     if (found) {
-      above.push_back(cardPtr.get());
+      above.push_back(cardPtr);
     }
   }
   return above;
@@ -86,7 +86,7 @@ int Pile::cardIndexFromBack(Card* card) const {
   while (backIt != cards_.begin()) {
     i++;
     backIt--;
-    if (backIt->get() == card) {
+    if (*backIt == card) {
       return i;
     }
   }

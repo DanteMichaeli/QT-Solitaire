@@ -8,7 +8,7 @@ Deck::Deck(QGraphicsItem* parent) : Pile(parent) {
   // Add cards to deck
   for (Suit suit : allSuits) {
     for (Rank rank : allRanks) {
-      auto card = std::make_unique<Card>(suit, rank);
+      Card* card = new Card(suit, rank, this);
       AddCard(card);
     }
   }
@@ -61,7 +61,7 @@ void Deck::updateVisuals() {
   while (i > 0) {
     i--;
     // Get the card's previous position
-    Card* card = cards_[i].get();
+    Card* card = cards_[i];
     QPointF prevPos = card->getPrevScenePos();
     QPointF startPos = this->mapFromScene(prevPos);
 

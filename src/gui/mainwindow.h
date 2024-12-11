@@ -4,8 +4,9 @@
 #include <QMainWindow>
 #include <QResizeEvent>
 #include <QStackedWidget>
-#include "settings.hpp"
+
 #include "gameView.hpp"
+#include "settings.hpp"
 
 namespace Ui {
 
@@ -43,18 +44,17 @@ class MainWindow : public QMainWindow {
 
   void resizeEvent(QResizeEvent *event);
 
-  signals:
-  void settingsSignal(Settings gameSettings);
-
  private:
   Ui::MainWindow *ui;
   QStackedWidget *stackedWidget;  // Main window's pages
-  GameView *gameView = nullptr;   // Game view page
+  GameView *gameView;             // Game view page
   Settings gameSettings;
+  bool gameStarted_;
   void switchToPage(int pageIndex);
 
  private slots:
   void onGameWon(int points);
+  void fromDropdownSlot(DropDownOption option);
 };
 
 #endif  // MAINWINDOW_H

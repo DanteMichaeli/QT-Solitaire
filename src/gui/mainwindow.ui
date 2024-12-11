@@ -47,7 +47,7 @@
        </font>
       </property>
       <property name="currentIndex">
-       <number>1</number>
+       <number>3</number>
       </property>
       <widget class="QWidget" name="mainMenuPage">
        <layout class="QHBoxLayout" name="horizontalLayout_7">
@@ -1105,12 +1105,12 @@
              </font>
             </property>
             <property name="text">
-             <string>Leave rate:</string>
+             <string>Best time:</string>
             </property>
            </widget>
           </item>
           <item>
-           <widget class="QLCDNumber" name="leaveRateLCD">
+           <widget class="QLCDNumber" name="bestTimeLCD">
             <property name="frameShape">
              <enum>QFrame::Shape::NoFrame</enum>
             </property>
@@ -1280,6 +1280,13 @@
            </spacer>
           </item>
          </layout>
+        </item>
+        <item>
+         <widget class="Line" name="line_10">
+          <property name="orientation">
+           <enum>Qt::Orientation::Horizontal</enum>
+          </property>
+         </widget>
         </item>
         <item>
          <layout class="QHBoxLayout" name="horizontalLayout_29">

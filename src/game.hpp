@@ -83,7 +83,7 @@ class Game : public QObject {
   /**
    * @brief Destroys the Game object.
    */
-  ~Game() {}
+  ~Game();
 
   /**
    * @brief Initializes the deck.
@@ -115,25 +115,25 @@ class Game : public QObject {
    * @brief Retrieves the deck.
    * @return A pointer to the deck.
    */
-  Deck* getDeck() const { return deck_.get(); }
+  Deck* getDeck() { return deck_; }
 
   /**
    * @brief Retrieves the waste pile.
    * @return A pointer to the waste pile.
    */
-  WastePile* getWPile() const { return wastePile_.get(); }
+  WastePile* getWPile() { return wastePile_; }
 
   /**
    * @brief Retrieves the Klondike piles.
    * @return A vector of unique pointers to Klondike piles.
    */
-  vector<unique_ptr<KlondikePile>>& getKPiles() { return klondikePiles_; }
+  const vector<KlondikePile*>& getKPiles() const { return klondikePiles_; }
 
   /**
    * @brief Retrieves the target piles.
    * @return A vector of unique pointers to target piles.
    */
-  vector<unique_ptr<TargetPile>>& getTPiles() { return targetPiles_; }
+  const vector<TargetPile*>& getTPiles() const { return targetPiles_; }
 
   /**
    * @brief Get player points.
@@ -173,8 +173,6 @@ class Game : public QObject {
    * @return The point value of how many cards were moved.
    */
   int attemptMove(Card* card, Pile* fromPile, Pile* toPile);
-
-  void animateCardMovement(Card* card, Pile* fromPile, Pile* toPile);
 
   /**
    * @brief Attempts to move cards from the deck to the waste pile.
@@ -220,14 +218,12 @@ class Game : public QObject {
    */
   void updateStats();
 
+  void updateSettingsSlot(Settings gameSettings);
+
  signals:
   void updateTime(size_t elapsedTime);
   void gameStateChange(int points, int moves);
   void gameWon(int _t1);
-
- public slots:
-
-  void updateSettingsSlot(Settings gameSettings);
 
  private slots:
 
@@ -255,15 +251,15 @@ class Game : public QObject {
   void handleAutoMove(Card* card, Pile* fromPile);
 
  private:
-  unique_ptr<Deck> deck_;                           ///< The deck of cards.
-  unique_ptr<WastePile> wastePile_;                 ///< The waste pile.
-  vector<unique_ptr<KlondikePile>> klondikePiles_;  ///< The Klondike piles.
-  vector<unique_ptr<TargetPile>> targetPiles_;      ///< The target piles.
+  Deck* deck_;                           ///< The deck of cards.
+  WastePile* wastePile_;                 ///< The waste pile.
+  vector<KlondikePile*> klondikePiles_;  ///< The Klondike piles.
+  vector<TargetPile*> targetPiles_;      ///< The target piles.
 
   QTimer* timer_;
   size_t elapsedTime_;
 
-  int points_;  ///< The player's current score.
+  size_t points_;  ///< The player's current score.
   size_t moves_;
   size_t hints_;
   size_t undos_;

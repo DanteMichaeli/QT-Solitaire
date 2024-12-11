@@ -34,7 +34,7 @@ void WastePile::updateVisuals() {
   while (index > 0) {
     index--;
     // Get the card's previous position
-    Card* card = cards_[index].get();
+    Card* card = cards_[index];
     QPointF prevPos = card->getPrevScenePos();
     QPointF startPos = this->mapFromScene(prevPos);
 
