@@ -143,7 +143,7 @@
               <enum>Qt::LayoutDirection::LeftToRight</enum>
              </property>
              <property name="text">
-              <string>Start new game</string>
+              <string>New game</string>
              </property>
              <property name="iconSize">
               <size>
@@ -488,7 +488,7 @@
              <item>
               <widget class="QPushButton" name="exitSettingsButton">
                <property name="text">
-                <string>Exit</string>
+                <string>Return</string>
                </property>
                <property name="flat">
                 <bool>false</bool>

@@ -42,6 +42,8 @@ class TargetPile : public Pile {
 
   void setCardPrevScenePos() override;
 
+  QPointF getOffset() const override;
+
  protected:
   void paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
              QWidget *widget = nullptr) override;

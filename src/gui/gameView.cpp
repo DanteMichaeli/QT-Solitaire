@@ -16,14 +16,15 @@
 #include "targetPile.hpp"
 #include "wastePile.hpp"
 
-GameView::GameView(QWidget *parent, int volume)
+GameView::GameView(Settings &settings, QWidget *parent)
     : QGraphicsView(parent),
       scene_(new QGraphicsScene(this)),
-      game_(new Game(this)) {
+      game_(make_unique<Game>()) {
   initView();
   initButtons();
   initLabels();
   initToolbar();
+  changeSettings(settings);
 }
 
 void GameView::initView() {
@@ -36,8 +37,8 @@ void GameView::initView() {
   this->setRenderHint(QPainter::Antialiasing, true);
   scene_->clear();
 
-  layout_ = make_unique<KlondikeLayout>(scene_, game_);
-  connect(game_, &Game::gameWon, this, &GameView::handleGameWon);
+  layout_ = make_unique<KlondikeLayout>(scene_, game_.get());
+  connect(game_.get(), &Game::gameWon, this, &GameView::handleGameWon);
 }
 
 void GameView::initButtons() {
@@ -68,14 +69,22 @@ void GameView::initButtons() {
   QPushButton *quitButton = new QPushButton("Quit");
 
   // Connect actions with the same signal but different values
-  connect(newGameButton, &QPushButton::clicked, this,
-          [this]() { emit dropdownSignal(NEW_GAME); });
-  connect(mainMenuButton, &QPushButton::clicked, this,
-          [this]() { emit dropdownSignal(MAIN_MENU); });
-  connect(settingsButton, &QPushButton::clicked, this,
-          [this]() { emit dropdownSignal(SETTINGS); });
-  connect(quitButton, &QPushButton::clicked, this,
-          [this]() { emit dropdownSignal(QUIT); });
+  connect(newGameButton, &QPushButton::clicked, this, [this, menu]() {
+    menu->close();
+    emit dropdownSignal(DD_NEW_GAME);
+  });
+  connect(mainMenuButton, &QPushButton::clicked, this, [this, menu]() {
+    menu->close();
+    emit dropdownSignal(DD_MAIN_MENU);
+  });
+  connect(settingsButton, &QPushButton::clicked, this, [this, menu]() {
+    menu->close();
+    emit dropdownSignal(DD_SETTINGS);
+  });
+  connect(quitButton, &QPushButton::clicked, this, [this, menu]() {
+    menu->close();
+    emit dropdownSignal(DD_QUIT);
+  });
 
   // Add buttons to the layout
   menuLayout->addWidget(newGameButton);
@@ -110,9 +119,9 @@ void GameView::initLabels() {
   moveLabel_->setStyleSheet("color: white;");
   timerLabel_->setStyleSheet("color: white;");
 
-  connect(game_, &Game::gameStateChange, this,
+  connect(game_.get(), &Game::gameStateChange, this,
           &GameView::handleGameStateChange);
-  connect(game_, &Game::updateTime, this, &GameView::handleTimeElapsed);
+  connect(game_.get(), &Game::updateTime, this, &GameView::handleTimeElapsed);
 }
 
 void GameView::initToolbar() {
@@ -148,8 +157,8 @@ void GameView::updateLayout(QSizeF &newSize) {
   updateToolbarSize(newSize);
 }
 
-void GameView::settingsRelaySlot(Settings gameSettings) {
-  game_->updateSettingsSlot(gameSettings);
+void GameView::changeSettings(Settings &gameSettings) {
+  game_->changeSettings(gameSettings);
   if (!gameSettings.isHintsEnabled) {
     hintButton_->setEnabled(false);
     hintButton_->setStyleSheet("background-color: lightgray; color: gray;");
@@ -159,8 +168,6 @@ void GameView::settingsRelaySlot(Settings gameSettings) {
         "background-color: #964B00; border-bottom: 2px solid #222222; color: "
         "white;");
   }
-
-  qDebug() << "relaying settings";
 }
 
 void GameView::updateToolbarSize(QSizeF &size) {

@@ -60,3 +60,4 @@ CMakeLists.txt.user
 
 #statistics file
 stats.csv
+settings.json

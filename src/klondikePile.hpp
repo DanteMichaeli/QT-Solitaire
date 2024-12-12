@@ -51,6 +51,8 @@ class KlondikePile : public Pile {
 
   void setCardPrevScenePos() override;
 
+  QPointF getOffset() const override;
+
  protected:
   QRectF boundingRect() const override;
 };
