@@ -11,16 +11,16 @@ bool TargetPile::IsValid(const Card &card) {
     return false;
   }
   if (this->Size() == 0) {
-    suit_ = card.GetSuit();
+    suit_ = card.getSuit();
   }
 
-  if (card.GetSuit() != suit_) {
+  if (card.getSuit() != suit_) {
     return false;
   }
   if (Empty()) {
-    return card.GetRank() == Rank::ACE;
+    return card.getRank() == Rank::ACE;
   } else {
-    return card.GetRank() == cards_.back()->GetRank() + 1;
+    return card.getRank() == cards_.back()->getRank() + 1;
   }
 }
 

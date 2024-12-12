@@ -13,9 +13,9 @@ TEST_CASE("Card Initialization", "[card]") {
   Card card(Suit::HEARTS, Rank::ACE);
 
   // Verify suit and rank are correctly set
-  REQUIRE(card.GetSuit() == Suit::HEARTS);
-  REQUIRE(card.GetRank() == Rank::ACE);
-  REQUIRE(card.GetColor() == Color::RED);
+  REQUIRE(card.getSuit() == Suit::HEARTS);
+  REQUIRE(card.getRank() == Rank::ACE);
+  REQUIRE(card.getColor() == Color::RED);
   REQUIRE(card.isFaceUp() == false);  // Card should be face-down initially
 }
 

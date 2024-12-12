@@ -3,17 +3,26 @@
 KlondikePile::KlondikePile(QGraphicsItem* parent) : Pile(parent) {}
 
 bool KlondikePile::flipCard(bool faceUp, int indexFromBack) {
-  if (!this->Empty()) {
-    int size = this->Size();
-    Card* card = cards_[size - indexFromBack];
-    if (!faceUp) {
-      card->flipDown();
-    } else if (!card->isFaceUp()) {
-      card->flipUp();
-      return true;
+  if (this->Empty()) {
+    return false;  // No cards to flip
+  }
+
+  int size = this->Size();
+
+  Card* card = cards_[size - indexFromBack];
+
+  if (faceUp) {
+    if (!card->isFaceUp()) {
+      card->flip();  // Flip to face-up
+      return true;   // Successfully flipped
+    }
+  } else {
+    if (card->isFaceUp()) {
+      card->flip();  // Flip to face-down
     }
   }
-  return false;
+
+  return false;  // No action taken
 }
 
 bool KlondikePile::IsValid(const Card& card) {
@@ -21,11 +30,11 @@ bool KlondikePile::IsValid(const Card& card) {
     return false;
   }
   if (cards_.empty()) {
-    return card.GetRank() == Rank::KING;
+    return card.getRank() == Rank::KING;
   }
   Card* top = getTopCard();
-  bool diffColor = card.GetColor() != top->GetColor();
-  bool isNextLower = card.GetRank() == top->GetRank() - 1;
+  bool diffColor = card.getColor() != top->getColor();
+  bool isNextLower = card.getRank() == top->getRank() - 1;
   return diffColor && isNextLower;
 }
 

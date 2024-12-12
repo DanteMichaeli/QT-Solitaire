@@ -63,44 +63,48 @@ constexpr Rank allRanks[] = {ACE,   TWO,  THREE, FOUR, FIVE,  SIX, SEVEN,
  */
 class Card : public QGraphicsObject {
   Q_OBJECT
-  Q_PROPERTY(qreal glowRadius READ glowRadius WRITE setGlowRadius)
-  Q_PROPERTY(qreal flipProgress READ flipProgress WRITE setFlipProgress)
+  Q_PROPERTY(qreal getGlowRadius READ getGlowRadius WRITE setGlowRadius)
+  Q_PROPERTY(qreal getFlipProgress READ getFlipProgress WRITE setFlipProgress)
 
  public:
   /**
-   * @brief Constructs a new Card object with specified suit and rank.
+   * @addtogroup CardLogic
+   * @{
+   */
+
+  /**
+   * @brief Construct a new Card object with specified suit and rank.
    * @param s Suit of the card (CLUBS, DIAMONDS, SPADES, HEARTS).
    * @param r Rank of the card (ACE to KING).
    */
   explicit Card(Suit s, Rank r, QGraphicsItem* parent = nullptr);
 
   /**
-   * @brief Destroys the Card object and outputs a message indicating which card
-   * is being destroyed.
+   * @brief Destroy the Card object
    */
   ~Card();
 
   /**
-   * @brief Gets the suit of the card.
+   * @brief Get the suit of the card.
    * @return Suit of the card.
    */
-  Suit GetSuit() const { return suit_; }
+  Suit getSuit() const { return suit_; }
 
   /**
-   * @brief Gets the rank of the card.
+   * @brief Get the rank of the card.
    * @return Rank of the card.
    */
-  Rank GetRank() const { return rank_; }
+  Rank getRank() const { return rank_; }
 
   /**
    * @brief Get the Suit in QString
-   * @return QString
+   * @return QString of the suit
    */
   QString getSuitQstring() const;
 
   /**
    * @brief Get the Rank in QString
-   * @return QString
+   * @return QString of the rank
    */
   QString getRankQstring() const;
 
@@ -111,62 +115,68 @@ class Card : public QGraphicsObject {
   bool isFaceUp() const { return faceUp_; }
 
   /**
-   * @brief Gets the color of the card.
+   * @brief Get the color of the card.
    * @return Color of the card (BLACK or RED).
    */
-  Color GetColor() const { return color_; }
-
-  const QPixmap& getPixmap() const { return pixmap_; }
+  Color getColor() const { return color_; }
 
   /**
-   * @brief Returns a Qstring representation of the card, including its rank and
+   * @brief Return a Qstring representation of the card, including its rank and
    * suit.
    * @return String in the format "RANK_of_SUIT".
    */
   QString cardToQString() const;
 
   /**
-   * @brief Sets the card to face-up. Also repaints the pixmap.
+   * @brief Flip the card up/down and repaint the pixmap.
    */
-  void flipUp();
-
-  /**
-   * @brief Sets the card to face-down. Also repaints the pixmap.
-   */
-  void flipDown();
-
-  /**
-   * @brief Toggle card face. Also repaints the pixmap.
-   */
-  void toggleFace();
+  void flip();
 
   /**
    * @brief Check whether this card is eligible to recieve mouse clicks.
-   * @return true
-   * @return false
+   * @return true if the card is clickable, false otherwise.
    */
   bool isClickable();
 
   /**
-   * @brief Check whether this card is movable (/draggable).
-   * @return true
-   * @return false
+   * @brief Check whether this card is draggable.
+   * @return true if the card is draggable, false otherwise.
    */
   bool isDraggable();
 
-  bool operator==(Card& card);
-
-  qreal glowRadius() const { return glowEffect_->blurRadius(); }
-
-  void setGlowRadius(qreal radius) { glowEffect_->setBlurRadius(radius); }
-
-  void startGlowing();
-
-  void animateMove(QPointF& startPos, QPointF& endPos);
-
+  /**
+   * @brief Set the previous position of the card.
+   * @param pos QPointF
+   */
   void setPrevScenePos(QPointF& pos) { prevScenePos_ = pos; }
 
+  /**
+   * @brief Get the previous position of the card.
+   * @return QPointF of the previous position.
+   */
   const QPointF& getPrevScenePos() const { return prevScenePos_; }
+
+  /** @} */  // End of CardLogic
+
+  /**
+   * @addtogroup CardGUI
+   * @{
+   */
+
+  /**
+   * @brief Start the moving animation.
+   */
+  void animateMove(QPointF& startPos, QPointF& endPos);
+
+  /**
+   * @brief Start the glowing animation.
+   */
+  void animateGlowIn();
+
+  /**
+   * @brief Stop the glowing animation.
+   */
+  void animateGlowOut();
 
  signals:
   /**
@@ -182,9 +192,31 @@ class Card : public QGraphicsObject {
    */
   void cardDragged(Card* card, const QPointF& newScenePos);
 
- protected:
+  /** @} */  // End of CardGUI
+
+ private:
   /**
-   * @brief Returns the bounding rectangle of the card item.
+   * @defgroup CardLogic Card Logic
+   * @brief Variables related to the card's logical state.
+   * @{
+   */
+
+  QPointF prevPos_;  ///< The previous position of the card in the scene.
+  vector<Card*> cardsAbove_;  ///< Cards that are above this card in a pile.
+  Suit suit_;    ///< Suit of the card (CLUBS, DIAMONDS, SPADES, HEARTS).
+  Rank rank_;    ///< Rank of the card (ACE to KING).
+  bool faceUp_;  ///< Face-up status of the card.
+  Color color_;  ///< Color of the card (BLACK or RED).
+  /** @} */      // End of CardLogic
+
+  /**
+   * @defgroup CardGUI Card GUI
+   * @brief Variables related to the card's graphical representation.
+   * @{
+   */
+
+  /**
+   * @brief Return the bounding rectangle of the card item.
    *
    * This function defines the bounding area for the card, which is used
    * for collision detection.
@@ -194,7 +226,7 @@ class Card : public QGraphicsObject {
   QRectF boundingRect() const override;
 
   /**
-   * @brief Paints the card item on the scene.
+   * @brief Paint the card item on the scene.
    *
    * This function is called during the rendering process to draw the
    * card's appearance using the provided painter.
@@ -207,75 +239,81 @@ class Card : public QGraphicsObject {
              QWidget* widget = nullptr) override;
 
   /**
-   * @brief Handles mouse press events on the card.
+   * @brief Handle mouse press events on the card.
    * @param event Pointer to the mouse event object.
    */
   void mousePressEvent(QGraphicsSceneMouseEvent* event) override;
 
   /**
-   * @brief Handles mouse move events on the card.
+   * @brief Handle mouse move events on the card.
    * @param event Pointer to the mouse event object.
    */
   void mouseMoveEvent(QGraphicsSceneMouseEvent* event) override;
 
   /**
-   * @brief Handles mouse release events on the card.
+   * @brief Handle mouse release events on the card.
    * @param event Pointer to the mouse event object.
    */
   void mouseReleaseEvent(QGraphicsSceneMouseEvent* event) override;
 
-  void startGlowingOut();
+  /**
+   * @brief Start the flipping animation.
+   */
+  void animateFlip();
 
-  void stopGlowingAnimation();
+  /**
+   * @brief Get the flipping progress of the card.
+   * @return qreal
+   */
+  qreal getFlipProgress() { return flipProgress_; }
 
-  qreal flipProgress() { return flipProgress_; }
-
+  /**
+   * @brief Set the flipping progress of the card.
+   * @return qreal
+   */
   void setFlipProgress(qreal progress) {
     flipProgress_ = progress;
 
     QTransform transform;
-    double scale = progress / 90.0;
+    double scale = progress / 90;
     double scaleHor = (progress < 90) ? 1 - scale : scale - 1;
 
     QPointF center = this->boundingRect().center();
     double scaledX = center.x() * this->scale();
 
     transform.translate(scaledX, 1);
-    transform.scale(scaleHor, 1.0);
+    transform.scale(scaleHor, 1);
     transform.translate(-scaledX, 1);
     this->setTransform(transform);
   }
 
-  void flipAnim();
+  /**
+   * @brief Get the glow radius of the card.
+   * @return qreal
+   */
+  qreal getGlowRadius() const { return glowEffect_->blurRadius(); }
 
- private:
-  void createDragPixmap();
+  /**
+   * @brief Set the glow radius of the card.
+   * @param radius qreal
+   */
+  void setGlowRadius(qreal radius) { glowEffect_->setBlurRadius(radius); }
 
   QPixmap frontImage_;  ///< The front image of the card.
   QPixmap backImage_;   ///< The back image of the card.
-  QPixmap pixmap_;      ///< Current pixmap.
-
-  QPointF prevPos_;           ///< The previous position of the card.
-  vector<Card*> cardsAbove_;  ///< Cards that are above this card in a pile
-
-  QGraphicsDropShadowEffect* glowEffect_;
-  QPropertyAnimation* glowIn_;
-  QPropertyAnimation* glowOut_;
-  QTimer* glowTimer_;
-  bool isGlowing_;
-
-  QPropertyAnimation* moveAnimation_;
-  QPointF prevScenePos_;
-
-  QPropertyAnimation* flipAnimation_;
-  qreal flipProgress_;
-
-  Suit suit_;    ///< Suit of the card (CLUBS, DIAMONDS, SPADES, HEARTS).
-  Rank rank_;    ///< Rank of the card (ACE to KING).
-  bool faceUp_;  ///< Face-up status of the card.
-  Color color_;  ///< Color of the card (BLACK or RED).
-
-  QPixmap tmpDragMap_;  // currently not in use.
+  QPixmap pixmap_;      ///< Current pixmap (image).
+  QGraphicsDropShadowEffect*
+      glowEffect_;  ///< Drop shadow effect used for glowing the card.
+  QPropertyAnimation* glowInAnimation_;   ///< Animation for glowing in.
+  QPropertyAnimation* glowOutAnimation_;  ///< Animation for glowing out.
+  QTimer* glowTimer_;  ///< Timer to handle glowing transitions.
+  bool isGlowing_;     ///< Whether the card is currently glowing.
+  QPropertyAnimation*
+      moveAnimation_;     ///< Animation for moving the card to a new position.
+  QPointF prevScenePos_;  ///< The previous scene position of the card.
+  QPropertyAnimation* flipAnimation_;  ///< Animation for flipping the card.
+  qreal flipProgress_;  ///< Progress of the flip animation (0 to 180).
+  /** @} */             // End of CardGUI
 };
 
 #endif
