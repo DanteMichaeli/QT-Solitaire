@@ -13,11 +13,14 @@ namespace Ui {
 class MainWindow;
 }
 
+enum Window { MENU, SETTINGS, GAME, WIN_SCREEN, STATS };
+
 class MainWindow : public QMainWindow {
   Q_OBJECT
 
  public:
   explicit MainWindow(QWidget *parent = nullptr);
+
   ~MainWindow();
 
   void fullscreen();
@@ -26,33 +29,46 @@ class MainWindow : public QMainWindow {
 
   void quit();
 
+  void toMenu();
+
+  void returnToPrev();
+
+  void backToMenuInit();
+
+  void toStatistics();
+
   void startGame();
 
-  void backToMenu();
+  void continueGame();
 
-  void backToMenuInit();  // go to main menu and initialize a new game
-
-  void menuToStatistics();
-
-  void settingsToMenu();
+  void deleteGame();
 
   void initNewGame();
 
-  void dealNewGame();
+  bool gameInitialized();
 
-  int getVolume();
+  bool gameStarted();
 
-  void resizeEvent(QResizeEvent *event);
+  void setGameStarted(bool value);
 
   static QString formatTime(size_t seconds);
 
  private:
   Ui::MainWindow *ui;
-  QStackedWidget *stackedWidget;  // Main window's pages
-  GameView *gameView;             // Game view page
-  Settings gameSettings;
+  QStackedWidget *stackedWidget_;  // Main window's pages
+  GameView *gameView_;             // Game view page
+  Settings gameSettings_;
+  Window previousWindow_;
+
   bool gameStarted_;
-  void switchToPage(int pageIndex);
+
+  void switchToPage(Window window);
+
+  void loadSettings();
+
+  void saveSettings();
+
+  void resizeEvent(QResizeEvent *event) override;
 
  private slots:
   void onGameWon(int points);

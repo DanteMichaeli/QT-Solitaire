@@ -24,7 +24,6 @@ Game::Game(QObject* parent)
 void Game::initDeck() {
   deck_ = new Deck();
   deck_->setParent(this);
-  deck_->Shuffle();
   connect(deck_, &Pile::cardClickMove, this, &Game::handleDeckClicked);
 }
 
@@ -227,9 +226,9 @@ int Game::pointChange(MoveType move) {
   return rawChange;
 }
 
-void Game::updateSettingsSlot(Settings settings) {
-  hardMode = settings.isHardModeEnabled;
-  hintsEnabled = settings.isHintsEnabled;
+void Game::changeSettings(Settings& settings) {
+  hardMode_ = settings.isHardModeEnabled;
+  hintsEnabled_ = settings.isHintsEnabled;
   soundManager_.setVolume(settings.volume);
   qDebug() << "Updated settings:";
   qDebug() << "Volume:" << settings.volume;
@@ -253,7 +252,7 @@ int Game::attemptMove(Card* card, Pile* fromPile, Pile* toPile) {
 
 int Game::attemptDeckMove() {
   if (!deck_->Empty()) {
-    int amount = hardMode ? 3 : 1;
+    int amount = hardMode_ ? 3 : 1;
     soundManager_.playMoveSound();
     return wastePile_->AddFromDeck(*deck_, amount);
   } else if (deck_->recycle(*wastePile_)) {
@@ -304,7 +303,7 @@ void Game::hint() {
     prevHint_ = findHint();
   }
   if (prevHint_ != nullptr) {
-    prevHint_->animateGlowIn();
+    prevHint_->animateGlow();
   }
 }
 
@@ -359,7 +358,7 @@ Card* Game::findHint() {
 }
 
 void Game::handleAutoMove(Card* card, Pile* fromPile) {
-  if (!hardMode && !fromPile->Empty()) {
+  if (!hardMode_ && !fromPile->Empty()) {
     Pile* toPile = findLegalPile(card);
     int howMany = attemptMove(card, fromPile, toPile);
     if (howMany != 0) {
@@ -398,13 +397,15 @@ void Game::handleDeckClicked() {
 }
 
 Pile* Game::findLegalPile(Card* card) {
+  Pile* parent = card->getPile();
   for (auto& pile : targetPiles_) {
-    if (pile != card->parentItem() && pile->IsValid(*card)) {
+    if (pile != parent && pile->IsValid(*card) &&
+        card == parent->getTopCard()) {
       return pile;
     }
   }
   for (auto& pile : klondikePiles_) {
-    if (pile != card->parentItem() && pile->IsValid(*card)) {
+    if (pile != parent && pile->IsValid(*card)) {
       return pile;
     }
   }

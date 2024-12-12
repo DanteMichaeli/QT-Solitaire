@@ -14,7 +14,7 @@
 #include "layout.hpp"
 #include "settings.hpp"
 
-enum DropDownOption { NEW_GAME, SETTINGS, MAIN_MENU, QUIT };
+enum DropDownOption { DD_NEW_GAME, DD_SETTINGS, DD_MAIN_MENU, DD_QUIT };
 
 /**
  * @class GameView
@@ -24,7 +24,7 @@ enum DropDownOption { NEW_GAME, SETTINGS, MAIN_MENU, QUIT };
 class GameView : public QGraphicsView {
   Q_OBJECT
  public:
-  GameView(QWidget *parent = nullptr, int volume = 100);
+  GameView(Settings &settings, QWidget *parent = nullptr);
 
   ~GameView() { qDebug() << "View destroyed"; }
 
@@ -42,7 +42,7 @@ class GameView : public QGraphicsView {
 
   void startGame() { game_->startGame(); }
 
-  void settingsRelaySlot(Settings gameSettings);  // get from mainwindow
+  void changeSettings(Settings &gameSettings);
 
  signals:
   void gameWon(int points);  // Relay signal to MainWindow.
@@ -55,7 +55,7 @@ class GameView : public QGraphicsView {
 
  private:
   QGraphicsScene *scene_;  // The scene containing all graphical items
-  Game *game_;
+  unique_ptr<Game> game_;
   unique_ptr<Layout> layout_;
 
   QWidget *toolbarWidget_;

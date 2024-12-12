@@ -46,6 +46,8 @@ class WastePile : public Pile {
   void updateVisuals() override;
 
   void setCardPrevScenePos() override;
+
+  QPointF getOffset() const override;
 };
 
 #endif

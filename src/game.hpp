@@ -143,12 +143,12 @@ class Game : public QObject {
 
   int pointChange(MoveType move);
 
-  void changeSettings(Settings settings);
+  void changeSettings(Settings& settings);
 
   /**
    * @brief Toggles hard mode for the game.
    */
-  void toggleHardMode() { hardMode = !hardMode; }
+  void toggleHardMode() { hardMode_ = !hardMode_; }
 
   /**
    * @brief Finds the first legal pile for a card to be moved to.
@@ -218,8 +218,6 @@ class Game : public QObject {
    */
   void updateStats();
 
-  void updateSettingsSlot(Settings gameSettings);
-
  signals:
   void updateTime(size_t elapsedTime);
   void gameStateChange(int points, int moves);
@@ -264,8 +262,8 @@ class Game : public QObject {
   size_t hints_;
   size_t undos_;
 
-  bool hardMode = false;  ///< Indicates if the game is in hard mode.
-  bool hintsEnabled = true;
+  bool hardMode_;  ///< Indicates if the game is in hard mode.
+  bool hintsEnabled_;
   bool isWon_;         ///< Indicates if the game has been won.
   size_t maxHistory_;  ///< The maximium amount of moves stored in the history.
 

@@ -104,6 +104,8 @@ class Pile : public QGraphicsObject {
 
   virtual void setCardPrevScenePos() = 0;
 
+  virtual QPointF getOffset() const = 0;
+
  signals:
   /**
    * @brief Signal emitted when a card is moved.

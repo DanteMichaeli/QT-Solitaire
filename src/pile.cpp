@@ -17,10 +17,9 @@ Card* Pile::getTopCard() const {
 
 void Pile::AddCard(Card* card) {
   card->setParentItem(this);
-  card->setPos(0, 0);
   connect(card, &Card::cardClicked, this, &Pile::onCardClicked);
   connect(card, &Card::cardDragged, this, &Pile::onCardDragged);
-  cards_.push_back(std::move(card));
+  cards_.push_back(card);
 }
 
 Card* Pile::RemoveCard() {
@@ -47,7 +46,6 @@ void Pile::TransferCard(Pile& other, size_t nof) {
   if (!this->Empty() && nof <= this->Size()) {
     if (nof == 1) {
       Card* card = RemoveCard();
-      card->setZValue(other.Size() + 1);
       other.AddCard(card);
     } else {
       stack<Card*> aux;
@@ -58,7 +56,6 @@ void Pile::TransferCard(Pile& other, size_t nof) {
       }
       while (!aux.empty()) {
         auto& card = aux.top();
-        card->setZValue(other.Size() + 1);
         other.AddCard(card);
         aux.pop();
       }

@@ -48,13 +48,12 @@ void KlondikePile::updateVisuals() {
     QPointF startPos = this->mapFromScene(prevPos);
 
     // Set the start and end positions for the animation
-    QPointF endPos(0, 1 + i * PILE_YOFFSET);  // Offset for stacking
+    QPointF endPos = i * this->getOffset();  // Offset for stacking
     QPointF endScenePos = mapToScene(endPos);
-    card->setPrevScenePos(endScenePos);
 
     // Start the animation
-    if (card->pos() != endPos) {
-      this->setZValue(5);
+    if (startPos != endPos) {
+      this->setZValue(2);
       card->animateMove(startPos, endPos);
     } else {
       break;
@@ -64,9 +63,14 @@ void KlondikePile::updateVisuals() {
 
 void KlondikePile::setCardPrevScenePos() {
   for (int i = 0; i < Size(); i++) {
-    QPointF scenePos = mapToScene(QPointF(0, 1 + i * PILE_YOFFSET));
+    QPointF scenePos = mapToScene(i * this->getOffset());
     cards_[i]->setPrevScenePos(scenePos);
   }
+}
+
+QPointF KlondikePile::getOffset() const {
+  int offset = (Size() > 11) ? 11 * PILE_YOFFSET / Size() : PILE_YOFFSET;
+  return QPoint(0, offset);
 }
 
 QRectF KlondikePile::boundingRect() const { return QRect(-10, -10, 120, 500); }

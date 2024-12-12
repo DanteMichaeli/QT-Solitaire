@@ -47,13 +47,11 @@ void WastePile::updateVisuals() {
 
     // Set the start and end positions for the animation
     int j = (index >= i) ? index - i : 0;
-    QPointF endPos = QPointF(j * PILE_YOFFSET, 1);
-    QPointF endScenePos = mapToScene(endPos);
-    card->setPrevScenePos(endScenePos);
+    QPointF endPos = j * this->getOffset();
 
     // Start the animation
-    if (card->pos() != endPos) {
-      this->setZValue(5);
+    if (startPos != endPos) {
+      this->setZValue(2);
       card->animateMove(startPos, endPos);
     } else {
       break;
@@ -65,7 +63,9 @@ void WastePile::setCardPrevScenePos() {
   int i = std::max(Size() - show, 0);
   for (int index = 0; index < Size(); index++) {
     int j = (index >= i) ? index - i : 0;
-    QPointF scenePos = mapToScene(QPointF(j * PILE_YOFFSET, 1));
+    QPointF scenePos = mapToScene(j * this->getOffset());
     cards_[index]->setPrevScenePos(scenePos);
   }
 }
+
+QPointF WastePile::getOffset() const { return QPoint(PILE_YOFFSET, 0); }

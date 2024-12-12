@@ -12,6 +12,7 @@
 #include <string>
 
 #define SCALING_FACTOR 0.2
+#define MAX_GLOW 110
 
 using namespace std;
 
@@ -56,6 +57,8 @@ constexpr Suit allSuits[] = {CLUBS, DIAMONDS, SPADES, HEARTS};
 constexpr Rank allRanks[] = {ACE,   TWO,  THREE, FOUR, FIVE,  SIX, SEVEN,
                              EIGHT, NINE, TEN,   JACK, QUEEN, KING};
 
+class Pile;
+
 /**
  * @class Card
  * @brief Represents a single playing card with a suit, rank, color, and face-up
@@ -63,6 +66,7 @@ constexpr Rank allRanks[] = {ACE,   TWO,  THREE, FOUR, FIVE,  SIX, SEVEN,
  */
 class Card : public QGraphicsObject {
   Q_OBJECT
+  Q_PROPERTY(QPointF movePos READ pos WRITE setMovePos)
   Q_PROPERTY(qreal getGlowRadius READ getGlowRadius WRITE setGlowRadius)
   Q_PROPERTY(qreal getFlipProgress READ getFlipProgress WRITE setFlipProgress)
 
@@ -120,6 +124,8 @@ class Card : public QGraphicsObject {
    */
   Color getColor() const { return color_; }
 
+  Pile* getPile();
+
   /**
    * @brief Return a Qstring representation of the card, including its rank and
    * suit.
@@ -144,11 +150,15 @@ class Card : public QGraphicsObject {
    */
   bool isDraggable();
 
+  bool isMoving() const { return isMoving_; }
+
+  bool isGlowing() const { return isGlowing_; }
+
   /**
    * @brief Set the previous position of the card.
    * @param pos QPointF
    */
-  void setPrevScenePos(QPointF& pos) { prevScenePos_ = pos; }
+  void setPrevScenePos(const QPointF& pos) { prevScenePos_ = pos; }
 
   /**
    * @brief Get the previous position of the card.
@@ -166,17 +176,13 @@ class Card : public QGraphicsObject {
   /**
    * @brief Start the moving animation.
    */
-  void animateMove(QPointF& startPos, QPointF& endPos);
+  void animateMove(const QPointF& startPos, const QPointF& endPos,
+                   const size_t ms = 500);
 
   /**
    * @brief Start the glowing animation.
    */
-  void animateGlowIn();
-
-  /**
-   * @brief Stop the glowing animation.
-   */
-  void animateGlowOut();
+  void animateGlow();
 
  signals:
   /**
@@ -200,14 +206,17 @@ class Card : public QGraphicsObject {
    * @brief Variables related to the card's logical state.
    * @{
    */
-
-  QPointF prevPos_;  ///< The previous position of the card in the scene.
+  QPointF prevScenePos_;  ///< The previous scene position of the card.
+  QPointF prevPos_;       ///< The previous position of the card in the scene.
   vector<Card*> cardsAbove_;  ///< Cards that are above this card in a pile.
-  Suit suit_;    ///< Suit of the card (CLUBS, DIAMONDS, SPADES, HEARTS).
-  Rank rank_;    ///< Rank of the card (ACE to KING).
-  bool faceUp_;  ///< Face-up status of the card.
-  Color color_;  ///< Color of the card (BLACK or RED).
-  /** @} */      // End of CardLogic
+  Suit suit_;       ///< Suit of the card (CLUBS, DIAMONDS, SPADES, HEARTS).
+  Rank rank_;       ///< Rank of the card (ACE to KING).
+  Color color_;     ///< Color of the card (BLACK or RED).
+  bool faceUp_;     ///< Face-up status of the card.
+  bool isGlowing_;  ///< Whether the card is currently glowing.
+  bool isMoving_;
+  bool isDragged_;
+  /** @} */  // End of CardLogic
 
   /**
    * @defgroup CardGUI Card GUI
@@ -256,6 +265,17 @@ class Card : public QGraphicsObject {
    */
   void mouseReleaseEvent(QGraphicsSceneMouseEvent* event) override;
 
+  void stopGlowingAnimation();
+
+  /**
+   * @brief Stop the glowing animation.
+   */
+  void animateGlowOut();
+
+  void setParentZValue(const qreal& value);
+
+  void setMovePos(const QPointF& pos);
+
   /**
    * @brief Start the flipping animation.
    */
@@ -265,27 +285,13 @@ class Card : public QGraphicsObject {
    * @brief Get the flipping progress of the card.
    * @return qreal
    */
-  qreal getFlipProgress() { return flipProgress_; }
+  const qreal& getFlipProgress() const { return flipProgress_; }
 
   /**
    * @brief Set the flipping progress of the card.
    * @return qreal
    */
-  void setFlipProgress(qreal progress) {
-    flipProgress_ = progress;
-
-    QTransform transform;
-    double scale = progress / 90;
-    double scaleHor = (progress < 90) ? 1 - scale : scale - 1;
-
-    QPointF center = this->boundingRect().center();
-    double scaledX = center.x() * this->scale();
-
-    transform.translate(scaledX, 1);
-    transform.scale(scaleHor, 1);
-    transform.translate(-scaledX, 1);
-    this->setTransform(transform);
-  }
+  void setFlipProgress(const qreal& progress);
 
   /**
    * @brief Get the glow radius of the card.
@@ -297,21 +303,22 @@ class Card : public QGraphicsObject {
    * @brief Set the glow radius of the card.
    * @param radius qreal
    */
-  void setGlowRadius(qreal radius) { glowEffect_->setBlurRadius(radius); }
+  void setGlowRadius(const qreal& radius) {
+    glowEffect_->setBlurRadius(radius);
+  }
 
   QPixmap frontImage_;  ///< The front image of the card.
   QPixmap backImage_;   ///< The back image of the card.
   QPixmap pixmap_;      ///< Current pixmap (image).
+
   QGraphicsDropShadowEffect*
       glowEffect_;  ///< Drop shadow effect used for glowing the card.
   QPropertyAnimation* glowInAnimation_;   ///< Animation for glowing in.
   QPropertyAnimation* glowOutAnimation_;  ///< Animation for glowing out.
-  QTimer* glowTimer_;  ///< Timer to handle glowing transitions.
-  bool isGlowing_;     ///< Whether the card is currently glowing.
   QPropertyAnimation*
-      moveAnimation_;     ///< Animation for moving the card to a new position.
-  QPointF prevScenePos_;  ///< The previous scene position of the card.
+      moveAnimation_;  ///< Animation for moving the card to a new position.
   QPropertyAnimation* flipAnimation_;  ///< Animation for flipping the card.
+  QTimer* glowTimer_;                  ///< Timer to handle glowing transitions.
   qreal flipProgress_;  ///< Progress of the flip animation (0 to 180).
   /** @} */             // End of CardGUI
 };

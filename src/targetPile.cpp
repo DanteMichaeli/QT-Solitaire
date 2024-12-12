@@ -32,24 +32,25 @@ void TargetPile::updateVisuals() {
     QPointF startPos = this->mapFromScene(prevPos);
 
     // Set the start and end positions for the animation
-    QPointF endPos = QPointF(0, 1);
+    QPointF endPos = QPointF(0, 0);
     QPointF endScenePos = mapToScene(endPos);
-    card->setPrevScenePos(endScenePos);
 
     // Start the animation
-    if (card->pos() != endPos) {
-      this->setZValue(5);
+    if (startPos != endPos) {
+      this->setZValue(2);
       card->animateMove(startPos, endPos);
     }
   }
 }
 
 void TargetPile::setCardPrevScenePos() {
-  QPointF scenePos = mapToScene(QPointF(0, 1));
+  QPointF scenePos = mapToScene(this->getOffset());
   for (auto &card : cards_) {
     card->setPrevScenePos(scenePos);
   }
 }
+
+QPointF TargetPile::getOffset() const { return QPoint(0, 0); }
 
 void TargetPile::paint(QPainter *painter,
                        const QStyleOptionGraphicsItem *option,

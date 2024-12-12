@@ -6,25 +6,25 @@
 
 Deck::Deck(QGraphicsItem* parent) : Pile(parent) {
   // Add cards to deck
+  std::vector<Card*> aux;
   for (Suit suit : allSuits) {
     for (Rank rank : allRanks) {
-      Card* card = new Card(suit, rank, this);
-      AddCard(card);
+      aux.push_back(new Card(suit, rank));
     }
   }
+
+  Deck::Shuffle<Card*>(aux);
+  for (auto& card : aux) this->AddCard(card);
 }
 
-void Deck::Shuffle(unsigned long seed) {
+template <typename T>
+void Deck::Shuffle(std::vector<T>& arr, unsigned long seed) {
   if (seed == 0) {
     // Default seed is based on system time.
     seed = chrono::high_resolution_clock::now().time_since_epoch().count();
   }
   mt19937 generator(seed);
-  shuffle(cards_.begin(), cards_.end(), generator);
-
-  for (int i = 0; i < Size(); i++) {
-    cards_[i]->setZValue(i + 1);
-  }
+  shuffle(arr.begin(), arr.end(), generator);
 }
 
 bool Deck::IsValid(const Card& card) { return false; }
@@ -54,7 +54,7 @@ void Deck::undoRecycle(WastePile& pile) {
 }
 
 void Deck::setCardPrevScenePos() {
-  QPointF scenePos = mapToScene(QPointF(0, 1));
+  QPointF scenePos = mapToScene(this->getOffset());
   for (auto& card : cards_) {
     card->setPrevScenePos(scenePos);
   }
@@ -62,7 +62,7 @@ void Deck::setCardPrevScenePos() {
 
 void Deck::updateVisuals() {
   int i = Size();
-  QPointF endPos(0, 1);
+  QPointF endPos(0, 0);
   QPointF endScenePos = mapToScene(endPos);
   while (i > 0) {
     i--;
@@ -71,18 +71,16 @@ void Deck::updateVisuals() {
     QPointF prevPos = card->getPrevScenePos();
     QPointF startPos = this->mapFromScene(prevPos);
 
-    // Set the start and end positions for the animation
-    card->setPrevScenePos(endScenePos);
-
-    // Start the animation
-    if (card->pos() != endPos) {
-      this->setZValue(6);
+    if (startPos != endPos) {
+      this->setZValue(3);
       card->animateMove(startPos, endPos);
     } else {
       break;
     }
   }
 }
+
+QPointF Deck::getOffset() const { return QPoint(0, 0); }
 
 void Deck::mousePressEvent(QGraphicsSceneMouseEvent* event) {
   emit cardClickMove(nullptr, this);

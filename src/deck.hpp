@@ -33,7 +33,8 @@ class Deck : public Pile {
    * @param seed Optional seed for reproducible shuffling. If 0 (default), the
    * seed is based on system time.
    */
-  void Shuffle(unsigned long seed = 0);
+  template <typename T>
+  static void Shuffle(vector<T>& arr, unsigned long seed = 0);
 
   /**
    * @brief Add all cards from waste pile to the deck.
@@ -50,6 +51,8 @@ class Deck : public Pile {
   bool IsValid(const Card& card) override;
 
   void updateVisuals() override;
+
+  QPointF getOffset() const override;
 
  protected:
   /**
