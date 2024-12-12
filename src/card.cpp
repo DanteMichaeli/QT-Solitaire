@@ -20,13 +20,12 @@ Card::Card(Suit s, Rank r, QGraphicsItem *parent)
       QGraphicsObject(parent) {
   color_ = (s == Suit::SPADES || s == Suit::CLUBS) ? Color::BLACK : Color::RED;
 
-  // Enable selection and movement of the CardItem
+  setScale(SCALING_FACTOR);
+
   setFlags(QGraphicsItem::ItemIsSelectable | QGraphicsItem::ItemIsMovable);
 
-  // Load the front/back image of the card
   QString frontIMG_path = QString(":/cards/%1.png").arg(cardToQString());
   QString backIMG_path = QString(":/cards/face_down.png");
-
   if (!frontImage_.load(frontIMG_path)) {
     qDebug() << "Failed to load front image:" << frontIMG_path;
   }
@@ -34,37 +33,28 @@ Card::Card(Suit s, Rank r, QGraphicsItem *parent)
     qDebug() << "Failed to load back image:" << backIMG_path;
   }
 
-  setScale(SCALING_FACTOR);
-
   glowEffect_ = new QGraphicsDropShadowEffect(this);
   glowEffect_->setBlurRadius(0);
   glowEffect_->setColor(Qt::darkRed);
   glowEffect_->setOffset(0, 0);
   setGraphicsEffect(glowEffect_);
-
-  // Glow-in animation
   glowInAnimation_ = new QPropertyAnimation(this, "getGlowRadius");
   glowInAnimation_->setDuration(500);
   glowInAnimation_->setStartValue(0);
   glowInAnimation_->setEndValue(MAX_GLOW);
   glowInAnimation_->setEasingCurve(QEasingCurve::OutQuad);
-
   glowOutAnimation_ = new QPropertyAnimation(this, "getGlowRadius");
   glowOutAnimation_->setDuration(500);
   glowOutAnimation_->setStartValue(MAX_GLOW);
   glowOutAnimation_->setEndValue(0);
   glowOutAnimation_->setEasingCurve(QEasingCurve::InQuad);
-
   glowTimer_ = new QTimer(this);
   glowTimer_->setSingleShot(true);
-
   isGlowing_ = false;
 
-  // Moving animation
   moveAnimation_ = new QPropertyAnimation(this, "movePos");
   moveAnimation_->setEasingCurve(QEasingCurve::InOutQuad);
 
-  // Flip animation
   flipAnimation_ = new QPropertyAnimation(this, "getFlipProgress");
   flipAnimation_->setDuration(250);
   flipAnimation_->setStartValue(0);
@@ -72,7 +62,9 @@ Card::Card(Suit s, Rank r, QGraphicsItem *parent)
   flipAnimation_->setEasingCurve(QEasingCurve::InOutCubic);
 }
 
-Card::~Card() { qDebug() << "Card: " << this->cardToQString() << "destroyed."; }
+Card::~Card() {}
+
+// LOGIC RELATED FUNCTIONS
 
 Pile *Card::getPile() { return static_cast<Pile *>(this->parentItem()); }
 
@@ -134,19 +126,12 @@ bool Card::isDraggable() {
   return isClickable();
 }
 
-QRectF Card::boundingRect() const {
-  return QRectF(0, 0, pixmap_.width(), pixmap_.height());
+void Card::setMovePos(const QPointF &pos) {
+  prevScenePos_ = this->parentItem()->mapToScene(pos);
+  this->setPos(pos);
 }
 
-void Card::paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
-                 QWidget *widget) {
-  Q_UNUSED(option);
-  Q_UNUSED(widget);
-
-  int flipProg = getFlipProgress();
-  pixmap_ = (this->isFaceUp() == (flipProg >= 90)) ? frontImage_ : backImage_;
-  painter->drawPixmap(0, 0, pixmap_);
-}
+// GUI RELATED FUNCTIONS
 
 void Card::mousePressEvent(QGraphicsSceneMouseEvent *event) {
   if (event->button() == Qt::LeftButton && this->isClickable() && !isMoving()) {
@@ -198,6 +183,53 @@ void Card::mouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
   }
 }
 
+void Card::paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
+                 QWidget *widget) {
+  Q_UNUSED(option);
+  Q_UNUSED(widget);
+
+  int flipProg = getFlipProgress();
+  pixmap_ = (this->isFaceUp() == (flipProg >= 90)) ? frontImage_ : backImage_;
+  painter->drawPixmap(0, 0, pixmap_);
+}
+
+void Card::animateFlip() { flipAnimation_->start(); }
+
+void Card::setFlipProgress(const qreal &progress) {
+  flipProgress_ = progress;
+
+  QTransform transform;
+  double scale = progress / 90.0;
+  double scaleHor = (progress < 90) ? 1 - scale : scale - 1;
+
+  QPointF center = this->boundingRect().center();
+  double scaledX = center.x() * this->scale();
+
+  transform.translate(scaledX, 1);
+  transform.scale(scaleHor, 1.0);
+  transform.translate(-scaledX, 1);
+  this->setTransform(transform);
+}
+
+void Card::animateMove(const QPointF &startPos, const QPointF &endPos,
+                       const size_t ms) {
+  moveAnimation_->stop();
+  isMoving_ = true;
+
+  moveAnimation_->setDuration(ms);
+  moveAnimation_->setStartValue(startPos);
+  moveAnimation_->setEndValue(endPos);
+
+  connect(moveAnimation_, &QAbstractAnimation::finished, this,
+          [this, endPos]() {
+            if (!isDragged_) this->setParentZValue(0);
+            isMoving_ = false;
+            prevScenePos_ = this->parentItem()->mapToScene(endPos);
+          });
+
+  moveAnimation_->start();
+}
+
 void Card::animateGlow() {
   if (isGlowing_) {
     return;
@@ -236,44 +268,6 @@ void Card::setParentZValue(const qreal &value) {
   this->parentItem()->setZValue(value);
 }
 
-void Card::animateMove(const QPointF &startPos, const QPointF &endPos,
-                       const size_t ms) {
-  moveAnimation_->stop();
-  isMoving_ = true;
-
-  // Moving animation
-  moveAnimation_->setDuration(ms);
-  moveAnimation_->setStartValue(startPos);
-  moveAnimation_->setEndValue(endPos);
-
-  connect(moveAnimation_, &QAbstractAnimation::finished, this,
-          [this, endPos]() {
-            if (!isDragged_) this->setParentZValue(0);
-            isMoving_ = false;
-            prevScenePos_ = this->parentItem()->mapToScene(endPos);
-          });
-
-  moveAnimation_->start();
+QRectF Card::boundingRect() const {
+  return QRectF(0, 0, pixmap_.width(), pixmap_.height());
 }
-
-void Card::setFlipProgress(const qreal &progress) {
-  flipProgress_ = progress;
-
-  QTransform transform;
-  double scale = progress / 90.0;
-  double scaleHor = (progress < 90) ? 1 - scale : scale - 1;
-
-  QPointF center = this->boundingRect().center();
-  double scaledX = center.x() * this->scale();
-
-  transform.translate(scaledX, 1);
-  transform.scale(scaleHor, 1.0);
-  transform.translate(-scaledX, 1);
-  this->setTransform(transform);
-}
-
-void Card::setMovePos(const QPointF &pos) {
-  prevScenePos_ = this->parentItem()->mapToScene(pos);
-  this->setPos(pos);
-}
-void Card::animateFlip() { flipAnimation_->start(); }
