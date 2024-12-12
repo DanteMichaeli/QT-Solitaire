@@ -32,7 +32,10 @@ bool Deck::IsValid(const Card& card) { return false; }
 bool Deck::recycle(WastePile& pile) {
   if (this->Empty() && !pile.Empty()) {
     while (!pile.Empty()) {
-      pile.getTopCard()->flipDown();
+      Card* topCard = pile.getTopCard();
+      if (topCard->isFaceUp()) {
+        topCard->flip();
+      }
       pile.TransferCard(*this);
     }
     return true;
@@ -42,7 +45,10 @@ bool Deck::recycle(WastePile& pile) {
 
 void Deck::undoRecycle(WastePile& pile) {
   while (!this->Empty()) {
-    getTopCard()->flipUp();
+    Card* topCard = this->getTopCard();
+    if (!topCard->isFaceUp()) {
+      topCard->flip();
+    }
     TransferCard(pile);
   }
 }

@@ -77,7 +77,10 @@ void Game::startGame() {
     for (size_t j = 0; j < i; j++) {
       deck_->TransferCard(*klondikePile);
     }
-    deck_->getTopCard()->flipUp();
+    Card* topCard = deck_->getTopCard();
+    if (!topCard->isFaceUp()) {
+      topCard->flip();
+    }
     deck_->TransferCard(*klondikePile);
     klondikePile->updateVisuals();
   }
@@ -301,7 +304,7 @@ void Game::hint() {
     prevHint_ = findHint();
   }
   if (prevHint_ != nullptr) {
-    prevHint_->startGlowing();
+    prevHint_->animateGlowIn();
   }
 }
 
@@ -321,7 +324,7 @@ Card* Game::findHint() {
       }
       // Check Klondike Piles
       Card* cardBelow = klondikePile->getCardFromBack(i + 1);
-      if (currentCard->GetRank() != KING || cardBelow != nullptr) {
+      if (currentCard->getRank() != KING || cardBelow != nullptr) {
         for (auto& kp : klondikePiles_) {
           if (kp != klondikePile && kp->IsValid(*currentCard)) {
             if (cardBelow == nullptr || !cardBelow->isFaceUp()) {

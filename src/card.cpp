@@ -40,17 +40,17 @@ Card::Card(Suit s, Rank r, QGraphicsItem *parent)
   setGraphicsEffect(glowEffect_);
 
   // Glow-in animation
-  glowIn_ = new QPropertyAnimation(this, "glowRadius");
-  glowIn_->setDuration(500);
-  glowIn_->setStartValue(0);
-  glowIn_->setEndValue(110);
-  glowIn_->setEasingCurve(QEasingCurve::OutQuad);
+  glowInAnimation_ = new QPropertyAnimation(this, "getGlowRadius");
+  glowInAnimation_->setDuration(500);
+  glowInAnimation_->setStartValue(0);
+  glowInAnimation_->setEndValue(110);
+  glowInAnimation_->setEasingCurve(QEasingCurve::OutQuad);
 
-  glowOut_ = new QPropertyAnimation(this, "glowRadius");
-  glowOut_->setDuration(500);
-  glowOut_->setStartValue(110);
-  glowOut_->setEndValue(0);
-  glowOut_->setEasingCurve(QEasingCurve::InQuad);
+  glowOutAnimation_ = new QPropertyAnimation(this, "getGlowRadius");
+  glowOutAnimation_->setDuration(500);
+  glowOutAnimation_->setStartValue(110);
+  glowOutAnimation_->setEndValue(0);
+  glowOutAnimation_->setEasingCurve(QEasingCurve::InQuad);
 
   glowTimer_ = new QTimer(this);
   glowTimer_->setSingleShot(true);
@@ -62,7 +62,7 @@ Card::Card(Suit s, Rank r, QGraphicsItem *parent)
   moveAnimation_->setDuration(500);
   moveAnimation_->setEasingCurve(QEasingCurve::InOutQuad);
 
-  flipAnimation_ = new QPropertyAnimation(this, "flipProgress");
+  flipAnimation_ = new QPropertyAnimation(this, "getFlipProgress");
   flipAnimation_->setDuration(250);
   flipAnimation_->setStartValue(0);
   flipAnimation_->setEndValue(180);
@@ -72,7 +72,7 @@ Card::Card(Suit s, Rank r, QGraphicsItem *parent)
 Card::~Card() { std::cout << "Card destroyed" << std::endl; }
 
 QString Card::getSuitQstring() const {
-  switch (GetSuit()) {
+  switch (getSuit()) {
     case Suit::CLUBS:
       return QString("clubs");
     case Suit::DIAMONDS:
@@ -87,7 +87,7 @@ QString Card::getSuitQstring() const {
 }
 
 QString Card::getRankQstring() const {
-  Rank rank = GetRank();
+  Rank rank = getRank();
   switch (rank) {
     case Rank::ACE:
       return QString("ace");
@@ -106,19 +106,9 @@ QString Card::cardToQString() const {
   return QString("%1_of_%2").arg(getRankQstring()).arg(getSuitQstring());
 }
 
-void Card::flipUp() {
-  faceUp_ = true;
-  flipAnim();
-}
-
-void Card::flipDown() {
-  faceUp_ = false;
-  flipAnim();
-}
-
-void Card::toggleFace() {
-  faceUp_ ^= true;
-  flipAnim();
+void Card::flip() {
+  faceUp_ = !faceUp_;
+  animateFlip();
 }
 
 /*
@@ -151,10 +141,6 @@ bool Card::isDraggable() {
   return isClickable();
 }
 
-bool Card::operator==(Card &card) {
-  return suit_ == card.GetSuit() && rank_ == card.GetRank();
-}
-
 QRectF Card::boundingRect() const {
   return QRectF(0, 0, pixmap_.width(), pixmap_.height());
 }
@@ -164,7 +150,7 @@ void Card::paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
   Q_UNUSED(option);
   Q_UNUSED(widget);
 
-  int flipProg = flipProgress();
+  int flipProg = getFlipProgress();
   pixmap_ = (this->isFaceUp() == (flipProg >= 90)) ? frontImage_ : backImage_;
   painter->drawPixmap(0, 0, pixmap_);
 }
@@ -173,7 +159,7 @@ void Card::mousePressEvent(QGraphicsSceneMouseEvent *event) {
   if (moveAnimation_->state() != QAbstractAnimation::Running) {
     if (event->button() == Qt::LeftButton && this->isClickable()) {
       if (isGlowing_) {
-        stopGlowingAnimation();
+        animateGlowOut();
       }
       prevPos_ = this->pos();
       auto parent = this->parentItem();
@@ -207,7 +193,7 @@ void Card::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
 
 void Card::mouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
   auto parent = this->parentItem();
-  if (glowIn_->state() != QAbstractAnimation::Running) {
+  if (glowInAnimation_->state() != QAbstractAnimation::Running) {
     if (event->button() == Qt::LeftButton && this->isClickable()) {
       int dist = (prevPos_ - this->pos()).manhattanLength();
       if (dist == 0 && dynamic_cast<TargetPile *>(parent) == nullptr) {
@@ -230,64 +216,43 @@ void Card::mouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
   QGraphicsItem::mouseReleaseEvent(event);
 }
 
-// Not working :( not in use currently
-// Should combine all pixmaps of cardsAbove_ and update card "image" to it.
-// Problem: pixmap width / height calculations cause some kind of error.
-// Result is that combined pixmap clips some cards and leaves artifacts.
-void Card::createDragPixmap() {
-  int offset = 0;
-  int totalWidth = pixmap_.width();
-  int totalHeight = pixmap_.height() + (cardsAbove_.size() - 1) * offset;
-
-  QPixmap combinedPixmap(totalWidth, totalHeight);
-  combinedPixmap.fill(Qt::transparent);
-  QPainter painter(&combinedPixmap);
-  int currentY = 0;
-  for (auto &card : cardsAbove_) {
-    auto &pxm = card->getPixmap();
-    painter.drawPixmap(0, currentY, pxm);
-    currentY += offset;
-  }
-  painter.end();
-  tmpDragMap_ = combinedPixmap;
-}
-
-void Card::startGlowing() {
+void Card::animateGlowIn() {
   if (isGlowing_) {
     return;
   }
   isGlowing_ = true;
 
-  connect(glowTimer_, &QTimer::timeout, this, &Card::startGlowingOut);
+  connect(glowTimer_, &QTimer::timeout, this, &Card::animateGlowOut);
   glowTimer_->start(1000);
-  glowIn_->start();
+  glowInAnimation_->start();
 }
 
-void Card::startGlowingOut() {
-  // Glow-out animation
-  connect(glowOut_, &QPropertyAnimation::finished, this,
-          [this]() { isGlowing_ = false; });
-  glowOut_->start();
-}
-
-void Card::stopGlowingAnimation() {
-  QVariant glow = 110;
-  if (glowIn_->state() == QAbstractAnimation::Running) {
-    glow = glowIn_->currentValue();
-  } else if (glowOut_->state() == QAbstractAnimation::Running) {
-    glow = glowOut_->currentValue();
+void Card::animateGlowOut() {
+  if (!isGlowing_) {
+    return;  // No need to fade out if not glowing
   }
 
-  QPropertyAnimation *fastGlowOut = new QPropertyAnimation(this, "glowRadius");
-  fastGlowOut->setStartValue(glow);
-  fastGlowOut->setEndValue(0);
-  fastGlowOut->setDuration(75);
-  connect(fastGlowOut, &QPropertyAnimation::finished, this,
-          [this]() { isGlowing_ = false; });
-  fastGlowOut->start(QAbstractAnimation::DeleteWhenStopped);
-  glowIn_->stop();
-  glowOut_->stop();
-  glowTimer_->stop();
+  qreal glow = 110;  // Default maximum glow
+  if (glowInAnimation_->state() == QAbstractAnimation::Running) {
+    glow =
+        glowInAnimation_->currentValue().toReal();  // Get current glow-in value
+    glowInAnimation_->stop();  // Stop the glow-in animation
+  } else if (glowOutAnimation_->state() == QAbstractAnimation::Running) {
+    glow = glowOutAnimation_->currentValue()
+               .toReal();       // Get current glow-out value
+    glowOutAnimation_->stop();  // Stop the previous glow-out animation
+  }
+
+  // Reuse glowOutAnimation_ for the fade-out
+  glowOutAnimation_->setStartValue(glow);  // Start from the current glow radius
+  glowOutAnimation_->setEndValue(0);       // Fade to zero glow
+  glowOutAnimation_->setDuration(800);     // Smooth fade-out duration
+  connect(glowOutAnimation_, &QPropertyAnimation::finished, this, [this]() {
+    isGlowing_ = false;  // Reset glowing state
+    glowTimer_->stop();  // Stop the timer
+  });
+
+  glowOutAnimation_->start();  // Start the fade-out animation
 }
 
 void Card::animateMove(QPointF &startPos, QPointF &endPos) {
@@ -299,4 +264,4 @@ void Card::animateMove(QPointF &startPos, QPointF &endPos) {
   moveAnimation_->start();
 }
 
-void Card::flipAnim() { flipAnimation_->start(); }
+void Card::animateFlip() { flipAnimation_->start(); }

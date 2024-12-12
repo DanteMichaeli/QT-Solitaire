@@ -11,7 +11,11 @@ bool WastePile::IsValid(const Card& card) { return false; }
 int WastePile::AddFromDeck(Deck& deck, size_t nofCards) {
   size_t i = 0;
   while (i < nofCards && !deck.Empty()) {
-    deck.getTopCard()->flipUp();
+    Card* topCard = deck.getTopCard();
+    if (!topCard->isFaceUp()) {
+      topCard->flip();
+    }
+
     deck.TransferCard(*this);
     i++;
   }
@@ -21,7 +25,10 @@ int WastePile::AddFromDeck(Deck& deck, size_t nofCards) {
 void WastePile::undoAddFromDeck(Deck& deck, size_t nofCards) {
   size_t i = 0;
   while (i < nofCards && !Empty()) {
-    getTopCard()->flipDown();
+    Card* topCard = getTopCard();
+    if (topCard->isFaceUp()) {
+      topCard->flip();
+    }
     TransferCard(deck);
     i++;
   }
