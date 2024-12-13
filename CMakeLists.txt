@@ -35,7 +35,7 @@ qt6_add_resources(RESOURCES src/assets/resources.qrc)
 add_executable(solitaire ${SOURCES} ${RESOURCES})
 
 # Link the Qt libraries automatically
-target_link_libraries(solitaire Qt6::Core Qt6::Gui Qt6::Widgets)
+target_link_libraries(solitaire Qt6::Core dl Qt6::Gui Qt6::Widgets)
 
 # Enable verbose output for CMake
 set(CMAKE_VERBOSE_MAKEFILE ON)
