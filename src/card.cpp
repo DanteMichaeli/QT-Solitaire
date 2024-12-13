@@ -38,14 +38,14 @@ Card::Card(Suit s, Rank r, QGraphicsItem *parent)
   setGraphicsEffect(glowEffect_);
 
   // Glow in animation
-  glowInAnimation_ = new QPropertyAnimation(this, "getGlowRadius");
+  glowInAnimation_ = new QPropertyAnimation(this, "getGlowRadius", this);
   glowInAnimation_->setDuration(500);
   glowInAnimation_->setStartValue(0);
   glowInAnimation_->setEndValue(MAX_GLOW);
   glowInAnimation_->setEasingCurve(QEasingCurve::OutQuad);
 
   // Glow out animation
-  glowOutAnimation_ = new QPropertyAnimation(this, "getGlowRadius");
+  glowOutAnimation_ = new QPropertyAnimation(this, "getGlowRadius", this);
   glowOutAnimation_->setDuration(500);
   glowOutAnimation_->setStartValue(MAX_GLOW);
   glowOutAnimation_->setEndValue(0);
@@ -55,11 +55,11 @@ Card::Card(Suit s, Rank r, QGraphicsItem *parent)
   isGlowing_ = false;
 
   // Moving animation
-  moveAnimation_ = new QPropertyAnimation(this, "movePos");
+  moveAnimation_ = new QPropertyAnimation(this, "movePos", this);
   moveAnimation_->setEasingCurve(QEasingCurve::InOutQuad);
 
   // Flip animation
-  flipAnimation_ = new QPropertyAnimation(this, "getFlipProgress");
+  flipAnimation_ = new QPropertyAnimation(this, "getFlipProgress", this);
   flipAnimation_->setDuration(250);
   flipAnimation_->setStartValue(0);
   flipAnimation_->setEndValue(180);
