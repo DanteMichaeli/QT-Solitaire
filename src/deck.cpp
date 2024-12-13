@@ -13,7 +13,7 @@ Deck::Deck(QGraphicsItem* parent) : Pile(parent) {
   std::vector<Card*> aux;
   for (Suit suit : allSuits) {
     for (Rank rank : allRanks) {
-      aux.push_back(new Card(suit, rank));
+      aux.push_back(new Card(suit, rank, this));
     }
   }
 
