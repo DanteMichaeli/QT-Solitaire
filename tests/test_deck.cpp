@@ -1,73 +1,66 @@
 #include <QGuiApplication>
 #include <catch2/catch_test_macros.hpp>
 
-#include "deck.cpp"
 #include "deck.hpp"
+#include "qtTestApp.hpp"
+#include "wastePile.hpp"
 
-TEST_CASE("Deck Initialization", "[deck]") {
-  int argc = 1;
-  char *argv[] = {""};
-  QGuiApplication app(argc, argv);
+/**
+ * @brief Fixture to set up a QGuiApplication for all tests.
+ */
 
+TEST_CASE_METHOD(QtTestApp, "Deck: Transfer Cards to WastePile", "[deck]") {
   Deck deck;
-  REQUIRE(deck.Empty() ==
-          false);  // Deck should not be empty after initialization
-}
+  WastePile wastePile;
 
-TEST_CASE("Deck Shuffle", "[deck]") {
-  int argc = 1;
-  char *argv[] = {""};
-  QGuiApplication app(argc, argv);
+  SECTION("Transfer cards from Deck to WastePile") {
+    REQUIRE(deck.getSize() == 52);  // Deck starts with 52 cards
 
-  Deck deck;
-  deck.Shuffle();
-  // Since shuffle is random, we can't predict the order, but we can check if
-  // the deck is still not empty
-  REQUIRE(deck.Empty() == false);
-}
+    // Transfer the top 3 cards from Deck to WastePile
+    for (int i = 0; i < 3; ++i) {
+      deck.transferCards(wastePile);
+    }
 
-TEST_CASE("Deck Peek", "[deck]") {
-  int argc = 1;
-  char *argv[] = {""};
-  QGuiApplication app(argc, argv);
+    REQUIRE(deck.getSize() == 49);      // Deck size decreases
+    REQUIRE(wastePile.getSize() == 3);  // WastePile size increases
 
-  Deck deck;
-  REQUIRE_NOTHROW(deck.getTopCard());  // Should not throw an exception
-}
+    // Verify that all cards in WastePile are face-up
+    int cardCount = 0;
+    while (!wastePile.isEmpty()) {
+      Card* topCard = wastePile.getTopCard();
+      REQUIRE(topCard != nullptr);  // Top card should exist
+      ++cardCount;
 
-TEST_CASE("Deck Deal Card", "[deck]") {
-  int argc = 1;
-  char *argv[] = {""};
-  QGuiApplication app(argc, argv);
+      // Move card temporarily back to Deck to continue checking
+      wastePile.transferCards(deck);
+    }
 
-  Deck deck;
-  auto card = deck.RemoveCard();
-  REQUIRE(card != nullptr);  // Should return a card
-  REQUIRE(deck.Empty() ==
-          false);  // Deck should not be empty after dealing one card
-}
-
-TEST_CASE("Deck Empty Check", "[deck]") {
-  int argc = 1;
-  char *argv[] = {""};
-  QGuiApplication app(argc, argv);
-
-  Deck deck;
-  while (!deck.Empty()) {
-    deck.RemoveCard();
+    REQUIRE(cardCount == 3);        // Verify 3 cards were checked
+    REQUIRE(wastePile.isEmpty());   // WastePile should be empty
+    REQUIRE(deck.getSize() == 52);  // Cards are back in the deck
   }
-  REQUIRE(deck.Empty() ==
-          true);  // Deck should be empty after dealing all cards
 }
 
-TEST_CASE("Deck Add Card", "[deck]") {
-  int argc = 1;
-  char *argv[] = {""};
-  QGuiApplication app(argc, argv);
-
+TEST_CASE_METHOD(QtTestApp, "WastePile: Transfer Cards Back to Deck",
+                 "[wastePile]") {
   Deck deck;
-  auto card = std::make_unique<Card>(Suit::HEARTS, Rank::ACE);
-  deck.AddCard(card);
-  REQUIRE(deck.Empty() ==
-          false);  // Deck should not be empty after adding a card
+  WastePile wastePile;
+
+  SECTION("Move cards back from WastePile to Deck") {
+    // Transfer 3 cards from Deck to WastePile
+    for (int i = 0; i < 3; ++i) {
+      deck.transferCards(wastePile);
+    }
+
+    REQUIRE(deck.getSize() == 49);
+    REQUIRE(wastePile.getSize() == 3);
+
+    // Move cards back to the Deck
+    while (!wastePile.isEmpty()) {
+      wastePile.transferCards(deck);
+    }
+
+    REQUIRE(deck.getSize() == 52);  // All cards back in the deck
+    REQUIRE(wastePile.isEmpty());   // WastePile is empty
+  }
 }

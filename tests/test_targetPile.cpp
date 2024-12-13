@@ -1,48 +1,86 @@
 #include <QGuiApplication>
 #include <catch2/catch_test_macros.hpp>
 
-#include "deck.hpp"
-#include "klondikePile.hpp"
-#include "targetPile.cpp"
+#include "card.hpp"
+#include "qtTestApp.hpp"
 #include "targetPile.hpp"
 
-TEST_CASE("TargetPile Check isValid Check with Loop", "[targetpile]") {
-  int argc = 1;
-  char* argv[] = {""};
-  QGuiApplication app(argc, argv);  // Initialize QGuiApplication
+// Test-only class to expose protected methods
+class TestTargetPile : public TargetPile {
+ public:
+  using TargetPile::addCard;
+};
 
-  TargetPile pile(Suit::HEARTS);
-  Deck deck;
+TEST_CASE_METHOD(QtTestApp, "TargetPile: Card Validity", "[targetPile]") {
+  TestTargetPile pile;
 
-  // Wrong suit cannot be added
-  auto card = std::make_unique<Card>(Suit::SPADES, Rank::ACE);
-  card->flipUp();
-  REQUIRE(pile.isValid(*card) == false);
+  Card ace(Suit::HEARTS, Rank::ACE);
+  ace.flip();
 
-  // Correct suit but wrong rank
-  card = std::make_unique<Card>(Suit::HEARTS, Rank::TWO);
-  card->flipUp();
-  REQUIRE(pile.isValid(*card) == false);
+  Card two(Suit::HEARTS, Rank::TWO);
+  two.flip();
 
-  KlondikePile kPile(deck);  // Create a KlondikePile for transferring cards
+  Card three(Suit::HEARTS, Rank::THREE);
+  three.flip();
 
-  // Loop through all ranks (1 to 13) and add them to the target pile
-  for (int rank = 1; rank <= 13; ++rank) {
-    auto correctCard =
-        std::make_unique<Card>(Suit::HEARTS, static_cast<Rank>(rank));
-    correctCard->flipUp();
+  Card invalidSuit(Suit::SPADES, Rank::TWO);
+  invalidSuit.flip();
 
-    auto wrongCard =
-        std::make_unique<Card>(Suit::SPADES, static_cast<Rank>(rank));
-    wrongCard->flipUp();
+  SECTION("Empty pile: Only ACE of the correct suit is valid") {
+    REQUIRE(pile.isValid(ace) == true);
+    REQUIRE(pile.isValid(two) == false);
+    REQUIRE(pile.isValid(invalidSuit) == false);
 
-    REQUIRE(pile.isValid(*wrongCard) == false);  // Wrong suit should fail
-    REQUIRE(pile.isValid(*correctCard) ==
-            true);  // Correct suit and rank should pass
+    // Add ACE to the pile
+    pile.addCard(&ace);
+    REQUIRE(pile.getTopCard() == &ace);
+  }
 
-    // Add the correct card to the KlondikePile, then transfer it to the
-    // TargetPile
-    kPile.AddCard(correctCard);
-    REQUIRE(kPile.TransferCard(pile) == true);  // Ensure successful transfer
+  SECTION("Non-empty pile: Cards must be of the same suit and ascending rank") {
+    // Add ACE to the pile
+    pile.addCard(&ace);
+
+    REQUIRE(pile.isValid(two) == true);
+    REQUIRE(pile.isValid(three) == false);
+    REQUIRE(pile.isValid(invalidSuit) == false);
+
+    // Add TWO to the pile
+    pile.addCard(&two);
+    REQUIRE(pile.getTopCard() == &two);
+
+    REQUIRE(pile.isValid(three) == true);
+  }
+}
+
+TEST_CASE_METHOD(QtTestApp, "TargetPile: Visual Behavior", "[targetPile]") {
+  TestTargetPile pile;
+
+  Card* ace = new Card(Suit::DIAMONDS, Rank::ACE);
+  Card* two = new Card(Suit::DIAMONDS, Rank::TWO);
+  Card* three = new Card(Suit::DIAMONDS, Rank::THREE);
+
+  ace->flip();
+  two->flip();
+  three->flip();
+
+  pile.addCard(ace);
+  pile.addCard(two);
+  pile.addCard(three);
+
+  SECTION("setCardsPrevScenePos updates positions correctly") {
+    pile.setCardsPrevScenePos();
+
+    REQUIRE(ace->getPrevScenePos() == QPointF(0, 0));
+    REQUIRE(two->getPrevScenePos() ==
+            QPointF(0, 0));  // No offset in TargetPile
+    REQUIRE(three->getPrevScenePos() == QPointF(0, 0));
+  }
+
+  SECTION("updateVisuals positions all cards at the same location") {
+    pile.updateVisuals();
+
+    REQUIRE(ace->pos() == QPointF(0, 0));
+    REQUIRE(two->pos() == QPointF(0, 0));
+    REQUIRE(three->pos() == QPointF(0, 0));
   }
 }
