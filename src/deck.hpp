@@ -1,13 +1,6 @@
 #ifndef DECK_HPP
 #define DECK_HPP
 
-#include <algorithm>
-#include <chrono>
-#include <exception>
-#include <memory>
-#include <random>
-#include <vector>
-
 #include "pile.hpp"
 
 using namespace std;
@@ -17,24 +10,22 @@ class WastePile;
 /**
  * @class Deck
  * @brief Represents a deck of cards with operations for shuffling, dealing, and
- * checking status.
+ * status checking.
  */
 class Deck : public Pile {
   Q_OBJECT
  public:
   /**
-   * @brief Constructs a standard deck of 52 cards, each unique by suit and
+   * @defgroup DeckLogic Deck Logic
+   * @brief Members related to the deck's logical state.
+   * @{
+   */
+
+  /**
+   * @brief Construct a standard deck of 52 cards, each unique by suit and
    * rank.
    */
   explicit Deck(QGraphicsItem* parent = nullptr);
-
-  /**
-   * @brief Shuffles the deck of cards using a random seed.
-   * @param seed Optional seed for reproducible shuffling. If 0 (default), the
-   * seed is based on system time.
-   */
-  template <typename T>
-  static void Shuffle(vector<T>& arr, unsigned long seed = 0);
 
   /**
    * @brief Add all cards from waste pile to the deck.
@@ -44,22 +35,67 @@ class Deck : public Pile {
    */
   bool recycle(WastePile& pile);
 
+  /**
+   * @brief Undo the recycle operation
+   */
   void undoRecycle(WastePile& pile);
 
-  void setCardPrevScenePos() override;
+  /**
+   * @brief Shuffle the deck using a random seed.
+   * @param seed Optional seed for reproducible shuffling. If 0 (default), the
+   * seed is based on system time.
+   */
+  template <typename T>
+  static void shuffle(vector<T>& arr, unsigned long seed = 0);
 
-  bool IsValid(const Card& card) override;
+  /**
+   * @brief Check if card can be legally added to deck. Override Pile::isValid.
+   *
+   * @param card
+   * @return false always, as cards cannot be added directly to the deck.
+   */
+  bool isValid(const Card& card) override;
 
+  /** @} */  // End of DeckLogic
+
+  /**
+   * @defgroup DeckGUI Deck GUI
+   * @brief Members related to the deck's graphical representation.
+   * @{
+   */
+
+  /**
+   * @brief Set the previous position of all cards in the deck to the deck's
+   * position (in scene coordinates).
+   */
+  void setCardsPrevScenePos() override;
+
+  /**
+   * @brief Update the visual representation of the deck.
+   */
   void updateVisuals() override;
 
+  /**
+   * @brief Get the offset for positioning cards in the deck (none).
+   * @return The offset as a QPointF
+   */
   QPointF getOffset() const override;
 
- protected:
+  /** @} */  // End of DeckGUI
+
+ private:
   /**
-   * @brief Handles mouse press events on the deck.
+   * @addtogroup DeckGUI
+   * @{
+   */
+
+  /**
+   * @brief Handle mouse press events on the deck.
    * @param event The mouse event triggered by clicking on the deck.
    */
   void mousePressEvent(QGraphicsSceneMouseEvent* event) override;
+
+  /** @} */  // End of DeckGUI
 };
 
 #endif

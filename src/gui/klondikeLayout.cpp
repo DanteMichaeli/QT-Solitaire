@@ -1,7 +1,5 @@
 #include "klondikeLayout.hpp"
 
-#include "gameView.hpp"
-
 KlondikeLayout::KlondikeLayout(QGraphicsScene* scene, Game* game)
     : Layout(scene, game) {
   init();
@@ -10,22 +8,22 @@ KlondikeLayout::KlondikeLayout(QGraphicsScene* scene, Game* game)
 void KlondikeLayout::init() {
   auto game = this->getGame();
   auto scene = this->getScene();
-  scene->clear();
 
+  // Add deck and Waste pile
   scene->addItem(game->getDeck());
   scene->addItem(game->getWPile());
 
-  // Create and add all seven Klondike piles to the tableau
+  // Add all seven Klondike piles to the scene
   for (auto& ptr : game->getKPiles()) {
     scene->addItem(ptr);
-    ptr->updateVisuals();
   }
+  // Add all four Target piles to the scene
   for (auto& ptr : game->getTPiles()) {
     scene->addItem(ptr);
   }
 }
 
-void KlondikeLayout::resize(QSizeF& newSize) {
+void KlondikeLayout::resize(const QSizeF& newSize) {
   const double width = newSize.width() - 30;
   const double height = newSize.height() - 30;
 
@@ -35,9 +33,9 @@ void KlondikeLayout::resize(QSizeF& newSize) {
   auto wPile = game->getWPile();
 
   const int pileRealWidth = deck->getWidth();
-  const int pileRealHeight = deck->getHeigh();
+  const int pileRealHeight = deck->getHeight();
 
-  // Initial margins pin pixels
+  // Initial margins in pixels
   double topMpix = pileRealHeight * topMargin;
   double leftMpix = pileRealWidth * leftMargin;
 
@@ -97,15 +95,15 @@ void KlondikeLayout::resize(QSizeF& newSize) {
   wPile->setScale(scale);
   deck->setPos(leftMpix + xDiff, topMpix + yDiff);
   wPile->setPos(leftMpix + 2 * xDiff + pWidth, topMpix + yDiff);
-  deck->setCardPrevScenePos();
-  wPile->setCardPrevScenePos();
+  deck->setCardsPrevScenePos();
+  wPile->setCardsPrevScenePos();
 
   double xOffset = leftMpix + xDiff;
   double yOffset = topMpix + 2 * yDiff + pHeight;
   for (auto& kp : game->getKPiles()) {
     kp->setPos(xOffset, yOffset);
     kp->setScale(scale);
-    kp->setCardPrevScenePos();
+    kp->setCardsPrevScenePos();
     xOffset += xDiff + pWidth;
   }
 
@@ -114,7 +112,7 @@ void KlondikeLayout::resize(QSizeF& newSize) {
   for (auto& tp : game->getTPiles()) {
     tp->setPos(xOffset, yOffset);
     tp->setScale(scale);
-    tp->setCardPrevScenePos();
+    tp->setCardsPrevScenePos();
     xOffset += xDiff + pWidth;
   }
 }

@@ -8,22 +8,24 @@ Pile::Pile(QGraphicsItem* parent)
 
 Pile::~Pile() { qDebug() << "PILE destroyed"; }
 
+// LOGIC RELATED FUNCTIONS
+
 Card* Pile::getTopCard() const {
-  if (!this->Empty()) {
+  if (!this->isEmpty()) {
     return cards_.back();
   }
   return nullptr;
 }
 
-void Pile::AddCard(Card* card) {
+void Pile::addCard(Card* card) {
   card->setParentItem(this);
   connect(card, &Card::cardClicked, this, &Pile::onCardClicked);
   connect(card, &Card::cardDragged, this, &Pile::onCardDragged);
   cards_.push_back(card);
 }
 
-Card* Pile::RemoveCard() {
-  if (cards_.empty()) {
+Card* Pile::removeCard() {
+  if (this->isEmpty()) {
     return nullptr;
   }
   Card* card = getTopCard();
@@ -34,36 +36,37 @@ Card* Pile::RemoveCard() {
   return card;
 }
 
-Card* Pile::getCardFromBack(size_t i) {
-  int index = cards_.size() - 1 - i;
+Card* Pile::getCardFromBack(const size_t i) {
+  int index = getSize() - 1 - i;
   if (index >= 0 && index < cards_.size()) {
     return cards_[index];
   }
   return nullptr;
 }
 
-void Pile::TransferCard(Pile& other, size_t nof) {
-  if (!this->Empty() && nof <= this->Size()) {
+void Pile::transferCards(Pile& other, const unsigned int nof) {
+  if (!this->isEmpty() && nof <= this->getSize()) {
     if (nof == 1) {
-      Card* card = RemoveCard();
-      other.AddCard(card);
+      Card* card = removeCard();
+      other.addCard(card);
     } else {
+      // aux stack to keep the order consistent
       stack<Card*> aux;
       size_t i = 0;
       while (i < nof && !cards_.empty()) {
-        aux.push(RemoveCard());
+        aux.push(this->removeCard());
         ++i;
       }
       while (!aux.empty()) {
         auto& card = aux.top();
-        other.AddCard(card);
+        other.addCard(card);
         aux.pop();
       }
     }
   }
 }
 
-vector<Card*> Pile::getCardsAbove(Card* card) {
+vector<Card*> Pile::getCardsAbove(Card* card) const {
   vector<Card*> above;
   bool found = false;
   for (auto& cardPtr : cards_) {
@@ -77,7 +80,30 @@ vector<Card*> Pile::getCardsAbove(Card* card) {
   return above;
 }
 
-int Pile::cardIndexFromBack(Card* card) const {
+bool Pile::flipTopCard(bool faceUp, const int indexFromBack) {
+  if (this->isEmpty()) {
+    return false;  // No cards to flip
+  }
+
+  int size = this->getSize();
+
+  Card* card = cards_[size - indexFromBack];
+
+  if (faceUp) {
+    if (!card->isFaceUp()) {
+      card->flip();  // Flip to face-up
+      return true;   // Successfully flipped
+    }
+  } else {
+    if (card->isFaceUp()) {
+      card->flip();  // Flip to face-down
+    }
+  }
+
+  return false;  // No action taken
+}
+
+int Pile::cardIndexFromTop(Card* card) const {
   auto backIt = cards_.end();
   int i = 0;
   while (backIt != cards_.begin()) {
@@ -89,6 +115,8 @@ int Pile::cardIndexFromBack(Card* card) const {
   }
   return 0;
 }
+
+// GUI RELATED FUNCTIONS
 
 QRectF Pile::boundingRect() const { return rect_; }
 

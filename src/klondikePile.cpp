@@ -2,34 +2,13 @@
 
 KlondikePile::KlondikePile(QGraphicsItem* parent) : Pile(parent) {}
 
-bool KlondikePile::flipCard(bool faceUp, int indexFromBack) {
-  if (this->Empty()) {
-    return false;  // No cards to flip
-  }
+// LOGIC RELATED FUNCTIONS
 
-  int size = this->Size();
-
-  Card* card = cards_[size - indexFromBack];
-
-  if (faceUp) {
-    if (!card->isFaceUp()) {
-      card->flip();  // Flip to face-up
-      return true;   // Successfully flipped
-    }
-  } else {
-    if (card->isFaceUp()) {
-      card->flip();  // Flip to face-down
-    }
-  }
-
-  return false;  // No action taken
-}
-
-bool KlondikePile::IsValid(const Card& card) {
+bool KlondikePile::isValid(const Card& card) {
   if (!card.isFaceUp()) {
     return false;
   }
-  if (cards_.empty()) {
+  if (this->isEmpty()) {
     return card.getRank() == Rank::KING;
   }
   Card* top = getTopCard();
@@ -38,8 +17,10 @@ bool KlondikePile::IsValid(const Card& card) {
   return diffColor && isNextLower;
 }
 
+// GUI RELATED FUNCTIONS
+
 void KlondikePile::updateVisuals() {
-  int i = Size();
+  int i = this->getSize();
   while (i > 0) {
     i--;
     // Get the card's previous position
@@ -49,7 +30,6 @@ void KlondikePile::updateVisuals() {
 
     // Set the start and end positions for the animation
     QPointF endPos = i * this->getOffset();  // Offset for stacking
-    QPointF endScenePos = mapToScene(endPos);
 
     // Start the animation
     if (startPos != endPos) {
@@ -61,15 +41,15 @@ void KlondikePile::updateVisuals() {
   }
 }
 
-void KlondikePile::setCardPrevScenePos() {
-  for (int i = 0; i < Size(); i++) {
+void KlondikePile::setCardsPrevScenePos() {
+  for (int i = 0; i < this->getSize(); i++) {
     QPointF scenePos = mapToScene(i * this->getOffset());
     cards_[i]->setPrevScenePos(scenePos);
   }
 }
 
 QPointF KlondikePile::getOffset() const {
-  int offset = (Size() > 11) ? 11 * PILE_YOFFSET / Size() : PILE_YOFFSET;
+  int offset = (getSize() > 11) ? 11 * PILE_OFFSET / getSize() : PILE_OFFSET;
   return QPoint(0, offset);
 }
 

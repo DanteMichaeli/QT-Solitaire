@@ -2,19 +2,13 @@
 #define QT_DEBUG
 
 #include <QDebug>
-#include <QGraphicsProxyWidget>
 #include <QHBoxLayout>
 #include <QMenu>
-#include <QPushButton>
-#include <QTime>
 #include <QVBoxLayout>
 #include <QWidgetAction>
 
 #include "klondikeLayout.hpp"
-#include "klondikePile.hpp"
 #include "mainwindow.h"
-#include "targetPile.hpp"
-#include "wastePile.hpp"
 
 GameView::GameView(Settings &settings, QWidget *parent)
     : QGraphicsView(parent),
@@ -43,16 +37,16 @@ void GameView::initView() {
 
 void GameView::initButtons() {
   // Set proper parent-child ownership for buttons
-  undoButton_ = new QPushButton("Undo", this);  // Pass 'this' as parent
+  undoButton_ = new QPushButton("Undo", this);
   connect(undoButton_, &QPushButton::clicked, this,
           [this]() { game_->undo(); });
 
-  hintButton_ = new QPushButton("Hint", this);  // Pass 'this' as parent
+  hintButton_ = new QPushButton("Hint", this);
   connect(hintButton_, &QPushButton::clicked, this,
           [this]() { game_->hint(); });
 
-  // Create a menu button and set parent to 'this'
-  menuButton_ = new QToolButton();  // Pass 'this' as parent
+  // Create a menu button
+  menuButton_ = new QToolButton();
   menuButton_->setText("Options");
   menuButton_->setIcon(QIcon::fromTheme("go-home"));
   menuButton_->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
@@ -131,8 +125,6 @@ void GameView::initToolbar() {
   QHBoxLayout *toolbarLayout = new QHBoxLayout(toolbarWidget_);
   toolbarLayout->setContentsMargins(10, 10, 50, 10);
   toolbarLayout->setSpacing(20);
-  QSpacerItem *spacer =
-      new QSpacerItem(30, 0, QSizePolicy::Fixed, QSizePolicy::Minimum);
 
   // Add buttons and labels to the custom toolbar
   toolbarLayout->addWidget(undoButton_);
@@ -152,12 +144,12 @@ void GameView::initToolbar() {
   toolbarWidget_->setLayout(toolbarLayout);
 }
 
-void GameView::updateLayout(QSizeF &newSize) {
+void GameView::updateLayout(const QSizeF &newSize) {
   layout_->resize(newSize);
   updateToolbarSize(newSize);
 }
 
-void GameView::changeSettings(Settings &gameSettings) {
+void GameView::changeSettings(const Settings &gameSettings) {
   game_->changeSettings(gameSettings);
   if (!gameSettings.isHintsEnabled) {
     hintButton_->setEnabled(false);
@@ -170,9 +162,8 @@ void GameView::changeSettings(Settings &gameSettings) {
   }
 }
 
-void GameView::updateToolbarSize(QSizeF &size) {
+void GameView::updateToolbarSize(const QSizeF &size) {
   if (toolbarWidget_) {
-    // Get the current scene size or view size
     int toolbarWidth = size.width();
     int toolbarHeight = 40;  // Fixed height for the toolbar
 
@@ -181,14 +172,17 @@ void GameView::updateToolbarSize(QSizeF &size) {
   }
 }
 
-void GameView::handleGameStateChange(int points, int moves) {
+void GameView::handleGameStateChange(const unsigned int points,
+                                     const unsigned int moves) {
   pointsLabel_->setText(QString("Points: %1").arg(points));
   moveLabel_->setText(QString("Moves: %1").arg(moves));
 }
 
-void GameView::handleGameWon(int points) { emit gameWon(points); }
+void GameView::handleGameWon(const unsigned int points) {
+  emit gameWon(points);
+}
 
-void GameView::handleTimeElapsed(unsigned long elapsedTime) {
+void GameView::handleTimeElapsed(const unsigned int elapsedTime) {
   QString newText = MainWindow::formatTime(elapsedTime);
   timerLabel_->setText(newText);
 }

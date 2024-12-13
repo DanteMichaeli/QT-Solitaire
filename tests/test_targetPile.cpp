@@ -17,12 +17,12 @@ TEST_CASE("TargetPile Check isValid Check with Loop", "[targetpile]") {
   // Wrong suit cannot be added
   auto card = std::make_unique<Card>(Suit::SPADES, Rank::ACE);
   card->flipUp();
-  REQUIRE(pile.IsValid(*card) == false);
+  REQUIRE(pile.isValid(*card) == false);
 
   // Correct suit but wrong rank
   card = std::make_unique<Card>(Suit::HEARTS, Rank::TWO);
   card->flipUp();
-  REQUIRE(pile.IsValid(*card) == false);
+  REQUIRE(pile.isValid(*card) == false);
 
   KlondikePile kPile(deck);  // Create a KlondikePile for transferring cards
 
@@ -36,8 +36,8 @@ TEST_CASE("TargetPile Check isValid Check with Loop", "[targetpile]") {
         std::make_unique<Card>(Suit::SPADES, static_cast<Rank>(rank));
     wrongCard->flipUp();
 
-    REQUIRE(pile.IsValid(*wrongCard) == false);  // Wrong suit should fail
-    REQUIRE(pile.IsValid(*correctCard) ==
+    REQUIRE(pile.isValid(*wrongCard) == false);  // Wrong suit should fail
+    REQUIRE(pile.isValid(*correctCard) ==
             true);  // Correct suit and rank should pass
 
     // Add the correct card to the KlondikePile, then transfer it to the

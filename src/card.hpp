@@ -7,9 +7,6 @@
 #include <QPainter>
 #include <QPropertyAnimation>
 #include <QTimer>
-#include <iostream>
-#include <sstream>
-#include <string>
 
 #define SCALING_FACTOR 0.2
 #define MAX_GLOW 110
@@ -124,6 +121,10 @@ class Card : public QGraphicsObject {
    */
   Color getColor() const { return color_; }
 
+  /**
+   * @brief Get the Pile object that the card is part of.
+   * @return Pile*
+   */
   Pile* getPile();
 
   /**
@@ -150,8 +151,16 @@ class Card : public QGraphicsObject {
    */
   bool isDraggable();
 
+  /**
+   * @brief Check if card is mid move animation.
+   * @return true if moving, false otherwise.
+   */
   bool isMoving() const { return isMoving_; }
 
+  /**
+   * @brief Check if card is mid glow animation.
+   * @return true if glowing, false otherwise.
+   */
   bool isGlowing() const { return isGlowing_; }
 
   /**
@@ -177,7 +186,7 @@ class Card : public QGraphicsObject {
    * @brief Start the moving animation.
    */
   void animateMove(const QPointF& startPos, const QPointF& endPos,
-                   const size_t ms = 500);
+                   const unsigned int ms = 500);
 
   /**
    * @brief Start the glowing animation.
@@ -203,24 +212,24 @@ class Card : public QGraphicsObject {
  private:
   /**
    * @defgroup CardLogic Card Logic
-   * @brief Variables related to the card's logical state.
+   * @brief Members related to the card's logical state.
    * @{
    */
   QPointF prevScenePos_;  ///< The previous scene position of the card.
   QPointF prevPos_;       ///< The previous position of the card in the scene.
   vector<Card*> cardsAbove_;  ///< Cards that are above this card in a pile.
-  Suit suit_;       ///< Suit of the card (CLUBS, DIAMONDS, SPADES, HEARTS).
-  Rank rank_;       ///< Rank of the card (ACE to KING).
-  Color color_;     ///< Color of the card (BLACK or RED).
-  bool faceUp_;     ///< Face-up status of the card.
-  bool isGlowing_;  ///< Whether the card is currently glowing.
-  bool isMoving_;
-  bool isDragged_;
-  /** @} */  // End of CardLogic
+  const Suit suit_;  ///< Suit of the card (CLUBS, DIAMONDS, SPADES, HEARTS).
+  const Rank rank_;  ///< Rank of the card (ACE to KING).
+  Color color_;      ///< Color of the card (BLACK or RED).
+  bool faceUp_;      ///< Face-up status of the card.
+  bool isGlowing_;   ///< Whether the card is currently glowing.
+  bool isMoving_;    ///< If card is mid moving animation.
+  bool isDragged_;   ///< If card is currently being dragged.
+  /** @} */          // End of CardLogic
 
   /**
    * @defgroup CardGUI Card GUI
-   * @brief Variables related to the card's graphical representation.
+   * @brief Members related to the card's graphical representation.
    * @{
    */
 
@@ -265,6 +274,9 @@ class Card : public QGraphicsObject {
    */
   void mouseReleaseEvent(QGraphicsSceneMouseEvent* event) override;
 
+  /**
+   * @brief forcefully stop the current glow animation.
+   */
   void stopGlowingAnimation();
 
   /**
@@ -272,8 +284,19 @@ class Card : public QGraphicsObject {
    */
   void animateGlowOut();
 
+  /**
+   * @brief Set the Parent's Z Value, render parent on top / bottom.
+   * @param value
+   */
   void setParentZValue(const qreal& value);
 
+  /**
+   * @brief Helper function to animate the card movement.
+   *
+   * Changes the cards position in the scene and assigns cards prevScenePos_
+   * variable for smooth animations.
+   * @param pos
+   */
   void setMovePos(const QPointF& pos);
 
   /**

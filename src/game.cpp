@@ -1,6 +1,5 @@
 #include "game.hpp"
 
-#include <QPropertyAnimation>
 #include <exception>
 
 Game::Game(QObject* parent)
@@ -12,7 +11,7 @@ Game::Game(QObject* parent)
       undos_(0),
       isWon_(false),
       prevHint_(nullptr),
-      maxHistory_(100),
+      maxHistory_(0xFF),
       QObject(parent) {
   initDeck();
   initWastePile();
@@ -36,7 +35,7 @@ void Game::initWastePile() {
 
 void Game::initKlondikePiles() {
   for (int i = 0; i < KLONDIKE_PILE_AM; i++) {
-    if (deck_->Empty()) {
+    if (deck_->isEmpty()) {
       throw std::out_of_range("pile empty");
     }
     KlondikePile* klondikePile = new KlondikePile();
@@ -69,50 +68,50 @@ void Game::elapseTime() {
 }
 
 void Game::startGame() {
-  deck_->setCardPrevScenePos();
+  deck_->setCardsPrevScenePos();
   for (size_t i = 0; i < klondikePiles_.size(); i++) {
     qDebug() << "Initializing KlondikePile with" << i << "cards.";
     KlondikePile* klondikePile = klondikePiles_[i];
-    for (size_t j = 0; j < i; j++) {
-      deck_->TransferCard(*klondikePile);
+    for (size_t j = 0; j <= i; j++) {
+      deck_->transferCards(*klondikePile);
     }
-    Card* topCard = deck_->getTopCard();
-    if (!topCard->isFaceUp()) {
-      topCard->flip();
-    }
-    deck_->TransferCard(*klondikePile);
+    klondikePile->getTopCard()->flip();
     klondikePile->updateVisuals();
   }
   timer_->start(1000);
 }
 
+// Update stat.CSV when game is deconstructed and moves have been made
 Game::~Game() {
-  if (moves_ > 0) {
+  if (moves_ > 0 || undos_ > 0) {
     updateStats();
   }
 }
 
-void Game::logMove(Move& move) {
+void Game::logMove(const Move& move) {
+  // Add move to history
   addToHistory(move);
   moves_++;
   points_ += move.pointChange_;
 
   // Determine if top card is flipped in KlondikePile.
   KlondikePile* kPile = dynamic_cast<KlondikePile*>(move.fromPile_);
-  if (kPile && kPile->flipCard(true)) {
-    Move flipMove(FLIP_KLONDIKE, move.fromPile_, move.toPile_, 0,
-                  turnOverPoints);
-    addToHistory(flipMove);
-    points_ += flipMove.pointChange_;
+  if (kPile && kPile->flipTopCard(true)) {
+    addToHistory(
+        Move(FLIP_KLONDIKE, move.fromPile_, move.toPile_, 0, turnOverPoints));
+    points_ += turnOverPoints;
   }
+
   // Update visuals
   move.fromPile_->updateVisuals();
   move.toPile_->updateVisuals();
   prevHint_ = nullptr;
 
+  // Update game view labels
   emit gameStateChange(points_, moves_);
 
-  if (hasWon()) {
+  // Winning move?
+  if (this->hasWon()) {
     isWon_ = true;
     soundManager_.playWinSound();
     emit gameWon(points_);
@@ -129,7 +128,13 @@ void Game::updateStats() {
   stats.winRate = stats.wins / games;
 
   stats.totalTime += elapsedTime_;
-  if (isWon_) stats.bestTime = std::max(stats.bestTime, elapsedTime_);
+  if (isWon_) {
+    if (stats.bestTime != 0) {
+      stats.bestTime = std::min(stats.bestTime, elapsedTime_);
+    } else {
+      stats.bestTime = elapsedTime_;
+    }
+  }
   stats.avgTime = stats.totalTime / games;
 
   stats.totalMoves += moves_;
@@ -152,7 +157,8 @@ void Game::updateStats() {
   saveStatsToCSV("stats.csv", stats);
 }
 
-void Game::addToHistory(Move& move) {
+void Game::addToHistory(const Move& move) {
+  // Keep the max size intact
   if (movehistory_.size() >= maxHistory_) {
     movehistory_.pop_front();
   }
@@ -163,25 +169,28 @@ void Game::undo() {
   if (!movehistory_.empty()) {
     moves_--;
     undos_++;
-    Move& move = movehistory_.back();
-    movehistory_.pop_back();
+    prevHint_ = nullptr;
 
-    // If last move is card flip, do 2 undos in that sense.
-    if (move.type_ == FLIP_KLONDIKE) {
-      static_cast<KlondikePile*>(move.fromPile_)->flipCard(false);
-      points_ -= move.pointChange_;
-      move = movehistory_.back();
+    // Check if card was flipped in KlondikePile
+    if (movehistory_.back().type_ == FLIP_KLONDIKE) {
+      const Move& flipMove = movehistory_.back();
+      flipMove.fromPile_->flipTopCard(false);
+      points_ -= flipMove.pointChange_;
       movehistory_.pop_back();
     }
 
+    // Get last move
+    const Move& move = movehistory_.back();
+    movehistory_.pop_back();
+
     if (move.type_ == RECYCLE_DECK) {
-      static_cast<Deck*>(move.toPile_)->undoRecycle(*wastePile_);
+      deck_->undoRecycle(*wastePile_);
     } else if (move.type_ == DECK_TO_WASTE) {
-      static_cast<WastePile*>(move.toPile_)
-          ->undoAddFromDeck(*deck_, move.nofCards_);
+      wastePile_->undoAddFromDeck(*deck_, move.nofCards_);
     } else {
-      move.toPile_->TransferCard(*move.fromPile_, move.nofCards_);
+      move.toPile_->transferCards(*move.fromPile_, move.nofCards_);
     }
+
     // Update board
     points_ -= move.pointChange_;
     move.toPile_->updateVisuals();
@@ -190,7 +199,7 @@ void Game::undo() {
   }
 }
 
-int Game::pointChange(MoveType move) {
+int Game::pointChange(MoveType move) const {
   int rawChange;
   switch (move) {
     case (WASTE_TO_KLONDIKE):
@@ -220,13 +229,14 @@ int Game::pointChange(MoveType move) {
     default:
       rawChange = 0;
   }
+  // Points cannot be negative, also prevent int underflow
   if (rawChange < 0 && points_ < -rawChange) {
     rawChange = -points_;
   }
   return rawChange;
 }
 
-void Game::changeSettings(Settings& settings) {
+void Game::changeSettings(const Settings& settings) {
   hardMode_ = settings.isHardModeEnabled;
   hintsEnabled_ = settings.isHintsEnabled;
   soundManager_.setVolume(settings.volume);
@@ -238,10 +248,13 @@ void Game::changeSettings(Settings& settings) {
 
 int Game::attemptMove(Card* card, Pile* fromPile, Pile* toPile) {
   if (toPile != nullptr) {
-    int i = fromPile->cardIndexFromBack(card);
+    // How many cards are trying to be moved
+    int i = fromPile->cardIndexFromTop(card);
+
+    // Allow one card to move to a target pile
     if (i == 1 || dynamic_cast<TargetPile*>(toPile) == nullptr) {
-      if (toPile->IsValid(*card)) {
-        fromPile->TransferCard(*toPile, i);
+      if (toPile->isValid(*card)) {
+        fromPile->transferCards(*toPile, i);
         soundManager_.playMoveSound();
         return i;
       }
@@ -251,10 +264,10 @@ int Game::attemptMove(Card* card, Pile* fromPile, Pile* toPile) {
 }
 
 int Game::attemptDeckMove() {
-  if (!deck_->Empty()) {
+  if (!deck_->isEmpty()) {
     int amount = hardMode_ ? 3 : 1;
     soundManager_.playMoveSound();
-    return wastePile_->AddFromDeck(*deck_, amount);
+    return wastePile_->addFromDeck(*deck_, amount);
   } else if (deck_->recycle(*wastePile_)) {
     soundManager_.playShuffleSound();
     return -1;
@@ -262,16 +275,16 @@ int Game::attemptDeckMove() {
   return 0;
 }
 
-bool Game::hasWon() {
+bool Game::hasWon() const {
   for (auto& ptr : targetPiles_) {
-    if (ptr->Size() != 13) {
+    if (ptr->getSize() != 13) {
       return false;
     }
   }
   return true;
 }
 
-MoveType Game::determineMove(Pile* fromPile, Pile* toPile) {
+MoveType Game::determineMove(Pile* fromPile, Pile* toPile) const {
   if (dynamic_cast<WastePile*>(fromPile) &&
       dynamic_cast<KlondikePile*>(toPile)) {
     return WASTE_TO_KLONDIKE;
@@ -307,7 +320,7 @@ void Game::hint() {
   }
 }
 
-Card* Game::findHint() {
+Card* Game::findHint() const {
   // Klondike to Target / Klondike
   for (auto& klondikePile : klondikePiles_) {
     int i = 0;
@@ -316,7 +329,7 @@ Card* Game::findHint() {
       // Check Target Piles
       if (currentCard == klondikePile->getTopCard()) {
         for (auto& tp : targetPiles_) {
-          if (tp->IsValid(*currentCard)) {
+          if (tp->isValid(*currentCard)) {
             return currentCard;
           }
         }
@@ -325,7 +338,7 @@ Card* Game::findHint() {
       Card* cardBelow = klondikePile->getCardFromBack(i + 1);
       if (currentCard->getRank() != KING || cardBelow != nullptr) {
         for (auto& kp : klondikePiles_) {
-          if (kp != klondikePile && kp->IsValid(*currentCard)) {
+          if (kp != klondikePile && kp->isValid(*currentCard)) {
             if (cardBelow == nullptr || !cardBelow->isFaceUp()) {
               return currentCard;
             }
@@ -340,42 +353,44 @@ Card* Game::findHint() {
   Card* wasteTopCard = wastePile_->getTopCard();
   if (wasteTopCard != nullptr) {
     for (auto& tp : targetPiles_) {
-      if (tp->IsValid(*wasteTopCard)) {
+      if (tp->isValid(*wasteTopCard)) {
         return wasteTopCard;
       }
     }
     for (auto& kp : klondikePiles_) {
-      if (kp->IsValid(*wasteTopCard)) {
+      if (kp->isValid(*wasteTopCard)) {
         return wasteTopCard;
       }
     }
   }
   // Else give hint to deck
-  if (!deck_->Empty()) {
+  if (!deck_->isEmpty()) {
     return deck_->getTopCard();
   }
   return nullptr;
 }
 
 void Game::handleAutoMove(Card* card, Pile* fromPile) {
-  if (!hardMode_ && !fromPile->Empty()) {
+  if (!hardMode_ && !fromPile->isEmpty()) {
     Pile* toPile = findLegalPile(card);
     int howMany = attemptMove(card, fromPile, toPile);
     if (howMany != 0) {
-      MoveType type = determineMove(fromPile, toPile);
-      Move move(type, fromPile, toPile, howMany, pointChange(type));
+      const MoveType type = determineMove(fromPile, toPile);
+      const Move move(determineMove(fromPile, toPile), fromPile, toPile,
+                      howMany, pointChange(type));
       logMove(move);
     }
   }
 }
 
-void Game::handleMove(Card* card, Pile* fromPile, QPointF scenePosition) {
-  if (!fromPile->Empty()) {
+void Game::handleMove(Card* card, Pile* fromPile,
+                      const QPointF& scenePosition) {
+  if (!fromPile->isEmpty()) {
     Pile* toPile = findPile(scenePosition);
     int howMany = attemptMove(card, fromPile, toPile);
     if (howMany != 0) {
-      MoveType type = determineMove(fromPile, toPile);
-      Move move(type, fromPile, toPile, howMany, pointChange(type));
+      const MoveType type = determineMove(fromPile, toPile);
+      const Move move(type, fromPile, toPile, howMany, pointChange(type));
       logMove(move);
     } else {
       fromPile->updateVisuals();  // Return to original position
@@ -386,33 +401,32 @@ void Game::handleMove(Card* card, Pile* fromPile, QPointF scenePosition) {
 void Game::handleDeckClicked() {
   int howMany = attemptDeckMove();
   if (howMany != 0) {
-    if (howMany > 0) {
-      Move move(DECK_TO_WASTE, deck_, wastePile_, howMany, dToWPoints);
-      logMove(move);
+    if (howMany > 0) {  // -1 for recycle
+      logMove(Move(DECK_TO_WASTE, deck_, wastePile_, howMany, dToWPoints));
     } else {
-      Move move(RECYCLE_DECK, wastePile_, deck_, 0, pointChange(RECYCLE_DECK));
-      logMove(move);
+      logMove(
+          Move(RECYCLE_DECK, wastePile_, deck_, 0, pointChange(RECYCLE_DECK)));
     }
   }
 }
 
-Pile* Game::findLegalPile(Card* card) {
+Pile* Game::findLegalPile(Card* card) const {
   Pile* parent = card->getPile();
   for (auto& pile : targetPiles_) {
-    if (pile != parent && pile->IsValid(*card) &&
-        card == parent->getTopCard()) {
+    if (pile != parent && pile->isValid(*card) &&
+        card == parent->getTopCard()) {  // One card to target pile at a time
       return pile;
     }
   }
   for (auto& pile : klondikePiles_) {
-    if (pile != parent && pile->IsValid(*card)) {
+    if (pile != parent && pile->isValid(*card)) {
       return pile;
     }
   }
   return nullptr;
 }
 
-Pile* Game::findPile(QPointF scenePosition) {
+Pile* Game::findPile(const QPointF& scenePosition) const {
   for (auto& pile : targetPiles_) {
     if (pile->contains(pile->mapFromScene(scenePosition))) {
       return pile;
