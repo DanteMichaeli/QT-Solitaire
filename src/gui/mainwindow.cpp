@@ -1,7 +1,5 @@
 #include "mainwindow.h"
 
-#include <QTime>
-
 #include "game.hpp"
 #include "stats.hpp"
 #include "ui_mainwindow.h"
@@ -120,8 +118,10 @@ void MainWindow::backToMenuInit() {
 }
 
 void MainWindow::toStatistics() {
+  // Load stats
   GameStats playStats = fromCSV("stats.csv");
 
+  // display the stats
   ui->gamesLCD->display(QString::number(playStats.games));
   ui->winsLCD->display(QString::number(playStats.wins));
   ui->lossesLCD->display(QString::number(playStats.losses));
@@ -150,17 +150,19 @@ void MainWindow::toStatistics() {
 }
 
 void MainWindow::startGame() {
+  // If a game is currently running or no game has been initialized
+  // Reinitialize the game and start it
   if (gameStarted() || !gameInitialized()) initNewGame();
 
-  QSizeF size = this->size();
-  gameView_->updateLayout(size);
-  gameView_->startGame();
+  gameView_->updateLayout(this->size());
   setGameStarted(true);
 
   ui->menuGame->menuAction()->setVisible(true);
   switchToPage(GAME);
-}
 
+  gameView_->startGame();
+}
+// If a game is currentlly running, return to it
 void MainWindow::continueGame() {
   if (gameInitialized()) {
     ui->menuGame->menuAction()->setVisible(true);
@@ -171,6 +173,8 @@ void MainWindow::continueGame() {
 void MainWindow::deleteGame() {
   if (gameInitialized()) {
     stackedWidget_->removeWidget(gameView_);
+    // Delete later so that all connections have time to clear before
+    // deconstructing
     gameView_->deleteLater();
     gameView_ = nullptr;
     setGameStarted(false);
@@ -178,8 +182,10 @@ void MainWindow::deleteGame() {
 }
 
 void MainWindow::initNewGame() {
+  // Delete old game
   deleteGame();
 
+  // Init a new one
   gameView_ = new GameView(gameSettings_, this);
   connect(gameView_, &GameView::gameWon, this, &MainWindow::onGameWon);
   connect(gameView_, &GameView::dropdownSignal, this,
@@ -189,8 +195,8 @@ void MainWindow::initNewGame() {
   stackedWidget_->insertWidget(GAME, gameView_);
 }
 
-void MainWindow::onGameWon(int points) {
-  ui->pointsCounter->display(points);
+void MainWindow::onGameWon(const unsigned int points) {
+  ui->pointsCounter->display(QString::number(points));
   switchToPage(WIN_SCREEN);
 }
 
@@ -217,16 +223,16 @@ void MainWindow::fromDropdownSlot(DropDownOption option) {
   }
 }
 
-bool MainWindow::gameInitialized() { return gameView_ != nullptr; }
+bool MainWindow::gameInitialized() const { return gameView_ != nullptr; }
 
-bool MainWindow::gameStarted() { return gameStarted_; }
+bool MainWindow::gameStarted() const { return gameStarted_; }
 
 void MainWindow::setGameStarted(bool value) { gameStarted_ = value; }
 
-QString MainWindow::formatTime(size_t seconds) {
-  size_t h = seconds / 3600;
-  size_t min = (seconds % 3600) / 60;
-  size_t sec = seconds % 60;
+QString MainWindow::formatTime(const unsigned long seconds) {
+  unsigned long h = seconds / 3600;
+  unsigned int min = (seconds % 3600) / 60;
+  unsigned int sec = seconds % 60;
 
   return QString("%1:%2:%3")
       .arg(h)
@@ -235,9 +241,7 @@ QString MainWindow::formatTime(size_t seconds) {
 }
 
 void MainWindow::resizeEvent(QResizeEvent *event) {
-  QSizeF newSize = event->size();
-  if (gameView_ != nullptr) {
-    gameView_->updateLayout(newSize);
-  }
+  // Update the layout if game is initialized
+  if (gameInitialized()) gameView_->updateLayout(event->size());
   QMainWindow::resizeEvent(event);
 }

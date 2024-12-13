@@ -1,5 +1,8 @@
 #include "settings.hpp"
 
+#include <QDebug>
+#include <QFile>
+
 QJsonObject Settings::toJson() const {
   QJsonObject json;
   json["volume"] = volume;

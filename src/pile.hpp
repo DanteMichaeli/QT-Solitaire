@@ -3,146 +3,233 @@
 
 #include <QGraphicsObject>
 #include <QPainter>
-#include <memory>
 
 #include "card.hpp"
 
-#define PILE_YOFFSET 20
+#define PILE_OFFSET 20
 
 using namespace std;
 
 /**
  * @class Pile
  * @brief Represents a pile of cards with the ability to add, remove, and
- * transfer cards. This is an abstract base class, as it includes a pure virtual
- * method IsValid.
+ * transfer cards. This is an abstract base class.
  */
 class Pile : public QGraphicsObject {
   Q_OBJECT
   Q_INTERFACES(QGraphicsItem)
  public:
   /**
-   * @brief Default constructor for an empty pile.
+   * @defgroup PileLogic Pile Logic
+   * @brief Members related to the pile's logical state.
+   * @{
+   */
+
+  /**
+   * @brief Construct an empty pile.
+   * @param parent Pointer to the parent QGraphicsItem, if any.
    */
   explicit Pile(QGraphicsItem* parent = nullptr);
 
   /**
-   * @brief Destructor for the Pile, outputs a message when the pile is
-   * destroyed.
+   * @brief Destruct Pile.
    */
   virtual ~Pile();
 
   /**
-   * @brief Get the size of pile container.
-   * @return point value of size.
+   * @brief Get the number of cards in the pile.
+   * @return The number of cards in the pile.
    */
-  int Size() const { return cards_.size(); }
+  size_t getSize() const { return cards_.size(); }
 
   /**
-   * @brief Check whether pile container is empty.
-   * @return true if empty.
-   * @return false otherwise.
+   * @brief Check whether the pile container is empty.
+   * @return true if the pile is empty, false otherwise.
    */
-  bool Empty() const { return cards_.empty(); }
+  bool isEmpty() const { return cards_.empty(); }
 
   /**
-   * @brief Get the pointer to the card that is on top of teh pile.
-   * @return Card pointer if pile is not empty, otherwise nullptr.
+   * @brief Get the pointer to the card that is on top of the pile.
+   * @return Pointer to the top card if the pile is not empty, otherwise
+   * nullptr.
    */
   Card* getTopCard() const;
 
-  Card* getCardFromBack(size_t i);
-
-  const vector<Card*>& getCards() const { return cards_; }
   /**
-   * @brief Get the index of a card, going from top to bottom.
+   * @brief Get a card from the back of the pile by index.
+   * @param i The index of the card from the back.
+   * @return Pointer to the specified card.
+   */
+  Card* getCardFromBack(const size_t i);
+
+  /**
+   * @brief Get the index of a card from the top of the pile.
    *
-   * Index starts from 1 as this represents how many cards are in the subpile
-   * that constsit of this card and all the cards on top of it.
+   * Index starts from 1, representing the subpile that consists of this card
+   * and all cards above it.
    *
-   * @param card to be searched for.
-   * @return size of subpile or 0 if card is not found.
+   * @param card Pointer to the card to find.
+   * @return The index of the card in the pile, or 0 if the card is not found.
    */
-  int cardIndexFromBack(Card* card) const;
+  int cardIndexFromTop(Card* card) const;
 
   /**
-   * @brief Add a card to the pile.
-   * @param card A unique pointer to the Card to add.
+   * @brief Move one or more card from this pile to another pile.
+   * @param other Reference to the target pile.
+   * @param nof Number of cards to transfer (default is 1).
    */
-  void AddCard(Card* card);
+  void transferCards(Pile& other, const unsigned int nof = 1);
 
   /**
-   * @brief Removes and returns the top card from the pile.
-   * @return A unique pointer to the top Card object, or nullptr if the pile
-   * is empty.
+   * @brief Get all cards above a specific card in the pile.
+   * @param card Pointer to the card in the pile.
+   * @return A vector of pointers to the cards above the specified card.
    */
-  Card* RemoveCard();
+  vector<Card*> getCardsAbove(Card* card) const;
 
   /**
-   * @brief A function that moves a card to another pile.
-   * @param other The target pile to which cards are moved to.
-   * @return true if the card is successfully moved, false otherwise.
+   * @brief Flip the top card up/down.
+   *
+   * In game class, if flipping is succesful, adds points for the player.
+   *
+   * @param value Boolean value. True for flip up, false for down.
+   * @return true when card is flipped up.
+   * @return false otherwise.
    */
-  void TransferCard(Pile& other, size_t nof = 1);
-
-  vector<Card*> getCardsAbove(Card* card);
-
-  double getScaledWidth() { return rect_.width() * this->scale(); }
-  double getScaledHeigh() { return rect_.height() * this->scale(); }
-  double getWidth() { return rect_.width(); }
-  double getHeigh() { return rect_.height(); }
+  bool flipTopCard(bool faceUp, const int indexFromBack = 1);
 
   /**
-   * @brief Pure virtual function to check if a card can be added to the pile.
-   *        Must be implemented by derived classes.
+   * @brief Check if a card can be added to the pile. Pure virtual function.
    * @param card The card to check.
    * @return true if the card can be added, false otherwise.
    */
-  virtual bool IsValid(const Card& card) = 0;
+  virtual bool isValid(const Card& card) = 0;
 
-  virtual void updateVisuals() = 0;  // Refresh the appearance of the pile
+  /** @} */  // End of PileLogic
 
-  virtual void setCardPrevScenePos() = 0;
+  /**
+   * @defgroup PileGUI Pile GUI
+   * @brief Members related to the pile's graphical representation.
+   * @{
+   */
 
+  /**
+   * @brief Get the unscaled width of the pile.
+   * @return The unscaled width.
+   */
+  double getWidth() const { return rect_.width(); }
+
+  /**
+   * @brief Get the unscaled height of the pile.
+   * @return The unscaled height.
+   */
+  double getHeight() const { return rect_.height(); }
+
+  /**
+   * @brief Update the visual representation of the pile. Pure virtual function.
+   *
+   */
+  virtual void updateVisuals() = 0;
+
+  /**
+   * @brief Set the previous scene positions of all cards in the pile. Pure
+   * virtual function.
+   */
+  virtual void setCardsPrevScenePos() = 0;
+
+  /**
+   * @brief Get the offset used for positioning cards in the pile. Pure virtual
+   * function.
+   * @return The offset as a QPointF.
+   */
   virtual QPointF getOffset() const = 0;
 
  signals:
   /**
    * @brief Signal emitted when a card is moved.
-   *
-   * This signal is triggered when a card is moved to a new position within the
-   * scene.
-   *
    * @param card Pointer to the card being moved.
    * @param fromPile Pointer to the originating pile.
    * @param newScenePos The new position of the card in scene coordinates.
    */
-  void cardMoved(Card* card, Pile* fromPile, QPointF newScenePos);
+  void cardMoved(Card* card, Pile* fromPile, const QPointF& newScenePos);
 
   /**
    * @brief Signal emitted when a card is clicked to initiate a move.
-   *
-   * This signal is triggered when a card is clicked and a move is initiated
-   * based on the click interaction.
-   *
    * @param card Pointer to the card being moved.
    * @param fromPile Pointer to the originating pile.
    */
   void cardClickMove(Card* card, Pile* fromPile);
 
+  /** @} */  // End of PileGUI
+
  protected:
   /**
-   * @brief Returns the bounding rectangle of the item.
-   *
-   * This function defines the area within which the item can be drawn and
-   * interacted with.
+   * @addtogroup PileLogic
+   * @{
+   */
+
+  vector<Card*> cards_;  ///< All the cards inside this pile.
+
+  /**
+   * @brief Add a card to the pile.
+   * @param card Pointer to the card to be added.
+   */
+  void addCard(Card* card);
+
+  /** @} */  // End of PileLogic
+
+  /**
+   * @addtogroup PileGUI
+   * @{
+   */
+
+  const QRectF rect_;  ///< The rectangle defining the item’s graphical size.
+
+  /**
+   * @brief Return the bounding rectangle of the item. Defines the area within
+   * which the item can be drawn and interacted with.
    *
    * @return A QRectF object specifying the bounding rectangle.
    */
   QRectF boundingRect() const override;
 
+ private slots:
   /**
-   * @brief Paints the pile slot on the scene.
+   * @brief Slot called when a card is clicked.
+   * @param card Pointer to the clicked card.
+   */
+  void onCardClicked(Card* card);
+
+  /**
+   * @brief Slot called when a card is dragged.
+   * @param card Pointer to the dragged card.
+   * @param newScenePos The new position of the card in scene coordinates.
+   */
+  void onCardDragged(Card* card, const QPointF& newScenePos);
+
+  /** @} */  // End of PileGUI
+
+ private:
+  /**
+   * @addtogroup PileLogic
+   * @{
+   */
+
+  /**
+   * @brief Remove and return the top card from the pile.
+   * @return Pointer to the top card, or nullptr if the pile is empty.
+   */
+  Card* removeCard();
+
+  /** @} */  // End of PileLogic
+
+  /**
+   * @addtogroup PileGUI
+   * @{
+   */
+
+  /**
+   * @brief Paint the pile slot on the scene.
    * @param painter Pointer to the QPainter used for drawing.
    * @param option Provides style options for the item.
    * @param widget Optional pointer to the widget being painted on.
@@ -150,29 +237,7 @@ class Pile : public QGraphicsObject {
   void paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
              QWidget* widget = nullptr) override;
 
-  vector<Card*> cards_;  ///< All the cards inside this pile.
-  QRectF rect_;          ///< The rectangle defining the item’s boundaries.
-
- private slots:
-  /**
-   * @brief Slot called when a card is clicked.
-   *
-   * Handles the logic for when a card is clicked within the scene.
-   *
-   * @param card Pointer to the clicked card.
-   */
-  void onCardClicked(Card* card);
-
-  /**
-   * @brief Slot called when a card is dragged.
-   *
-   * Handles the logic for when a card is dragged to a new position in the
-   * scene.
-   *
-   * @param card Pointer to the dragged card.
-   * @param newScenePos The new position of the card in scene coordinates.
-   */
-  void onCardDragged(Card* card, const QPointF& newScenePos);
+  /** @} */  // End of PileGUI
 };
 
 #endif

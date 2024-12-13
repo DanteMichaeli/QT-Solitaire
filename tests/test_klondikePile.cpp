@@ -62,12 +62,12 @@ TEST_CASE("KlondikePile IsValid Function", "[klondikepile]") {
   // Case 1: Valid move to an empty pile (KING)
   auto king = std::make_unique<Card>(Suit::HEARTS, Rank::KING);
   king->flipUp();  // Card must be face up
-  REQUIRE(pile.IsValid(*king) == true);
+  REQUIRE(pile.isValid(*king) == true);
 
   // Case 2: Invalid move to an empty pile (non-KING)
   auto queen = std::make_unique<Card>(Suit::DIAMONDS, Rank::QUEEN);
   queen->flipUp();
-  REQUIRE(pile.IsValid(*queen) == false);
+  REQUIRE(pile.isValid(*queen) == false);
 
   // Add the KING to the pile
   pile.AddCard(king);
@@ -75,12 +75,12 @@ TEST_CASE("KlondikePile IsValid Function", "[klondikepile]") {
   // Case 3: Valid move to a non-empty pile
   auto validCard = std::make_unique<Card>(Suit::SPADES, Rank::QUEEN);
   validCard->flipUp();
-  REQUIRE(pile.IsValid(*validCard) == true);
+  REQUIRE(pile.isValid(*validCard) == true);
 
   // Case 4: Invalid move to a non-empty pile (same color)
   auto invalidCard1 = std::make_unique<Card>(Suit::HEARTS, Rank::QUEEN);
   invalidCard1->flipUp();
-  REQUIRE(pile.IsValid(*invalidCard1) == false);
+  REQUIRE(pile.isValid(*invalidCard1) == false);
 
   // Case 5: Invalid move to a non-empty pile (not one rank lower)
   auto invalidCard2 = std::make_unique<Card>(Suit::SPADES, Rank::TEN);
@@ -89,7 +89,7 @@ TEST_CASE("KlondikePile IsValid Function", "[klondikepile]") {
 
   // Case 6: Invalid move with a face-down card
   auto faceDownCard = std::make_unique<Card>(Suit::CLUBS, Rank::QUEEN);
-  REQUIRE(pile.IsValid(*faceDownCard) == false);
+  REQUIRE(pile.isValid(*faceDownCard) == false);
 }
 
 TEST_CASE("KlondikePile TransferSubPile Success", "[klondikepile]") {

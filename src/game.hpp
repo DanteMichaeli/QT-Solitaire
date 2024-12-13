@@ -1,8 +1,8 @@
 #ifndef GAME_HPP
 #define GAME_HPP
 
-#include <QElapsedTimer>
 #include <QObject>
+#include <QTimer>
 #include <deque>
 
 #include "deck.hpp"
@@ -37,11 +37,11 @@ enum MoveType {
  * @brief Struct representing a move in the game.
  */
 struct Move {
-  MoveType type_;   ///< The type of the move.
-  Pile* fromPile_;  ///< Pointer to the pile from which the move originates.
-  Pile* toPile_;    ///< Pointer to the pile to which the move is made.
-  int nofCards_;    ///< Number of cards involved in the move.
-  int pointChange_;
+  const MoveType type_;  ///< The type of the move.
+  Pile* fromPile_;      ///< Pointer to the pile from which the move originates.
+  Pile* toPile_;        ///< Pointer to the pile to which the move is made.
+  const int nofCards_;  ///< Number of cards involved in the move.
+  const int pointChange_;
 
   Move(MoveType type, Pile* fromPile, Pile* toPile, int nofCards,
        int pointChange)
@@ -115,13 +115,13 @@ class Game : public QObject {
    * @brief Retrieves the deck.
    * @return A pointer to the deck.
    */
-  Deck* getDeck() { return deck_; }
+  Deck* getDeck() const { return deck_; }
 
   /**
    * @brief Retrieves the waste pile.
    * @return A pointer to the waste pile.
    */
-  WastePile* getWPile() { return wastePile_; }
+  WastePile* getWPile() const { return wastePile_; }
 
   /**
    * @brief Retrieves the Klondike piles.
@@ -139,11 +139,11 @@ class Game : public QObject {
    * @brief Get player points.
    * @return points.
    */
-  int getPoints() { return points_; }
+  int getPoints() const { return points_; }
 
-  int pointChange(MoveType move);
+  int pointChange(MoveType move) const;
 
-  void changeSettings(Settings& settings);
+  void changeSettings(const Settings& settings);
 
   /**
    * @brief Toggles hard mode for the game.
@@ -155,14 +155,14 @@ class Game : public QObject {
    * @param card Pointer to the card being moved.
    * @return Pointer to the legal pile if found, otherwise nullptr.
    */
-  Pile* findLegalPile(Card* card);
+  Pile* findLegalPile(Card* card) const;
 
   /**
    * @brief Finds the pile at a given scene position.
    * @param scenePosition The position in the scene.
    * @return Pointer to the pile at the position if found, otherwise nullptr.
    */
-  Pile* findPile(QPointF scenePosition);
+  Pile* findPile(const QPointF& scenePosition) const;
 
   /**
    * @brief Attempts to move a card between piles.
@@ -184,9 +184,9 @@ class Game : public QObject {
    * @brief Logs the move to history.
    * @param move The move that was executed.
    */
-  void logMove(Move& move);
+  void logMove(const Move& move);
 
-  void addToHistory(Move& move);
+  void addToHistory(const Move& move);
 
   /**
    * @brief undos the moves in history.
@@ -200,28 +200,27 @@ class Game : public QObject {
    * @param toPile Pointer to the destination pile.
    * @return The determined MoveType.
    */
-  MoveType determineMove(Pile* fromPile, Pile* toPile);
+  MoveType determineMove(Pile* fromPile, Pile* toPile) const;
 
   /**
    * @brief Checks if the player has won the game.
    * @return True if the player has won, otherwise false.
    */
-  bool hasWon();
+  bool hasWon() const;
 
   void hint();
 
-  Card* findHint();
+  Card* findHint() const;
 
   /**
    * @brief Updates game stats into file
-   *
    */
   void updateStats();
 
  signals:
-  void updateTime(size_t elapsedTime);
-  void gameStateChange(int points, int moves);
-  void gameWon(int _t1);
+  void updateTime(const unsigned int elapsedTime);
+  void gameStateChange(const unsigned int points, const unsigned int moves);
+  void gameWon(const unsigned int _t1);
 
  private slots:
 
@@ -238,7 +237,7 @@ class Game : public QObject {
    * @param fromPile Pointer to the originating pile.
    * @param scenePosition The position in the scene where the move ends.
    */
-  void handleMove(Card* card, Pile* fromPile, QPointF scenePosition);
+  void handleMove(Card* card, Pile* fromPile, const QPointF& scenePosition);
 
   /**
    * @brief Recieves a signal when card is clicked and attempts to move cards
@@ -255,17 +254,18 @@ class Game : public QObject {
   vector<TargetPile*> targetPiles_;      ///< The target piles.
 
   QTimer* timer_;
-  size_t elapsedTime_;
+  unsigned int elapsedTime_;
 
-  size_t points_;  ///< The player's current score.
-  size_t moves_;
-  size_t hints_;
-  size_t undos_;
+  unsigned int points_;  ///< The player's current score.
+  unsigned int moves_;
+  unsigned int hints_;
+  unsigned int undos_;
 
   bool hardMode_;  ///< Indicates if the game is in hard mode.
   bool hintsEnabled_;
-  bool isWon_;         ///< Indicates if the game has been won.
-  size_t maxHistory_;  ///< The maximium amount of moves stored in the history.
+  bool isWon_;  ///< Indicates if the game has been won.
+  unsigned int
+      maxHistory_;  ///< The maximium amount of moves stored in the history.
 
   deque<Move> movehistory_;        ///< Stack storing the history of moves.
   GameSoundManager soundManager_;  ///< Game sound manager.

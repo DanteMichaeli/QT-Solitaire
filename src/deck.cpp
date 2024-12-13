@@ -1,6 +1,10 @@
 #include "deck.hpp"
 
 #include <QDebug>
+#include <algorithm>
+#include <chrono>
+#include <random>
+#include <vector>
 
 #include "wastePile.hpp"
 
@@ -13,30 +17,32 @@ Deck::Deck(QGraphicsItem* parent) : Pile(parent) {
     }
   }
 
-  Deck::Shuffle<Card*>(aux);
-  for (auto& card : aux) this->AddCard(card);
+  Deck::shuffle<Card*>(aux);
+  for (auto& card : aux) this->addCard(card);
 }
 
+// LOGIC RELATED FUNCTIONS
+
 template <typename T>
-void Deck::Shuffle(std::vector<T>& arr, unsigned long seed) {
+void Deck::shuffle(std::vector<T>& arr, unsigned long seed) {
   if (seed == 0) {
     // Default seed is based on system time.
     seed = chrono::high_resolution_clock::now().time_since_epoch().count();
   }
   mt19937 generator(seed);
-  shuffle(arr.begin(), arr.end(), generator);
+  std::shuffle(arr.begin(), arr.end(), generator);
 }
 
-bool Deck::IsValid(const Card& card) { return false; }
+bool Deck::isValid(const Card& card) { return false; }
 
 bool Deck::recycle(WastePile& pile) {
-  if (this->Empty() && !pile.Empty()) {
-    while (!pile.Empty()) {
+  if (this->isEmpty() && !pile.isEmpty()) {
+    while (!pile.isEmpty()) {
       Card* topCard = pile.getTopCard();
       if (topCard->isFaceUp()) {
         topCard->flip();
       }
-      pile.TransferCard(*this);
+      pile.transferCards(*this);
     }
     return true;
   }
@@ -44,16 +50,18 @@ bool Deck::recycle(WastePile& pile) {
 }
 
 void Deck::undoRecycle(WastePile& pile) {
-  while (!this->Empty()) {
+  while (!this->isEmpty()) {
     Card* topCard = this->getTopCard();
     if (!topCard->isFaceUp()) {
       topCard->flip();
     }
-    TransferCard(pile);
+    transferCards(pile);
   }
 }
 
-void Deck::setCardPrevScenePos() {
+// GUI RELATED FUNCTIONS
+
+void Deck::setCardsPrevScenePos() {
   QPointF scenePos = mapToScene(this->getOffset());
   for (auto& card : cards_) {
     card->setPrevScenePos(scenePos);
@@ -61,9 +69,8 @@ void Deck::setCardPrevScenePos() {
 }
 
 void Deck::updateVisuals() {
-  int i = Size();
+  int i = this->getSize();
   QPointF endPos(0, 0);
-  QPointF endScenePos = mapToScene(endPos);
   while (i > 0) {
     i--;
     // Get the card's previous position
@@ -72,6 +79,7 @@ void Deck::updateVisuals() {
     QPointF startPos = this->mapFromScene(prevPos);
 
     if (startPos != endPos) {
+      // Bring card up, parnet z level ultimately determines rendering order
       this->setZValue(3);
       card->animateMove(startPos, endPos);
     } else {
@@ -82,6 +90,7 @@ void Deck::updateVisuals() {
 
 QPointF Deck::getOffset() const { return QPoint(0, 0); }
 
+// When deck is empty, this event can occur, triggers recycle
 void Deck::mousePressEvent(QGraphicsSceneMouseEvent* event) {
   emit cardClickMove(nullptr, this);
 }

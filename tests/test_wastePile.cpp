@@ -16,7 +16,7 @@ TEST_CASE("WastePile Cards Only Added Through AddFromDeck", "[wastepile]") {
   // loop through all cards in deck, and check isValid for each one
   for (int i = 0; i < 52; i++) {
     auto card = deck.RemoveCard();
-    REQUIRE(pile.IsValid(*card) == false);
+    REQUIRE(pile.isValid(*card) == false);
   }
 }
 

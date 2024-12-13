@@ -1,21 +1,26 @@
 #ifndef KLONDIKEPILE_HPP
 #define KLONDIKEPILE_HPP
 
-#include "deck.hpp"
 #include "pile.hpp"
 
 /**
  * @class KlondikePile
- * @brief A specialized type of Pile used in the game of Klondike Solitaire.
- *        This pile has specific rules for adding and removing cards, enforcing
- * the Klondike game rules.
+ * @brief A special type of Pile in the game of Klondike Solitaire.
+ *        This pile enforces the rules of Klondike Solitaire for handling cards.
  */
 class KlondikePile : public Pile {
   Q_OBJECT
+
  public:
   /**
-   * @brief Constructs a pile with a specified number of cards dealt from a
-   * deck. A certain number of cards are set to face up.
+   * @defgroup KlondikePileLogic Klondike Pile Logic
+   * @brief Members related to the Klondike pile's logical state.
+   * @{
+   */
+
+  /**
+   * @brief Construct a pile with a specified number of cards dealt from a
+   * deck, a subset of which are dealt face up.
    * @param deck The deck from which cards are dealt.
    * @param nofCards The total number of cards to add to the pile.
    * @param nofFacingUp The number of cards to flip face-up, starting from the
@@ -24,18 +29,7 @@ class KlondikePile : public Pile {
   KlondikePile(QGraphicsItem* parent = nullptr);
 
   /**
-   * @brief Flips the top card up/down.
-   *
-   * In game class, if flipping is succesfull, adds points for the player.
-   *
-   * @param value Boolean value. True for flip up, false for down.
-   * @return true when card is flipped up.
-   * @return false otherwise.
-   */
-  bool flipCard(bool faceUp, int indexFromBack = 1);
-
-  /**
-   * @brief Checks if a card can be legally added to this pile based on Klondike
+   * @brief Check if a card can be legally added to this pile based on Klondike
    * Solitaire rules.
    * @param card The card to check for validity.
    * @return true if the card can be added, false otherwise.
@@ -45,16 +39,44 @@ class KlondikePile : public Pile {
    * - The pile is non-empty, and the card is of opposite color and one rank
    * lower than the top card.
    */
-  bool IsValid(const Card& card) override;
+  bool isValid(const Card& card) override;
 
+  /** @} */  // End of KlondikePileLogic
+
+  /**
+   * @defgroup KlondikePileGUI Klondike Pile GUI
+   * @brief Members related to the Klondike pile's graphical representation.
+   * @{
+   */
+
+  /**
+   * @brief Update the visual representation of the pile.
+   */
   void updateVisuals() override;
 
-  void setCardPrevScenePos() override;
+  /**
+   * @brief Set the previous scene positions of all cards in the pile (in scene
+   * coordinates). For a KlondikePile, this is the pile's position plus an
+   * offset.
+   */
+  void setCardsPrevScenePos() override;
 
+ private:
+  /**
+   * @brief Return the bounding rectangle of the item. Defines the area within
+   * which the item can be drawn and interacted with.
+   *
+   * @return A QRectF object specifying the bounding rectangle.
+   */
+  QRectF boundingRect() const override;
+
+  /**
+   * @brief Get the offset used for positioning cards in the pile.
+   * @return The offset as a QPointF.
+   */
   QPointF getOffset() const override;
 
- protected:
-  QRectF boundingRect() const override;
+  /** @} */  // End of KlondikePileGUI
 };
 
 #endif

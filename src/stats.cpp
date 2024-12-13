@@ -2,7 +2,6 @@
 
 #include <filesystem>
 #include <fstream>
-#include <game.hpp>
 #include <iostream>
 #include <sstream>
 #include <string>
@@ -66,39 +65,39 @@ GameStats fromCSV(const std::string& fileName) {
       std::string cell;
 
       std::getline(lineStream, cell, ',');
-      stats.games = std::stoi(cell);
+      stats.games = std::stoul(cell);
       std::getline(lineStream, cell, ',');
-      stats.wins = std::stoi(cell);
+      stats.wins = std::stoul(cell);
       std::getline(lineStream, cell, ',');
-      stats.losses = std::stoi(cell);
+      stats.losses = std::stoul(cell);
       std::getline(lineStream, cell, ',');
       stats.winRate = std::stod(cell);
 
       std::getline(lineStream, cell, ',');
       stats.totalTime = std::stod(cell);
       std::getline(lineStream, cell, ',');
-      stats.bestTime = std::stod(cell);
+      stats.bestTime = std::stoul(cell);
       std::getline(lineStream, cell, ',');
       stats.avgTime = std::stod(cell);
 
       std::getline(lineStream, cell, ',');
-      stats.totalMoves = std::stod(cell);
+      stats.totalMoves = std::stoul(cell);
       std::getline(lineStream, cell, ',');
-      stats.bestMoves = std::stod(cell);
+      stats.bestMoves = std::stoul(cell);
       std::getline(lineStream, cell, ',');
       stats.avgMoves = std::stod(cell);
 
       std::getline(lineStream, cell, ',');
-      stats.undoCount = std::stoi(cell);
+      stats.undoCount = std::stoul(cell);
       std::getline(lineStream, cell, ',');
-      stats.hintCount = std::stoi(cell);
+      stats.hintCount = std::stoul(cell);
 
       std::getline(lineStream, cell, ',');
-      stats.totalPoints = std::stoull(cell);
+      stats.totalPoints = std::stoul(cell);
       std::getline(lineStream, cell, ',');
-      stats.bestPoints = std::stod(cell);
+      stats.bestPoints = std::stoul(cell);
       std::getline(lineStream, cell, ',');
-      stats.avgPoints = std::stoi(cell);
+      stats.avgPoints = std::stod(cell);
     }
 
     file.close();

@@ -6,38 +6,41 @@
 
 WastePile::WastePile(QGraphicsItem* parent) : Pile(parent) {}
 
-bool WastePile::IsValid(const Card& card) { return false; }
+// LOGIC RELATED FUNCTIONS
 
-int WastePile::AddFromDeck(Deck& deck, size_t nofCards) {
+bool WastePile::isValid(const Card& card) { return false; }
+
+int WastePile::addFromDeck(Deck& deck, const unsigned int nofCards) {
   size_t i = 0;
-  while (i < nofCards && !deck.Empty()) {
+  while (i < nofCards && !deck.isEmpty()) {
     Card* topCard = deck.getTopCard();
     if (!topCard->isFaceUp()) {
       topCard->flip();
     }
 
-    deck.TransferCard(*this);
+    deck.transferCards(*this);
     i++;
   }
   return i;
 }
 
-void WastePile::undoAddFromDeck(Deck& deck, size_t nofCards) {
+void WastePile::undoAddFromDeck(Deck& deck, const unsigned int nofCards) {
   size_t i = 0;
-  while (i < nofCards && !Empty()) {
+  while (i < nofCards && !this->isEmpty()) {
     Card* topCard = getTopCard();
     if (topCard->isFaceUp()) {
       topCard->flip();
     }
-    TransferCard(deck);
+    transferCards(deck);
     i++;
   }
 }
 
+// GUI RELATED FUNCTIONS
+
 void WastePile::updateVisuals() {
-  int show = 3;
-  int index = Size();
-  int i = std::max(Size() - show, 0);
+  int index = getSize();
+  int i = std::max(index - 3, 0);
   while (index > 0) {
     index--;
     // Get the card's previous position
@@ -45,7 +48,7 @@ void WastePile::updateVisuals() {
     QPointF prevPos = card->getPrevScenePos();
     QPointF startPos = this->mapFromScene(prevPos);
 
-    // Set the start and end positions for the animation
+    // Set the end positions for the animation
     int j = (index >= i) ? index - i : 0;
     QPointF endPos = j * this->getOffset();
 
@@ -58,14 +61,15 @@ void WastePile::updateVisuals() {
     }
   }
 }
-void WastePile::setCardPrevScenePos() {
-  int show = 3;
-  int i = std::max(Size() - show, 0);
-  for (int index = 0; index < Size(); index++) {
+void WastePile::setCardsPrevScenePos() {
+  int i = this->getSize() - 3;
+  i = std::max(i, 0);
+
+  for (int index = 0; index < this->getSize(); index++) {
     int j = (index >= i) ? index - i : 0;
     QPointF scenePos = mapToScene(j * this->getOffset());
     cards_[index]->setPrevScenePos(scenePos);
   }
 }
 
-QPointF WastePile::getOffset() const { return QPoint(PILE_YOFFSET, 0); }
+QPointF WastePile::getOffset() const { return QPoint(PILE_OFFSET, 0); }

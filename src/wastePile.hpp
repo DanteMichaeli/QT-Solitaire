@@ -9,7 +9,7 @@ class Deck;
 
 /**
  * @class WastePile
- * @brief Represents the waste pile in a solitaire game, where discarded or
+ * @brief A special type of Pile in a solitaire game, where discarded or
  * drawn cards are temporarily held.
  *
  * The waste pile has specific behavior in solitaire games:
@@ -20,34 +20,67 @@ class WastePile : public Pile {
   Q_OBJECT
  public:
   /**
-   * @brief Default constructor for an empty pile.
+   * @defgroup WastePileLogic Waste Pile Logic
+   * @brief Members related to the Waste pile's logical state.
+   * @{
+   */
+
+  /**
+   * @brief Construct an empty Waste pile.
    */
   WastePile(QGraphicsItem* parent = nullptr);
 
   /**
-   * @brief Checks if a card can be legally added to this pile based on game
+   * @brief Check if a card can be legally added to this pile based on game
    * rules. In WastePile, cards cannot be added directly by any method other
    * than `AddFromDeck`.
    * @param card The card to check for validity.
    * @return Always returns false for WastePile.
    */
-  bool IsValid(const Card& card) override;
+  bool isValid(const Card& card) override;
 
   /**
-   * @brief Adds a specified number of cards from the deck to the waste pile,
+   * @brief Add a specified number of cards from the deck to the waste pile,
    * flipping them face-up.
    * @param deck The deck from which cards are dealt.
    * @param nofCards The number of cards to add to the waste pile.
    */
-  int AddFromDeck(Deck& deck, size_t nofCards);
+  int addFromDeck(Deck& deck, const unsigned int nofCards);
 
-  void undoAddFromDeck(Deck& deck, size_t nofCards);
+  /**
+   * @brief Transfer all cards from the waste pile back to the deck.
+   * @param deck The deck to transfer the cards to.
+   * @param shuffle Whether to shuffle the cards in the deck after transfer.
+   */
+  void undoAddFromDeck(Deck& deck, const unsigned int nofCards);
 
+  /** @} */  // End of WastePileLogic
+
+  /**
+   * @defgroup WastePileGUI Waste Pile GUI
+   * @brief Members related to the Waste pile's graphical representation.
+   * @{
+   */
+
+  /**
+   * @brief Update the visual representation of the pile.
+   */
   void updateVisuals() override;
 
-  void setCardPrevScenePos() override;
+  /**
+   * @brief Set the previous scene positions of all cards in the pile (in scene
+   * coordinates). For a WastePile, this is the pile's position plus an offset.
+   */
+  void setCardsPrevScenePos() override;
 
+ private:
+  /**
+   * @brief Get the offset for the waste pile.
+   * @return The offset for the waste pile.
+   */
   QPointF getOffset() const override;
+
+  /** @} */  // End of WastePileGUI
 };
 
 #endif
