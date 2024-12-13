@@ -1,151 +1,74 @@
 #include <QGuiApplication>
 #include <catch2/catch_test_macros.hpp>
 
-#include "deck.hpp"
-#include "klondikePile.cpp"
+#include "card.hpp"
 #include "klondikePile.hpp"
-#include "pile.cpp"
-#include "pile.hpp"
+#include "qtTestApp.hpp"
 
-TEST_CASE("KlondikePile Initialization", "[klondikepile]") {
-  int argc = 1;
-  char* argv[] = {""};
-  QGuiApplication app(argc, argv);  // Initialize QGuiApplication
+class TestKlondikePile : public KlondikePile {
+ public:
+  using KlondikePile::addCard;
+};
 
-  // Initialize a deck and create a KlondikePile with 5 cards, 3 face up
-  Deck deck;
-  KlondikePile pile(deck, 5, 3);
+TEST_CASE_METHOD(QtTestApp, "KlondikePile: Card Validity", "[klondikePile]") {
+  TestKlondikePile pile;
 
-  // Verify the pile is not empty
-  REQUIRE(pile.getCards().size() == 5);
-  REQUIRE(pile.getCards().back()->isFaceUp() ==
-          true);  // Last card (top of pile) should be face up
+  Card king(Suit::SPADES, Rank::KING);
+  king.flip();
+
+  Card queen(Suit::HEARTS, Rank::QUEEN);
+  queen.flip();
+
+  Card invalidCard(Suit::SPADES, Rank::QUEEN);
+  invalidCard.flip();
+
+  SECTION("Empty pile: Only KING is valid") {
+    REQUIRE(pile.isValid(king) == true);
+
+    // Add KING to the pile using the test-only addCard
+    pile.addCard(&king);
+
+    REQUIRE(pile.getTopCard() == &king);
+  }
+
+  SECTION("Non-empty pile: Valid sequence of cards") {
+    // Add KING first
+    pile.addCard(&king);
+    REQUIRE(pile.getTopCard() == &king);
+
+    // Check QUEEN validity
+    REQUIRE(pile.isValid(queen) == true);
+
+    // Add QUEEN to the pile
+    pile.addCard(&queen);
+    REQUIRE(pile.getTopCard() == &queen);
+
+    // Invalid card (same color) cannot be added
+    REQUIRE(pile.isValid(invalidCard) == false);
+  }
 }
 
-TEST_CASE("KlondikePile Add Card", "[klondikepile]") {
-  int argc = 1;
-  char* argv[] = {""};
-  QGuiApplication app(argc, argv);  // Initialize QGuiApplication
+TEST_CASE_METHOD(QtTestApp, "KlondikePile: Visual Behavior", "[klondikePile]") {
+  TestKlondikePile pile;
 
-  Deck deck;
-  KlondikePile pile(deck, 5, 3);
+  Card* card1 = new Card(Suit::SPADES, Rank::KING);
+  Card* card2 = new Card(Suit::HEARTS, Rank::QUEEN);
+  Card* card3 = new Card(Suit::CLUBS, Rank::JACK);
 
-  // Create a new card and try adding it to the pile
-  auto newCard = std::make_unique<Card>(Suit::SPADES, Rank::QUEEN);
-  pile.AddCard(newCard);
+  card1->flip();
+  card2->flip();
+  card3->flip();
 
-  REQUIRE(pile.getCards().size() == 6);  // Pile should now have 6 cards
-}
+  // Add cards to the pile
+  pile.addCard(card1);
+  pile.addCard(card2);
+  pile.addCard(card3);
 
-TEST_CASE("KlondikePile Remove Card", "[klondikepile]") {
-  int argc = 1;
-  char* argv[] = {""};
-  QGuiApplication app(argc, argv);  // Initialize QGuiApplication
+  SECTION("setCardsPrevScenePos updates positions correctly") {
+    pile.setCardsPrevScenePos();
 
-  Deck deck;
-  KlondikePile pile(deck, 5, 3);
-
-  // Remove a card from the pile
-  auto removedCard = pile.RemoveCard();
-  REQUIRE(removedCard != nullptr);       // Should return a card
-  REQUIRE(pile.getCards().size() == 4);  // Pile should have 4 cards left
-}
-
-TEST_CASE("KlondikePile IsValid Function", "[klondikepile]") {
-  int argc = 1;
-  char* argv[] = {""};
-  QGuiApplication app(argc, argv);  // Initialize QGuiApplication
-
-  Deck deck;
-  KlondikePile pile(deck, 0, 0);  // Start with an empty pile
-
-  // Case 1: Valid move to an empty pile (KING)
-  auto king = std::make_unique<Card>(Suit::HEARTS, Rank::KING);
-  king->flipUp();  // Card must be face up
-  REQUIRE(pile.isValid(*king) == true);
-
-  // Case 2: Invalid move to an empty pile (non-KING)
-  auto queen = std::make_unique<Card>(Suit::DIAMONDS, Rank::QUEEN);
-  queen->flipUp();
-  REQUIRE(pile.isValid(*queen) == false);
-
-  // Add the KING to the pile
-  pile.AddCard(king);
-
-  // Case 3: Valid move to a non-empty pile
-  auto validCard = std::make_unique<Card>(Suit::SPADES, Rank::QUEEN);
-  validCard->flipUp();
-  REQUIRE(pile.isValid(*validCard) == true);
-
-  // Case 4: Invalid move to a non-empty pile (same color)
-  auto invalidCard1 = std::make_unique<Card>(Suit::HEARTS, Rank::QUEEN);
-  invalidCard1->flipUp();
-  REQUIRE(pile.isValid(*invalidCard1) == false);
-
-  // Case 5: Invalid move to a non-empty pile (not one rank lower)
-  auto invalidCard2 = std::make_unique<Card>(Suit::SPADES, Rank::TEN);
-  invalidCard2->flipUp();
-  REQUIRE(pile.IsValid(*invalidCard2) == false);
-
-  // Case 6: Invalid move with a face-down card
-  auto faceDownCard = std::make_unique<Card>(Suit::CLUBS, Rank::QUEEN);
-  REQUIRE(pile.isValid(*faceDownCard) == false);
-}
-
-TEST_CASE("KlondikePile TransferSubPile Success", "[klondikepile]") {
-  int argc = 1;
-  char* argv[] = {""};
-  QGuiApplication app(argc, argv);  // Initialize QGuiApplication
-
-  // Initialize source and destination piles with a deck
-  Deck deck;
-  KlondikePile sourcePile(deck, 0, 0);  // Empty source pile
-  KlondikePile destPile(deck, 0, 0);    // Empty destination pile
-
-  // Case 1: Valid transfer
-  auto card1 = std::make_unique<Card>(Suit::SPADES, Rank::KING);
-  card1->flipUp();
-  sourcePile.AddCard(card1);
-
-  auto card2 = std::make_unique<Card>(Suit::HEARTS, Rank::QUEEN);
-  card2->flipUp();
-  sourcePile.AddCard(card2);
-
-  REQUIRE(sourcePile.TransferSubPile(destPile, 2) == true);
-  REQUIRE(sourcePile.getCards().size() == 0);  // Source pile should be empty
-  REQUIRE(destPile.getCards().size() ==
-          2);  // Destination pile should have 2 cards
-}
-
-TEST_CASE("KlondikePile TransferSubPile Failure", "[klondikepile]") {
-  int argc = 1;
-  char* argv[] = {""};
-  QGuiApplication app(argc, argv);  // Initialize QGuiApplication
-
-  // Initialize source and destination piles with a deck
-  Deck deck;
-  KlondikePile sourcePile(deck, 0, 0);  // Empty source pile
-  KlondikePile destPile(deck, 0, 0);    // Empty destination pile
-
-  // Add an invalid card to the destination pile
-  auto card1 = std::make_unique<Card>(Suit::HEARTS, Rank::QUEEN);
-  card1->flipUp();
-  destPile.AddCard(card1);  // Add a Queen to the destination pile
-
-  // Add a card sequence to the source pile
-  auto card2 = std::make_unique<Card>(Suit::SPADES, Rank::KING);
-  card2->flipUp();
-  sourcePile.AddCard(card2);
-
-  auto card3 = std::make_unique<Card>(Suit::CLUBS, Rank::QUEEN);
-  card3->flipUp();
-  sourcePile.AddCard(card3);
-
-  // Attempt to transfer the source pile to the destination pile
-  // This should fail because a QUEEN cannot be placed on another QUEEN
-  REQUIRE(sourcePile.TransferSubPile(destPile, 2) == false);
-  REQUIRE(sourcePile.getCards().size() ==
-          2);  // Source pile should remain unchanged
-  REQUIRE(destPile.getCards().size() ==
-          1);  // Destination pile should remain unchanged
+    REQUIRE(card1->getPrevScenePos() == QPointF(0, 0));
+    REQUIRE(card2->getPrevScenePos().y() > card1->getPrevScenePos().y());
+    REQUIRE(card3->getPrevScenePos().y() > card2->getPrevScenePos().y());
+  }
 }

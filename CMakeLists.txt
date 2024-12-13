@@ -44,32 +44,52 @@ set(CMAKE_VERBOSE_MAKEFILE ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 #
 ## Add Catch2 as a subdirectory (Catch2 is now located under the libs/ folder as a git submodule)
-#add_subdirectory(libs/Catch2)
-###Add the card source (and other sources you need for testing) to the test build
-#list(APPEND TEST_SOURCES ${CMAKE_SOURCE_DIR}/src/card.cpp)  # Include card.cpp
-#
-## Create the test executable
-#add_executable(solitaire_tests ${TEST_SOURCES})
-#
-## Link the Catch2 library to the test executable
-## Link QtCore, QtGui, and QtWidgets to the tests
-#target_link_libraries(solitaire_tests PRIVATE 
-#    Qt6::Core 
-#    Qt6::Gui 
-#    Qt6::Widgets
-#    Catch2::Catch2WithMain
-#    ${RESOURCES}
-#)
-#
-# Include Catch2 headers for the tests
-#target_include_directories(solitaire_tests PRIVATE
-#    ${CMAKE_SOURCE_DIR}/libs/Catch2/src
-#    ${CMAKE_SOURCE_DIR}/libs/Catch2/src/catch2
-#)
-#
-# Enable verbose output for CMake (if needed)
-set(CMAKE_VERBOSE_MAKEFILE ON)
-set(CMAKE_AUTOMOC_VERBOSE ON)
+# Add Catch2 as a subdirectory
+add_subdirectory(libs/Catch2)
 
-# Export compile commands for use with tools like clang-tidy (for the tests)
+set(TEST_SOURCES
+    ${CMAKE_SOURCE_DIR}/tests/test_card.cpp
+    ${CMAKE_SOURCE_DIR}/tests/test_deck.cpp
+    ${CMAKE_SOURCE_DIR}/tests/test_dummy.cpp
+    ${CMAKE_SOURCE_DIR}/tests/test_klondikePile.cpp
+    ${CMAKE_SOURCE_DIR}/tests/test_targetPile.cpp
+    ${CMAKE_SOURCE_DIR}/tests/test_wastePile.cpp
+    ${CMAKE_SOURCE_DIR}/tests/test_game.cpp
+)
+
+# Add test sources
+list(APPEND TEST_SOURCES 
+    ${CMAKE_SOURCE_DIR}/src/card.cpp
+    ${CMAKE_SOURCE_DIR}/src/pile.cpp
+    ${CMAKE_SOURCE_DIR}/src/klondikePile.cpp
+    ${CMAKE_SOURCE_DIR}/src/wastePile.cpp
+    ${CMAKE_SOURCE_DIR}/src/targetPile.cpp
+    ${CMAKE_SOURCE_DIR}/src/deck.cpp
+    ${CMAKE_SOURCE_DIR}/src/game.cpp
+    ${CMAKE_SOURCE_DIR}/src/gui/gameSoundManager.cpp
+    ${CMAKE_SOURCE_DIR}/src/stats.cpp
+
+)
+
+# Create the test executable
+add_executable(solitaire_tests ${TEST_SOURCES})
+
+# Link necessary libraries
+target_link_libraries(solitaire_tests PRIVATE 
+    Qt6::Core 
+    Qt6::Gui 
+    Qt6::Widgets
+    Catch2::Catch2WithMain
+    ${RESOURCES}
+)
+
+# Include directories
+target_include_directories(solitaire_tests PRIVATE
+    ${CMAKE_SOURCE_DIR}/libs/Catch2/src
+    ${CMAKE_SOURCE_DIR}/src  # Include src directory for headers
+)
+
+# Enable AUTOMOC for Qt
+set(CMAKE_AUTOMOC ON)
+set(CMAKE_VERBOSE_MAKEFILE ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)

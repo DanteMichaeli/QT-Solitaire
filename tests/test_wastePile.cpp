@@ -1,44 +1,53 @@
 #include <QGuiApplication>
 #include <catch2/catch_test_macros.hpp>
 
+#include "card.hpp"
 #include "deck.hpp"
-#include "wastePile.cpp"
+#include "qtTestApp.hpp"
 #include "wastePile.hpp"
 
-TEST_CASE("WastePile Cards Only Added Through AddFromDeck", "[wastepile]") {
-  int argc = 1;
-  char* argv[] = {""};
-  QGuiApplication app(argc, argv);  // Initialize QGuiApplication
-
+TEST_CASE_METHOD(QtTestApp, "WastePile: Draw Cards from Deck", "[wastePile]") {
   Deck deck;
-  WastePile pile;
+  WastePile waste;
 
-  // loop through all cards in deck, and check isValid for each one
-  for (int i = 0; i < 52; i++) {
-    auto card = deck.RemoveCard();
-    REQUIRE(pile.isValid(*card) == false);
+  SECTION("Draw cards from the deck") {
+    REQUIRE(deck.getSize() == 52);
+    REQUIRE(waste.getSize() == 0);
+
+    int drawnCards = waste.addFromDeck(deck, 3);
+
+    REQUIRE(drawnCards == 3);
+    REQUIRE(deck.getSize() == 49);
+    REQUIRE(waste.getSize() == 3);
+
+    for (int i = 0; i < 3; ++i) {
+      Card* topCard = waste.getTopCard();
+      REQUIRE(topCard != nullptr);
+      REQUIRE(topCard->isFaceUp() == true);
+      waste.transferCards(deck);
+    }
+    REQUIRE(waste.getSize() == 0);
+    REQUIRE(deck.getSize() == 52);
   }
 }
 
-TEST_CASE("WastePile Working AddFromDeck and AddToDeck", "[wastepile]") {
-  int argc = 1;
-  char* argv[] = {""};
-  QGuiApplication app(argc, argv);  // Initialize QGuiApplication
-
+TEST_CASE_METHOD(QtTestApp, "WastePile: Visual Behavior", "[wastePile]") {
   Deck deck;
-  WastePile pile;
+  WastePile waste;
 
-  // move 3 cards from deck to waste pile
-  pile.AddFromDeck(deck, 3);
-  REQUIRE(pile.getCards().size() == 3);
+  waste.addFromDeck(deck, 3);
 
-  // empty deck
-  while (!deck.Empty()) {
-    deck.RemoveCard();
+  REQUIRE(waste.getSize() == 3);
+
+  SECTION("updateVisuals maintains stacking order") {
+    waste.updateVisuals();
+
+    // Verify that all cards visually appear stacked at the same position
+    QPointF expectedPos = QPointF(0, 0);
+    for (int i = 0; i < 3; ++i) {
+      Card* card = waste.getTopCard();
+      REQUIRE(card->pos() == expectedPos);
+      waste.transferCards(deck);
+    }
   }
-
-  // move all cards from waste pile back to deck
-  bool success = pile.AddToDeck(deck);
-  REQUIRE(success == true);
-  REQUIRE(pile.getCards().size() == 0);
 }

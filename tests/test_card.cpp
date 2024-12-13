@@ -1,49 +1,44 @@
-#include <QGuiApplication>  // Include the necessary Qt header for QGuiApplication
+#include <QGuiApplication>
 #include <catch2/catch_test_macros.hpp>
 
 #include "card.hpp"
+#include "qtTestApp.hpp"
 
-TEST_CASE("Card Initialization", "[card]") {
-  // Create the application context for Qt
-  int argc = 1;
-  char *argv[] = {""};
-  QGuiApplication app(argc, argv);  // Initialize QGuiApplication
-
-  // Test initialization of Card with Suit::HEARTS and Rank::ACE
+QGuiApplication* QtTestApp::app = nullptr;  // Definition
+TEST_CASE_METHOD(QtTestApp, "Card Initialization Test", "[card]") {
   Card card(Suit::HEARTS, Rank::ACE);
 
-  // Verify suit and rank are correctly set
-  REQUIRE(card.getSuit() == Suit::HEARTS);
-  REQUIRE(card.getRank() == Rank::ACE);
-  REQUIRE(card.getColor() == Color::RED);
-  REQUIRE(card.isFaceUp() == false);  // Card should be face-down initially
+  SECTION("Card suit and rank") {
+    REQUIRE(card.getSuit() == Suit::HEARTS);
+    REQUIRE(card.getRank() == Rank::ACE);
+  }
+
+  SECTION("Card default face-up state") { REQUIRE(card.isFaceUp() == false); }
+
+  SECTION("Card color for HEARTS is RED") {
+    REQUIRE(card.getColor() == Color::RED);
+  }
 }
 
-TEST_CASE("Card Flip Up and Flip Down", "[card]") {
-  // Create the application context for Qt
-  int argc = 1;
-  char *argv[] = {""};
-  QGuiApplication app(argc, argv);  // Initialize QGuiApplication
-
-  // Test flipUp and flipDown functionality
+TEST_CASE_METHOD(QtTestApp, "Card Flip Functionality", "[card]") {
   Card card(Suit::SPADES, Rank::KING);
 
-  card.flipUp();
-  REQUIRE(card.isFaceUp() == true);  // The card should now be face-up
+  SECTION("Flip the card face-up") {
+    card.flip();
+    REQUIRE(card.isFaceUp() == true);
+  }
 
-  card.flipDown();
-  REQUIRE(card.isFaceUp() == false);  // The card should be face-down again
+  SECTION("Flip the card face-down") {
+    card.flip();
+    card.flip();
+    REQUIRE(card.isFaceUp() == false);
+  }
 }
 
-TEST_CASE("Card String Representation", "[card]") {
-  // Create the application context for Qt
-  int argc = 1;
-  char *argv[] = {""};
-  QGuiApplication app(argc, argv);  // Initialize QGuiApplication
-
-  // Test the string representation of a card
+TEST_CASE_METHOD(QtTestApp, "Card String Representation", "[card]") {
   Card card(Suit::DIAMONDS, Rank::JACK);
 
-  // Expected string format: "JACK_of_DIAMONDS"
-  REQUIRE(card.cardToQString() == "jack_of_diamonds");
+  SECTION("String representation matches expected format") {
+    REQUIRE(card.cardToQString() == "jack_of_diamonds");
+  }
 }
