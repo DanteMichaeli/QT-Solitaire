@@ -1,0 +1,11 @@
+build/
+CMakeCache.txt
+CMakeFiles/
+*.o
+*.so
+*.a
+*.d
+*.log
+*.swp
+libs/Catch2
+libs/miniaudio
