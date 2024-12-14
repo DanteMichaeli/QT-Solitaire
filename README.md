@@ -1,3 +1,14 @@
+# Status:
+
+- Due to working a tight schedule we did not have time to clean up the repository. Currently, the docker setup instructions work for Linux machines. As for the manual setup on macOS and Windows, instructions MAY be outdated and not working properly. YMMV.
+
+- This project was developed over roughly 5 weeks for the C++ course at Aalto University. In collaboration with Kasper Tulonen, Ukko Ihamäki and Robin Runne.
+
+
+
+
+
+
 # Project Name (replace here!)
 
 This is the template for the projects. Please copy the project description here. 
